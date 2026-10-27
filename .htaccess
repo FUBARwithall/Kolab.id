@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Aset statis & entry point landing
+    RewriteRule ^(assets|dist)/(.*)$ landing/public/$1/$2 [L]
+    RewriteRule ^(favicon\.ico|robots\.txt)$ landing/public/$1 [L]
+
+    # Sub-aplikasi bila diakses via subpath
+    RewriteRule ^campaign/(assets|dist|uploads)/(.*)$ campaign/public/$1/$2 [L]
+    RewriteRule ^datahub/(assets|dist|uploads)/(.*)$ datahub/public/$1/$2 [L]
+
+    # Lindungi folder sensitif CI4 dari akses publik langsung
+    RewriteRule ^(landing|campaign|datahub)/(app|system|writable|tests|vendor)(/.*)?$ - [F,L]
+    RewriteRule ^(\.env|\.git|composer\.(json|lock)|spark|setup-server\.sh)$ - [F,L]
+
+    # Route utama ke landing public index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ landing/public/index.php?/$1 [L]
+</IfModule>

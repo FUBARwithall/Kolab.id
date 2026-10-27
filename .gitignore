@@ -1,0 +1,58 @@
+# =========================================================
+# Monorepo Kolab.id (CodeIgniter 4)
+#   landing/   → kolab.id        (CI4, SSR dari Campaign API)
+#   campaign/  → app.kolab.id    (CI4 enterprise)
+#   datahub/   → datahub.kolab.id(CI4 card generator/intelligence)
+#   shared/uploads → aset upload semua app (runtime, tidak di-commit)
+# =========================================================
+
+# --- Build & deps dev ---
+node_modules/
+package-lock.json.bak
+
+# --- Runtime CI4: writable (cache, logs, sessions, debugbar, uploads) ---
+**/writable/cache/*
+!**/writable/cache/index.html
+!**/writable/cache/.gitkeep
+**/writable/logs/*
+!**/writable/logs/index.html
+!**/writable/logs/.gitkeep
+**/writable/session/*
+!**/writable/session/index.html
+!**/writable/session/.gitkeep
+**/writable/debugbar/*
+!**/writable/debugbar/.gitkeep
+**/writable/uploads/*
+!**/writable/uploads/index.html
+!**/writable/uploads/.gitkeep
+
+# --- Uploads Runtime (Symlinks di public/ dan file fisik di shared/) ---
+campaign/public/uploads
+datahub/public/uploads
+shared/uploads/*
+!shared/uploads/.gitkeep
+!shared/uploads/campaign/.gitkeep
+!shared/uploads/datahub/.gitkeep
+
+# --- Out-of-scope repo ini ---
+whatsapp-service/
+kol-sentiment-analysis/
+
+.env
+.env.*
+!.env.example
+!**/.env.example
+*.env
+kol.sql
+*.sql
+*.sql.gz
+*.pem
+
+# --- Private configs ---
+config-private/
+
+# --- OS / IDE ---
+.DS_Store
+.idea/
+.vscode/
+Thumbs.db

@@ -1,0 +1,17 @@
+{
+  "name": "kol-landing",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Landing page KOLAB.ID — CodeIgniter 4 + Tailwind CSS. Artikel dibaca via REST API.",
+  "scripts": {
+    "build": "tailwindcss -i ./src/input.css -o ./public/dist/output.css --minify",
+    "css:watch": "tailwindcss -i ./src/input.css -o ./public/dist/output.css --watch",
+    "preview": "php spark serve --port 8087",
+    "dev": "concurrently -n css,preview -c blue,green \"npm:css:watch\" \"npm:preview\""
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.1.0",
+    "tailwindcss": "^4.1.0",
+    "concurrently": "^9.1.0"
+  }
+}
