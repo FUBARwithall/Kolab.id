@@ -123,9 +123,21 @@ $isActive = function(string $route) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
+          <a href="<?= base_url('tasks') ?>" class="nav-link <?= $isActive('tasks') ?>">
+            <i class="nav-icon fas fa-tasks text-primary"></i>
+            <p>Tasks Engine</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="<?= base_url('postings') ?>" class="nav-link <?= $isActive('postings') ?>">
             <i class="nav-icon fas fa-chart-bar text-success"></i>
             <p>Postings &amp; Analytics</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="<?= base_url('kalender') ?>" class="nav-link <?= $isActive('kalender') ?>">
+            <i class="nav-icon far fa-calendar-alt text-info"></i>
+            <p>Kalender Timeline</p>
           </a>
         </li>
 
@@ -163,6 +175,12 @@ $isActive = function(string $route) use ($currentPath): string {
             <a href="<?= base_url('contracts') ?>" class="nav-link <?= $isActive('contracts') ?>">
               <i class="nav-icon fas fa-file-signature text-primary"></i>
               <p>Kontrak KOL &amp; Komisi</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="<?= base_url('evaluations') ?>" class="nav-link <?= $isActive('evaluations') ?>">
+              <i class="nav-icon fas fa-medal text-warning"></i>
+              <p>Evaluasi Kinerja KPI</p>
             </a>
           </li>
         <?php else: ?>

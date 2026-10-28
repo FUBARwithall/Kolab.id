@@ -104,7 +104,10 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
 // --------------------------------------------------------------------
 $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) {
     $routes->get('rankings', 'Dashboard::index');
-    $routes->get('evaluations', 'Dashboard::index');
+    // Wave 5: Evaluasi Kinerja Internal Tim Operasional
+    $routes->get('evaluations', 'InternalEvaluation::index');
+    $routes->get('evaluations/staff', 'InternalEvaluation::staff');
+    $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
     $routes->get('finance', 'Dashboard::index');
     $routes->get('invoices', 'Dashboard::index');
     $routes->get('contracts', 'Dashboard::index');
