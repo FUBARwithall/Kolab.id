@@ -108,10 +108,21 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->get('evaluations', 'InternalEvaluation::index');
     $routes->get('evaluations/staff', 'InternalEvaluation::staff');
     $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
-    $routes->get('finance', 'Dashboard::index');
-    $routes->get('invoices', 'Dashboard::index');
-    $routes->get('contracts', 'Dashboard::index');
-    $routes->get('payments', 'Dashboard::index');
-    $routes->get('budget', 'Dashboard::index');
-    $routes->get('approvals', 'Dashboard::index');
+    // Wave 6: Invoices & Finansial
+    $routes->get('invoices', 'Invoices::index');
+    $routes->get('finance', 'Invoices::index');
+    $routes->post('invoices/get-datatable', 'Invoices::getDatatable');
+    $routes->get('invoices/get-one/(:num)', 'Invoices::getOne/$1');
+    $routes->post('invoices/create-from-deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->post('invoices/verify/(:num)', 'Invoices::verify/$1');
+    $routes->post('invoices/save-payment/(:num)', 'Invoices::savePayment/$1');
+
+    // Wave 6: Contracts & Komisi
+    $routes->get('contracts', 'Contracts::index');
+    $routes->post('contracts/get-datatable', 'Contracts::getDatatable');
+    $routes->get('contracts/get-one/(:num)', 'Contracts::getOne/$1');
+    $routes->post('contracts/generate', 'Contracts::generate');
+    $routes->get('payments', 'Invoices::index');
+    $routes->get('budget', 'Invoices::index');
+    $routes->get('approvals', 'Invoices::index');
 });
