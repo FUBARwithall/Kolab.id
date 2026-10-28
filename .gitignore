@@ -6,11 +6,23 @@
 #   shared/uploads → aset upload semua app (runtime, tidak di-commit)
 # =========================================================
 
-# --- Build & deps dev ---
+# --- Composer & Third-Party Dependencies ---
+vendor/
+campaign/vendor
+datahub/vendor
+landing/vendor
+**/vendor/
+composer.phar
+
+# --- Node / NPM Build & Dev ---
 node_modules/
 package-lock.json.bak
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# --- Runtime CI4: writable (cache, logs, sessions, debugbar, uploads) ---
+# --- Runtime CI4: Writable (cache, logs, sessions, debugbar, uploads) ---
 **/writable/cache/*
 !**/writable/cache/index.html
 !**/writable/cache/.gitkeep
@@ -29,32 +41,70 @@ package-lock.json.bak
 # --- Uploads Runtime (Symlinks di public/ dan file fisik di shared/) ---
 campaign/public/uploads
 datahub/public/uploads
+landing/public/uploads
 shared/uploads/*
 !shared/uploads/.gitkeep
 !shared/uploads/campaign/.gitkeep
 !shared/uploads/datahub/.gitkeep
+!shared/uploads/articles/.gitkeep
 
-# --- Out-of-scope repo ini ---
-whatsapp-service/
-kol-sentiment-analysis/
-_legacy_monorepo/
+# --- CRUD Generator Output ---
+campaign/crud-generator/downloads/Controllers/*
+!campaign/crud-generator/downloads/Controllers/index.php
+campaign/crud-generator/downloads/Models/*
+!campaign/crud-generator/downloads/Models/index.php
+campaign/crud-generator/downloads/Views/*
+!campaign/crud-generator/downloads/Views/index.php
 
+# --- Environment & Credentials ---
 .env
 .env.*
 !.env.example
 !**/.env.example
 *.env
-kol.sql
-*.sql
-!docs/kolab_ci4.sql
-*.sql.gz
 *.pem
+*.key
+*.crt
 
-# --- Private configs ---
+# --- Database & Dumps ---
+*.sql
+*.sql.gz
+*.sqlite
+*.sqlite3
+*.db
+!docs/kolab_ci4.sql
+
+# --- PHP Testing & QA Cache ---
+.phpunit.result.cache
+.php-cs-fixer.cache
+.phpstan.cache/
+
+# --- Private configs & Out of scope ---
 config-private/
+whatsapp-service/
+kol-sentiment-analysis/
+_legacy_monorepo/
 
-# --- OS / IDE ---
-.DS_Store
+# --- IDE & Editor Junk ---
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-project
+*.sublime-workspace
+
+# --- OS Specific Junk Files ---
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
 Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+*~
+*.swp
+*.swo

@@ -87,4 +87,14 @@ class Paths
      * value - the directory should not be publicly accessible.
      */
     public string $envDirectory = __DIR__ . '/../../';
+
+    public function __construct()
+    {
+        if (!is_dir($this->systemDirectory)) {
+            $this->systemDirectory = __DIR__ . '/../../../vendor/codeigniter4/framework/system';
+        }
+        if (!is_file(rtrim($this->envDirectory, '/\\') . DIRECTORY_SEPARATOR . '.env')) {
+            $this->envDirectory = __DIR__ . '/../../../';
+        }
+    }
 }
