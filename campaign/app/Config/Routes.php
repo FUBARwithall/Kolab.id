@@ -45,8 +45,16 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('tasks', 'Dashboard::index');
     $routes->get('live-posting', 'Dashboard::index');
     $routes->get('calendar', 'Dashboard::index');
-    $routes->get('products', 'Dashboard::index');
-    $routes->get('stock-history', 'Dashboard::index');
+
+    // Wave 1: Master Produk & Mutasi Stok Sampel
+    $routes->get('products', 'Products::index');
+    $routes->post('products/get-datatable', 'Products::getDatatable');
+    $routes->get('products/get-one/(:num)', 'Products::getOne/$1');
+    $routes->post('products/save', 'Products::save');
+    $routes->post('products/adjust-stock', 'Products::adjustStock');
+    $routes->post('products/delete/(:num)', 'Products::delete/$1');
+    $routes->get('stock-history', 'StockHistory::index');
+
     $routes->get('articles', 'Dashboard::index');
 });
 
