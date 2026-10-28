@@ -84,6 +84,18 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('shipments/save', 'Shipments::save');
     $routes->post('shipments/update-status/(:num)', 'Shipments::updateStatus/$1');
 
+    // Wave 4: Postings, Metrics, Sentiment & Kalender
+    $routes->get('postings', 'Postings::index');
+    $routes->post('postings/get-datatable', 'Postings::getDatatable');
+    $routes->get('postings/get-one/(:num)', 'Postings::getOne/$1');
+    $routes->post('postings/save', 'Postings::save');
+    $routes->post('postings/update-metrics/(:num)', 'Postings::updateMetrics/$1');
+    $routes->post('postings/analyze-sentiment/(:num)', 'Postings::analyzeSentiment/$1');
+
+    $routes->get('kalender', 'Kalender::index');
+    $routes->get('calendar', 'Kalender::index');
+    $routes->get('kalender/get-events', 'Kalender::getEvents');
+
     $routes->get('articles', 'Dashboard::index');
 });
 
