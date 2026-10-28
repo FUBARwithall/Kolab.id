@@ -36,16 +36,6 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('dashboard', 'Dashboard::index');
     $routes->get('campaign', 'Dashboard::index');
     $routes->get('campaign/dashboard', 'Dashboard::index');
-    $routes->get('campaigns', 'Dashboard::index');
-    $routes->get('briefs', 'Dashboard::index');
-    $routes->get('drafts', 'Dashboard::index');
-    $routes->get('shipments', 'Dashboard::index');
-    $routes->get('postings', 'Dashboard::index');
-    $routes->get('dealings', 'Dashboard::index');
-    $routes->get('tasks', 'Dashboard::index');
-    $routes->get('live-posting', 'Dashboard::index');
-    $routes->get('calendar', 'Dashboard::index');
-
     // Wave 1: Master Produk & Mutasi Stok Sampel
     $routes->get('products', 'Products::index');
     $routes->post('products/get-datatable', 'Products::getDatatable');
@@ -54,6 +44,17 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('products/adjust-stock', 'Products::adjustStock');
     $routes->post('products/delete/(:num)', 'Products::delete/$1');
     $routes->get('stock-history', 'StockHistory::index');
+
+    // Wave 2: Perencanaan Kampanye & Penugasan KOL
+    $routes->get('campaigns', 'Campaigns::index');
+    $routes->post('campaigns/get-datatable', 'Campaigns::getDatatable');
+    $routes->get('campaigns/get-one/(:num)', 'Campaigns::getOne/$1');
+    $routes->get('campaigns/view/(:num)', 'Campaigns::view/$1');
+    $routes->post('campaigns/save', 'Campaigns::save');
+    $routes->post('campaigns/delete/(:num)', 'Campaigns::delete/$1');
+    $routes->post('campaign-kols/assign', 'CampaignKols::assign');
+    $routes->get('campaign-kols/tasks-json/(:num)', 'CampaignKols::getTasksJson/$1');
+    $routes->post('campaign-kols/remove/(:num)', 'CampaignKols::remove/$1');
 
     $routes->get('articles', 'Dashboard::index');
 });

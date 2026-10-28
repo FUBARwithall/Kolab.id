@@ -123,15 +123,30 @@ $isActive = function(string $route) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
-          <a href="<?= base_url('shipments') ?>" class="nav-link <?= $isActive('shipments') ?>">
-            <i class="nav-icon fas fa-shipping-fast text-info"></i>
-            <p>Pengiriman Sampel</p>
-          </a>
-        </li>
-        <li class="nav-item">
           <a href="<?= base_url('postings') ?>" class="nav-link <?= $isActive('postings') ?>">
             <i class="nav-icon fas fa-chart-bar text-success"></i>
             <p>Postings &amp; Analytics</p>
+          </a>
+        </li>
+
+        <!-- Section: KATALOG & LOGISTIK -->
+        <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KATALOG &amp; LOGISTIK</li>
+        <li class="nav-item">
+          <a href="<?= base_url('products') ?>" class="nav-link <?= $isActive('products') ?>">
+            <i class="nav-icon fas fa-boxes text-success"></i>
+            <p>Master Produk &amp; Stok</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="<?= base_url('stock-history') ?>" class="nav-link <?= $isActive('stock-history') ?>">
+            <i class="nav-icon fas fa-history text-secondary"></i>
+            <p>Riwayat Mutasi Stok</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="<?= base_url('shipments') ?>" class="nav-link <?= $isActive('shipments') ?>">
+            <i class="nav-icon fas fa-shipping-fast text-info"></i>
+            <p>Pengiriman Sampel</p>
           </a>
         </li>
 
