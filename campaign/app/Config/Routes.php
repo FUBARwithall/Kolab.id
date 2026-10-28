@@ -56,6 +56,34 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('campaign-kols/tasks-json/(:num)', 'CampaignKols::getTasksJson/$1');
     $routes->post('campaign-kols/remove/(:num)', 'CampaignKols::remove/$1');
 
+    // Wave 3: Tasks Engine, Briefs, Drafts & Logistik Pengiriman Sampel
+    $routes->get('tasks', 'Tasks::index');
+    $routes->post('tasks/get-datatable', 'Tasks::getDatatable');
+    $routes->get('tasks/get-one/(:num)', 'Tasks::getOne/$1');
+    $routes->post('tasks/update-status/(:num)', 'Tasks::updateStatus/$1');
+    $routes->post('tasks/set-schedule/(:num)', 'Tasks::setSchedule/$1');
+    $routes->post('tasks/delete/(:num)', 'Tasks::delete/$1');
+
+    $routes->get('briefs', 'Briefs::index');
+    $routes->post('briefs/get-datatable', 'Briefs::getDatatable');
+    $routes->get('briefs/get-one/(:num)', 'Briefs::getOne/$1');
+    $routes->post('briefs/save', 'Briefs::save');
+    $routes->post('briefs/approve/(:num)', 'Briefs::approve/$1');
+    $routes->post('briefs/revision/(:num)', 'Briefs::revision/$1');
+
+    $routes->get('drafts', 'Drafts::index');
+    $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
+    $routes->get('drafts/get-one/(:num)', 'Drafts::getOne/$1');
+    $routes->post('drafts/submit', 'Drafts::submit');
+    $routes->post('drafts/approve/(:num)', 'Drafts::approve/$1');
+    $routes->post('drafts/revision/(:num)', 'Drafts::revision/$1');
+
+    $routes->get('shipments', 'Shipments::index');
+    $routes->post('shipments/get-datatable', 'Shipments::getDatatable');
+    $routes->get('shipments/get-one/(:num)', 'Shipments::getOne/$1');
+    $routes->post('shipments/save', 'Shipments::save');
+    $routes->post('shipments/update-status/(:num)', 'Shipments::updateStatus/$1');
+
     $routes->get('articles', 'Dashboard::index');
 });
 
