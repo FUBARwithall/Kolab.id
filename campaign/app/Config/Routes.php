@@ -96,7 +96,12 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('calendar', 'Kalender::index');
     $routes->get('kalender/get-events', 'Kalender::getEvents');
 
-    $routes->get('articles', 'Dashboard::index');
+    // Wave 7: Backoffice CMS Artikel Blog & Landing
+    $routes->get('articles', 'Articles::index');
+    $routes->post('articles/get-datatable', 'Articles::getDatatable');
+    $routes->get('articles/get-one/(:num)', 'Articles::getOne/$1');
+    $routes->post('articles/save', 'Articles::save');
+    $routes->post('articles/delete/(:num)', 'Articles::delete/$1');
 });
 
 // --------------------------------------------------------------------
