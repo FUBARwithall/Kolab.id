@@ -37,6 +37,7 @@ shared/uploads/*
 # --- Out-of-scope repo ini ---
 whatsapp-service/
 kol-sentiment-analysis/
+_legacy_monorepo/
 
 .env
 .env.*
@@ -45,6 +46,7 @@ kol-sentiment-analysis/
 *.env
 kol.sql
 *.sql
+!docs/kolab_ci4.sql
 *.sql.gz
 *.pem
 

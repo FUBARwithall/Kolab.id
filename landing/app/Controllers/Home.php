@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Controllers\BaseController;
 use App\Exceptions\ArtikelApiException;
 use App\Libraries\ArtikelApi;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -19,11 +20,10 @@ class Home extends BaseController
     {
         $latest = [];
         try {
+            // Ambil feed artikel lewat API Campaign
             $latest = $this->artikelApi->latest(3);
-            if (ENVIRONMENT === 'production') {
-                $this->cachePage(600);
-            }
         } catch (ArtikelApiException $e) {
+            log_message('error', 'Gagal memanggil API feed artikel untuk homepage: ' . $e->getMessage());
             $latest = [];
         }
 
@@ -37,6 +37,8 @@ class Home extends BaseController
             'latest'           => $latest,
         ];
 
+        $this->response->setContentType('text/html');
+
         return view('layout/header', $data)
             . view('home/index', $data)
             . view('layout/footer', $data);
@@ -47,15 +49,8 @@ class Home extends BaseController
         try {
             $articles = $this->artikelApi->allForSitemap();
         } catch (ArtikelApiException $e) {
-            return $this->response
-                ->setStatusCode(503)
-                ->setHeader('Retry-After', '60')
-                ->setContentType('text/plain', 'utf-8')
-                ->setBody('Sitemap temporarily unavailable');
-        }
-
-        if (ENVIRONMENT === 'production') {
-            $this->cachePage(3600);
+            log_message('error', 'Gagal memanggil API sitemap artikel: ' . $e->getMessage());
+            $articles = [];
         }
 
         $urls = [
@@ -64,12 +59,17 @@ class Home extends BaseController
         ];
 
         foreach ($articles as $row) {
-            $lastmod = ! empty($row->published_at) ? date('c', strtotime($row->published_at)) : date('c');
-            $urls[] = [
-                'loc'      => base_url('artikel/' . $row->slug),
-                'lastmod'  => $lastmod,
-                'priority' => '0.6',
-            ];
+            $slug = is_object($row) ? $row->slug : ($row['slug'] ?? '');
+            $publishedAt = is_object($row) ? ($row->published_at ?? null) : ($row['published_at'] ?? null);
+            $lastmod = !empty($publishedAt) ? date('c', strtotime($publishedAt)) : date('c');
+
+            if ($slug !== '') {
+                $urls[] = [
+                    'loc'      => base_url('artikel/' . $slug),
+                    'lastmod'  => $lastmod,
+                    'priority' => '0.6',
+                ];
+            }
         }
 
         $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";

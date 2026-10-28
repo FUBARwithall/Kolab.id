@@ -3,60 +3,93 @@
 namespace App\Libraries;
 
 use App\Exceptions\ArtikelApiException;
-use CodeIgniter\HTTP\CURLRequest;
 use Config\Api as ApiConfig;
 
 class ArtikelApi
 {
     protected string $apiBase;
     protected int $maxSitemapPages;
-    protected CURLRequest $http;
 
     public function __construct(?ApiConfig $config = null)
     {
         $config = $config ?? config(ApiConfig::class);
 
-        $this->apiBase         = rtrim($config->articlesApiBase, '/');
-        $this->maxSitemapPages = $config->maxSitemapPages;
+        $base = $config->articlesApiBase ?? '';
+        if ($base === '' || $base === 'http://localhost:8000') {
+            $base = base_url('campaign');
+        }
 
-        // Use CI4's built-in HTTP client (testable, configurable, PSR-compliant)
-        $this->http = \Config\Services::curlrequest([
-            'baseURI'    => $this->apiBase . '/',
-            'timeout'    => $config->timeout,
-            'connect_timeout' => $config->connectTimeout,
-            'headers'    => ['Accept' => 'application/json'],
-            'http_errors' => false, // Don't throw on 4xx/5xx — we handle manually
-        ]);
+        $this->apiBase         = rtrim($base, '/');
+        $this->maxSitemapPages = $config->maxSitemapPages ?? 40;
     }
 
     /**
-     * Execute HTTP GET request to the API feed.
-     *
-     * @param string $path   Relative API path (e.g. 'articles/feed')
-     * @param array  $query  Query-string key-value pairs
-     * @param bool   $allow404  If true, 404 returns null instead of throwing
-     *
-     * @throws ArtikelApiException
+     * Execute API request to Campaign articles feed
      */
     protected function request(string $path, array $query = [], bool $allow404 = false): ?object
     {
-        $options = [];
-        if (! empty($query)) {
-            $options['query'] = $query;
+        $url = $this->apiBase . '/' . ltrim($path, '/');
+        if (!empty($query)) {
+            $url .= '?' . http_build_query($query);
         }
 
+        // Single instance / php -S: call Campaign ArticlesApi directly to bypass local cURL single-thread blocking
+        if (php_sapi_name() === 'cli-server' || strpos($url, base_url()) === 0) {
+            $slug = null;
+            if (strpos($path, 'articles/feed/') === 0) {
+                $slug = substr($path, strlen('articles/feed/'));
+            }
+
+            $_GET = array_merge($_GET, $query);
+            $campaignApiFile = dirname(ROOTPATH) . '/campaign/app/Controllers/ArticlesApi.php';
+            if (is_file($campaignApiFile) && !class_exists(\App\Controllers\ArticlesApi::class)) {
+                require_once $campaignApiFile;
+            }
+
+            $internalResponse = new \CodeIgniter\HTTP\Response(config(\Config\App::class));
+            $apiController = new \App\Controllers\ArticlesApi();
+            $apiController->initController(service('request'), $internalResponse, service('logger'));
+
+            $response = $apiController->feed($slug);
+            $httpCode = $response->getStatusCode();
+            $body = (string) $response->getBody();
+
+            if ($httpCode === 404 && $allow404) {
+                return null;
+            }
+
+            if ($httpCode < 200 || $httpCode >= 300) {
+                throw new ArtikelApiException("API merespons status HTTP {$httpCode}", $httpCode);
+            }
+
+            $decoded = json_decode($body, false);
+            if (json_last_error() !== JSON_ERROR_NONE || !is_object($decoded)) {
+                throw new ArtikelApiException('Respons API bukan JSON yang valid');
+            }
+
+            if (empty($decoded->success) || $decoded->success !== true) {
+                $msg = isset($decoded->message) ? (string) $decoded->message : 'Operasi API tidak berhasil';
+                throw new ArtikelApiException($msg);
+            }
+
+            return $decoded;
+        }
+
+        // Standard HTTP cURL request (for cPanel production with separate domain/docroot or async worker)
+        $client = \Config\Services::curlrequest([
+            'timeout'         => 5,
+            'connect_timeout' => 2,
+            'headers'         => ['Accept' => 'application/json'],
+            'http_errors'     => false,
+        ]);
+
         try {
-            $response = $this->http->get(ltrim($path, '/'), $options);
+            $response = $client->get($url);
         } catch (\Exception $e) {
             throw new ArtikelApiException("Koneksi API gagal: {$e->getMessage()}", 0);
         }
 
         $httpCode = $response->getStatusCode();
-
-        if ($httpCode === 0) {
-            throw new ArtikelApiException('Koneksi API gagal (HTTP 0)', 0);
-        }
-
         if ($httpCode === 404 && $allow404) {
             return null;
         }
@@ -66,7 +99,7 @@ class ArtikelApi
         }
 
         $decoded = json_decode((string) $response->getBody(), false);
-        if (json_last_error() !== JSON_ERROR_NONE || ! is_object($decoded)) {
+        if (json_last_error() !== JSON_ERROR_NONE || !is_object($decoded)) {
             throw new ArtikelApiException('Respons API bukan JSON yang valid');
         }
 
@@ -78,12 +111,8 @@ class ArtikelApi
         return $decoded;
     }
 
-    // ---------------------------------------------------------------
-    //  Public API methods (unchanged signatures)
-    // ---------------------------------------------------------------
-
     /**
-     * Ambil artikel terbaru untuk homepage.
+     * Get latest articles for homepage
      */
     public function latest(int $limit = 3): array
     {
@@ -92,7 +121,7 @@ class ArtikelApi
     }
 
     /**
-     * Ambil artikel terpaginasi dengan filter kategori dan search opsional.
+     * Get paginated articles with optional category and search filters
      */
     public function paginate(int $limit, int $page, string $category = '', string $search = ''): object
     {
@@ -109,7 +138,8 @@ class ArtikelApi
             $query['q'] = $search;
         }
 
-        $res  = $this->request('articles/feed', $query);
+        $res = $this->request('articles/feed', $query);
+
         $data = (isset($res->data) && is_array($res->data)) ? $res->data : [];
         $meta = isset($res->meta) && is_object($res->meta) ? $res->meta : (object) [
             'page'        => $query['page'],
@@ -126,17 +156,17 @@ class ArtikelApi
     }
 
     /**
-     * Ambil artikel spesifik berdasarkan slug.
+     * Get single article by slug
      */
     public function bySlug(string $slug): ?object
     {
         $slug = trim($slug);
-        if ($slug === '' || ! preg_match('/^[a-z0-9\-]+$/i', $slug)) {
+        if ($slug === '' || !preg_match('/^[a-z0-9\-]+$/i', $slug)) {
             return null;
         }
 
         $res = $this->request('articles/feed/' . rawurlencode($slug), [], true);
-        if ($res === null || empty($res->data) || ! is_object($res->data)) {
+        if ($res === null || empty($res->data) || !is_object($res->data)) {
             return null;
         }
 
@@ -144,20 +174,12 @@ class ArtikelApi
     }
 
     /**
-     * Backward-compatible alias for bySlug.
-     */
-    public function by_slug(string $slug): ?object
-    {
-        return $this->bySlug($slug);
-    }
-
-    /**
-     * Ambil artikel terkait (exclude slug saat ini).
+     * Get related articles
      */
     public function related(string $slug, int $limit = 3): array
     {
         try {
-            $res  = $this->request('articles/feed', ['limit' => max(4, $limit + 1)]);
+            $res = $this->request('articles/feed', ['limit' => max(4, $limit + 1)]);
             $rows = (isset($res->data) && is_array($res->data)) ? $res->data : [];
         } catch (ArtikelApiException $e) {
             return [];
@@ -178,7 +200,7 @@ class ArtikelApi
     }
 
     /**
-     * Ambil seluruh artikel publik untuk sitemap XML.
+     * Get all articles for XML sitemap
      */
     public function allForSitemap(): array
     {
@@ -199,13 +221,4 @@ class ArtikelApi
 
         return $articles;
     }
-
-    /**
-     * Backward-compatible alias for allForSitemap.
-     */
-    public function all_for_sitemap(): array
-    {
-        return $this->allForSitemap();
-    }
 }
-

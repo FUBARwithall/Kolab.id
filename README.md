@@ -1,66 +1,112 @@
-# Monorepo KOLAB.ID (CodeIgniter 4)
+# KOLAB.ID — Monorepo CodeIgniter 4
 
-Monorepo tiga aplikasi web KOLAB.ID berbasis **CodeIgniter 4**, didesain untuk deploy via
-**cPanel Git Version Control** (pull-based, tanpa CI server eksternal).
+Monorepo terpadu platform **KOLAB.ID** berbasis **CodeIgniter 4** dan database aktif **`kolab_ci4`**.
 
-| App | Folder | Domain rencana | Fungsi |
-| --- | --- | --- | --- |
-| Landing | `landing/` | `kolab.id` | Landing page + blog (CI4, SSR, baca artikel lewat Campaign API — **tanpa akses DB**) |
-| Campaign | `campaign/` | `app.kolab.id` | Backend orkestrasi campaign KOL (CI4 enterprise) — sumber REST API `/articles/feed` |
-| Datahub | `datahub/` | `datahub.kolab.id` | Card generator/invoice & intelligence hub (CI4) |
-| Shared | `shared/uploads/` | — | Aset upload SEMUA app (`campaign/` & `datahub/` namespace). Runtime, tidak di-commit |
-
----
-
-## Layout di Server cPanel
-
-> [!IMPORTANT]
-> Berbeda dari CI3, Document Root web server pada CodeIgniter 4 **wajib mengarah ke subfolder `public/`**.
-
-```text
-~/repositories/Kolab.id/            ← clone Git Version Control (BUKAN docroot)
-~/Kolab.id/
-   ├── landing/
-   │       └── public/              ← docroot kolab.id
-   ├── campaign/
-   │       ├── public/              ← docroot app.kolab.id
-   │       │       uploads -> ../../shared/uploads/campaign   (symlink)
-   │       └── ...
-   ├── datahub/
-   │       ├── public/              ← docroot datahub.kolab.id
-   │       │       uploads -> ../../shared/uploads/datahub    (symlink)
-   │       └── ...
-   └── shared/uploads/              ← file upload runtime (775, tidak disentuh deploy)
-```
+| Sub-App | Folder | Stack UI | Sasaran & Akses |
+| :--- | :--- | :--- | :--- |
+| **Landing & Blog** | `landing/` | Tailwind CSS v4 (SSR) | Publik, katalog artikel blog, dan gerbang pemilihan portal (`/login`). |
+| **Campaign Management** | `campaign/` | AdminLTE 4 & Bootstrap 5 | Operasional internal brand: **Staff**, **Leader KOL**, dan **Superadmin**. |
+| **KOL Data Hub** | `datahub/` | AdminLTE 4 & Bootstrap 5 | Database intelijen & ruang kerja mandiri: **Talent KOL** dan **Superadmin**. |
+| **Shared Storage** | `shared/uploads/` | — | Penyimpanan upload runtime (`campaign`, `datahub`, `articles`). |
 
 ---
 
-## Setup Pertama Kali (cPanel Terminal)
+## Prasyarat Sistem (Prerequisites)
 
-Setelah repository selesai di-clone via Git Version Control di cPanel:
+- **PHP**: `^8.1`, `^8.2`, atau `^8.3` (Ekstensi wajib: `intl`, `mbstring`, `mysqli`, `curl`, `gd`)
+- **Composer**: `v2.x`
+- **Database**: MySQL `5.7+` / `8.0+` atau MariaDB `10.4+`
 
+---
+
+## Panduan Instalasi Lokal (Clone to Running)
+
+### 1. Clone Repository
 ```bash
-cd ~/repositories/Kolab.id
-bash setup-server.sh
+git clone <repository-url>
+cd Kolab.id
 ```
 
-Skrip ini secara otomatis:
-1. Menyiapkan folder `writable/` (`cache`, `logs`, `session`, `uploads`) dengan permission `775`.
-2. Menyiapkan folder penyimpanan permanen `shared/uploads/`.
-3. Membuat symlink `uploads` di dalam `public/` per aplikasi.
+### 2. Install Dependensi (Composer)
+```bash
+composer install
+```
+
+### 3. Konfigurasi Environment (`.env`)
+Salin file konfigurasi contoh:
+- **Linux / macOS**:
+  ```bash
+  cp .env.example .env
+  ```
+- **Windows (CMD / PowerShell)**:
+  ```powershell
+  copy .env.example .env
+  ```
+> Buka file `.env` dan sesuaikan kredensial MySQL jika menggunakan password (`database.default.password`).
+
+### 4. Setup & Import Database (`kolab_ci4`)
+Buat database dan import skema bawaan beserta akun awal:
+```bash
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS kolab_ci4;"
+mysql -u root kolab_ci4 < docs/kolab_ci4.sql
+```
+
+### 5. Setup Folder Runtime & Uploads
+- **Linux / macOS**:
+  ```bash
+  bash setup-server.sh
+  ```
+- **Windows (PowerShell)**:
+  ```powershell
+  New-Item -ItemType Directory -Force -Path "shared\uploads\campaign", "shared\uploads\datahub"
+  ```
 
 ---
 
-## Development Lokal
+## Menjalankan Aplikasi di Lokal
 
-| Situs | Port Default | Perintah CLI |
-| --- | --- | --- |
-| Landing | `8080` (atau `8087`) | `cd landing && php spark serve` |
-| Campaign | `8000` | `cd campaign && php spark serve --port 8000` |
-| Datahub | `8081` | `cd datahub && php spark serve --port 8081` |
+### Opsi A: Unified Dev Router (Rekomendasi — 1 Port untuk Semua Sub-App)
+Jalankan satu perintah dari root direktori `Kolab.id`:
 
-Untuk preview Tailwind CSS pada `landing`:
+- **Linux / macOS**:
+  ```bash
+  php -S localhost:8087 dev-router.php
+  ```
+- **Windows (CMD / PowerShell)**:
+  ```powershell
+  php -S localhost:8087 dev-router.php
+  ```
+
+Buka peramban (browser):
+- **Landing Page & Login Hub** : [http://localhost:8087/](http://localhost:8087/) & [http://localhost:8087/login](http://localhost:8087/login)
+- **Campaign Management** : [http://localhost:8087/campaign/](http://localhost:8087/campaign/)
+- **KOL Data Hub** : [http://localhost:8087/datahub/](http://localhost:8087/datahub/)
+
+### Opsi B: Standar Multi-Port (`php spark serve`)
+Buka 3 terminal terpisah:
 ```bash
-cd landing
-npm run dev     # watch CSS + spark serve sekaligus
+# Terminal 1: Landing Page (Port 8080)
+cd landing && php spark serve --port 8080
+
+# Terminal 2: Campaign Management (Port 8000)
+cd campaign && php spark serve --port 8000
+
+# Terminal 3: KOL Data Hub (Port 8081)
+cd datahub && php spark serve --port 8081
 ```
+
+---
+
+## Akun Pengguna Bawaan (Default Seeder `kolab_ci4`)
+
+| Role | Email | Password | Akses Portal |
+| :--- | :--- | :--- | :--- |
+| **Superadmin** | `admin@kolab.id` | `admin123` | Campaign & Datahub (Full Access) |
+| **Leader KOL** | `leader@kolab.id` | `admin123` | Campaign (Approval, Strategis & Keuangan) |
+| **Staff Operational** | `staff@kolab.id` | `admin123` | Campaign (Tugas Lapangan, Draft, Pengiriman) |
+| **Talent KOL** | `kol@kolab.id` | `admin123` | Datahub (Talent KOL Space, Peluang & Tagihan) |
+
+---
+
+## Dokumentasi Teknis Lanjutan
+- Rencana Rebuild & Matriks RBAC Lengkap: [docs/REBUILD_PLAN.md](docs/REBUILD_PLAN.md)

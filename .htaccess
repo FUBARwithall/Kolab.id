@@ -1,20 +1,45 @@
+# ----------------------------------------------------------------------
+# KOLAB.ID — Root Monorepo (.htaccess for cPanel / Apache Production)
+# ----------------------------------------------------------------------
+
+Options -Indexes +FollowSymLinks
+DirectoryIndex landing/public/index.php index.php
+AddDefaultCharset UTF-8
+
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # Aset statis & entry point landing
-    RewriteRule ^(assets|dist)/(.*)$ landing/public/$1/$2 [L]
-    RewriteRule ^(favicon\.ico|robots\.txt)$ landing/public/$1 [L]
+    # 1. Lindungi berkas sensitif dari akses HTTP langsung
+    RewriteRule ^(\.env|\.git|composer\.(json|lock)|package(-lock)?\.json|phpunit\.dist\.xml|README\.md|dev-router\.php)$ - [F,L]
+    RewriteRule ^(campaign|datahub|landing)/(app|writable|tests)(/.*)?$ - [F,L]
 
-    # Sub-aplikasi bila diakses via subpath
-    RewriteRule ^campaign/(assets|dist|uploads)/(.*)$ campaign/public/$1/$2 [L]
-    RewriteRule ^datahub/(assets|dist|uploads)/(.*)$ datahub/public/$1/$2 [L]
+    # 2. Shared Uploads (/uploads/* -> shared/uploads/*)
+    RewriteRule ^uploads/(.*)$ shared/uploads/$1 [L]
 
-    # Lindungi folder sensitif CI4 dari akses publik langsung
-    RewriteRule ^(landing|campaign|datahub)/(app|system|writable|tests|vendor)(/.*)?$ - [F,L]
-    RewriteRule ^(\.env|\.git|composer\.(json|lock)|spark|setup-server\.sh)$ - [F,L]
+    # 3. AdminLTE Assets (/asset/* -> assets/adminlte/*)
+    RewriteRule ^asset/(.*)$ assets/adminlte/$1 [L]
+    RewriteRule ^assets/adminlte/(.*)$ assets/adminlte/$1 [L]
 
-    # Route utama ke landing public index.php
+    # 4. Landing Assets (/dist/* dan /assets/*)
+    RewriteRule ^dist/(.*)$ landing/public/dist/$1 [L]
+    RewriteRule ^assets/(.*)$ landing/public/assets/$1 [L]
+    RewriteRule ^favicon\.ico$ landing/public/favicon.ico [L]
+    RewriteRule ^robots\.txt$ landing/public/robots.txt [L]
+
+    # 5. Sub-aplikasi Campaign (/campaign/*)
+    RewriteRule ^campaign/asset/(.*)$ assets/adminlte/$1 [L]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^campaign/public/(.*)$ campaign/public/$1 [L]
+    RewriteRule ^campaign/?(.*)$ campaign/public/index.php/$1 [L,QSA]
+
+    # 6. Sub-aplikasi Datahub (/datahub/*)
+    RewriteRule ^datahub/asset/(.*)$ assets/adminlte/$1 [L]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteRule ^datahub/public/(.*)$ datahub/public/$1 [L]
+    RewriteRule ^datahub/?(.*)$ datahub/public/index.php/$1 [L,QSA]
+
+    # 7. Sub-aplikasi Landing (Default Route /)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ landing/public/index.php?/$1 [L]
+    RewriteRule ^(.*)$ landing/public/index.php/$1 [L,QSA]
 </IfModule>
