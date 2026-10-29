@@ -76,7 +76,12 @@ class Dashboard extends BaseController
         $isKol   = in_array('kol', $userRoles, true);
 
         $kols = $this->db->table('kols')
-            ->select('kols.*, (SELECT COUNT(*) FROM kol_platforms WHERE kol_id = kols.id) as platform_count')
+            ->select('
+                kols.*,
+                (SELECT COUNT(*) FROM kol_platforms WHERE kol_id = kols.id) as platform_count,
+                (SELECT ROUND(AVG(rating), 1) FROM kol_reviews WHERE kol_id = kols.id) as avg_rating,
+                (SELECT COUNT(*) FROM kol_reviews WHERE kol_id = kols.id) as review_count
+            ')
             ->orderBy('kols.id', 'ASC')
             ->get()
             ->getResultArray();

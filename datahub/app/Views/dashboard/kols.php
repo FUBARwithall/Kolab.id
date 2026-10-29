@@ -51,7 +51,14 @@
                     </div>
                     <div>
                       <div class="fw-bold text-dark"><?= esc($k['name']) ?></div>
-                      <div class="text-muted text-xs">Terdaftar: <?= date('d M Y', strtotime($k['created_at'] ?? 'now')) ?></div>
+                      <div class="d-flex align-items-center gap-2 mt-0.5">
+                        <small class="text-muted text-xs">Terdaftar: <?= date('d M Y', strtotime($k['created_at'] ?? 'now')) ?></small>
+                        <?php if (!empty($k['avg_rating'])): ?>
+                          <span class="badge bg-warning-subtle text-dark border border-warning-subtle px-1.5 py-0.5 text-xs">
+                            <i class="fas fa-star text-warning me-1"></i><?= $k['avg_rating'] ?> (<?= $k['review_count'] ?> review)
+                          </span>
+                        <?php endif; ?>
+                      </div>
                     </div>
                   </div>
                 </td>
