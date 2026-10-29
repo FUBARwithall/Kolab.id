@@ -247,6 +247,12 @@ $isActive = function(string $route) use ($currentPath): string {
               <p>Audit Trail &amp; Log</p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="<?= base_url('users') ?>" class="nav-link <?= $isActive('users') ?>">
+              <i class="nav-icon fas fa-users-cog text-primary"></i>
+              <p>Manajemen Tim &amp; User</p>
+            </a>
+          </li>
         <?php endif; ?>
 
         <!-- Section: DEVELOPER TOOLS (Cicool Legacy parent 130 - Khusus Superadmin) -->

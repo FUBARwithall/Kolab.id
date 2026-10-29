@@ -60,6 +60,62 @@ class UserModel extends Model
     }
 
     /**
+     * Get DataTables list with joined roles
+     */
+    public function getDatatables(array $filters = [], int $start = 0, int $length = 10, string $search = '', string $orderCol = 'users.id', string $orderDir = 'DESC'): array
+    {
+        $builder = $this->db->table($this->table)
+            ->select('
+                users.id,
+                users.name,
+                users.email,
+                users.phone,
+                users.avatar,
+                users.status,
+                users.created_at,
+                roles.id as role_id,
+                roles.name as role_name,
+                roles.label as role_label
+            ')
+            ->join('user_roles', 'user_roles.user_id = users.id', 'left')
+            ->join('roles', 'roles.id = user_roles.role_id', 'left')
+            ->where('users.deleted_at IS NULL');
+
+        if (!empty($filters['role_id'])) {
+            $builder->where('roles.id', (int)$filters['role_id']);
+        }
+
+        if (!empty($filters['status'])) {
+            $builder->where('users.status', $filters['status']);
+        }
+
+        if (!empty($search)) {
+            $builder->groupStart()
+                ->like('users.name', $search)
+                ->orLike('users.email', $search)
+                ->orLike('users.phone', $search)
+                ->orLike('roles.label', $search)
+                ->groupEnd();
+        }
+
+        $recordsFiltered = (clone $builder)->countAllResults(false);
+
+        $builder->orderBy($orderCol, $orderDir);
+        if ($length > 0) {
+            $builder->limit($length, $start);
+        }
+
+        $data = $builder->get()->getResultArray();
+        $recordsTotal = $this->where('deleted_at IS NULL')->countAllResults();
+
+        return [
+            'recordsTotal'    => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data'            => $data,
+        ];
+    }
+
+    /**
      * Attempt login authentication
      */
     public function authenticate(string $email, string $password): ?array

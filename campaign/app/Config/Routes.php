@@ -171,6 +171,13 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->post('audit-logs/get-datatable', 'AuditLogs::getDatatable');
     $routes->get('audit-logs/get-one/(:num)', 'AuditLogs::getOne/$1');
 
+    // Wave 11: Team & User Management
+    $routes->get('users', 'Users::index');
+    $routes->post('users/get-datatable', 'Users::getDatatable');
+    $routes->get('users/get-one/(:num)', 'Users::getOne/$1');
+    $routes->post('users/save', 'Users::save');
+    $routes->post('users/toggle-status/(:num)', 'Users::toggleStatus/$1');
+
     $routes->get('payments', 'Invoices::index');
     $routes->get('budget', 'Invoices::index');
     $routes->get('approvals', 'Invoices::index');
