@@ -115,6 +115,14 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('whatsapp/start-session', 'Whatsapp::ajaxStartSession');
     $routes->get('whatsapp/broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
     $routes->post('whatsapp/send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
+
+    // Wave 9: Monitoring Scraping & Apify Jobs
+    $routes->get('scraping-jobs', 'ScrapingJobs::index');
+    $routes->post('scraping-jobs/get-datatable', 'ScrapingJobs::getDatatable');
+    $routes->get('scraping-jobs/get-one/(:num)', 'ScrapingJobs::getOne/$1');
+    $routes->post('scraping-jobs/retry/(:num)', 'ScrapingJobs::retry/$1');
+    $routes->post('scraping-jobs/trigger', 'ScrapingJobs::triggerNew');
+    $routes->get('apify-jobs', static fn() => redirect()->to(base_url('scraping-jobs')));
 });
 
 // --------------------------------------------------------------------

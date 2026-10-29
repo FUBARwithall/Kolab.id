@@ -135,6 +135,12 @@ $isActive = function(string $route) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
+          <a href="<?= base_url('scraping-jobs') ?>" class="nav-link <?= $isActive('scraping-jobs') ?>">
+            <i class="nav-icon fas fa-spider text-danger"></i>
+            <p>Monitoring Scraping</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="<?= base_url('kalender') ?>" class="nav-link <?= $isActive('kalender') ?>">
             <i class="nav-icon far fa-calendar-alt text-info"></i>
             <p>Kalender Timeline</p>
