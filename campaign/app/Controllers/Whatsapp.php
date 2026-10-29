@@ -304,4 +304,79 @@ class Whatsapp extends BaseController
             'phone'    => $cleanPhone,
         ]);
     }
+
+    /**
+     * Webhook Endpoint for Incoming WhatsApp Messages (WAHA & Baileys)
+     */
+    public function webhook()
+    {
+        if ($this->request->getMethod() === 'GET') {
+            return $this->response->setJSON([
+                'status'  => 'OK',
+                'service' => 'KOLAB.ID WhatsApp Webhook Receiver',
+                'time'    => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        $input = $this->request->getJSON(true) ?: $this->request->getPost();
+        if (empty($input)) {
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true) ?: [];
+        }
+
+        $event   = $input['event'] ?? 'message';
+        $payload = $input['payload'] ?? $input;
+
+        // Session status updates
+        if ($event === 'session.status') {
+            $sessStatus = $payload['status'] ?? 'CONNECTED';
+            $db = \Config\Database::connect();
+            $db->table('whatsapp_sessions')->upsert([
+                'session_name'   => $input['session'] ?? 'default',
+                'status'         => strtoupper($sessStatus),
+                'last_active_at' => date('Y-m-d H:i:s'),
+                'updated_at'     => date('Y-m-d H:i:s'),
+            ]);
+            return $this->response->setJSON(['success' => true, 'event' => 'session_updated']);
+        }
+
+        // Message handling
+        $rawFrom = $payload['from'] ?? ($payload['sender'] ?? '');
+        $cleanPhone = preg_replace('/[^0-9]/', '', (string)$rawFrom);
+        $fromMe = !empty($payload['fromMe']);
+
+        $bodyText = $payload['body'] ?? ($payload['text'] ?? ($payload['message']['conversation'] ?? ''));
+        $senderName = $payload['pushName'] ?? ($payload['_data']['notifyName'] ?? 'KOL Talent');
+        $mediaUrl = $payload['mediaUrl'] ?? ($payload['media'] ?? null);
+
+        if (empty($bodyText) && empty($mediaUrl)) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Ignored empty payload']);
+        }
+
+        // Match phone to registered KOL
+        $db = \Config\Database::connect();
+        $kol = null;
+        if (!empty($cleanPhone)) {
+            $shortPhone = substr($cleanPhone, -8);
+            $kol = $db->table('kols')->like('whatsapp', $shortPhone)->get()->getRowArray();
+        }
+
+        $msgId = $this->whatsappModel->recordMessage([
+            'kol_id'          => $kol['id'] ?? null,
+            'recipient_phone' => $cleanPhone,
+            'direction'       => $fromMe ? 'OUTBOUND' : 'INBOUND',
+            'sender_name'     => $fromMe ? 'Staff Kolab.id' : ($kol['name'] ?? $senderName),
+            'message_text'    => $bodyText,
+            'media_url'       => $mediaUrl,
+            'status'          => 'DELIVERED',
+            'sent_at'         => date('Y-m-d H:i:s'),
+            'created_at'      => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON([
+            'success'     => true,
+            'message_id'  => $msgId,
+            'matched_kol' => $kol ? $kol['name'] : null,
+        ]);
+    }
 }

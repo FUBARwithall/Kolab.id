@@ -11,6 +11,12 @@ $routes->get('articles/feed', 'ArticlesApi::feed');
 $routes->get('articles/feed/(:segment)', 'ArticlesApi::feed/$1');
 
 // --------------------------------------------------------------------
+// PUBLIC REST API: WhatsApp Webhook Receiver (WAHA & Baileys)
+// --------------------------------------------------------------------
+$routes->match(['get', 'post'], 'api/whatsapp/webhook', 'Whatsapp::webhook');
+$routes->match(['get', 'post'], 'whatsapp/webhook', 'Whatsapp::webhook');
+
+// --------------------------------------------------------------------
 // AUTENTIKASI CAMPAIGN & KOL
 // --------------------------------------------------------------------
 $routes->get('login', 'Auth::loginCampaign');
