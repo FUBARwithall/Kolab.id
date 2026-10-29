@@ -94,6 +94,9 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.btn-view-clause').forEach(btn => {
@@ -107,5 +110,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
 <?= $this->endSection() ?>

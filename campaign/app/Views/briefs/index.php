@@ -171,6 +171,9 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
 <script>
 let dtBriefs = null;
 

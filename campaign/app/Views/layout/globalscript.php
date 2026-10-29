@@ -6,7 +6,7 @@
 <!-- overlayScrollbars -->
 <script src="<?= base_url('asset/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js') ?>"></script>
 <!-- AdminLTE App -->
-<script src=" <?= base_url('asset/js/adminlte.min.js') ?>"></script>
+<script src="<?= base_url('asset/js/adminlte.min.js') ?>"></script>
 
 <!-- Page Global Script -->
 <!-- Toggle Button -->

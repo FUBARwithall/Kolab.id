@@ -224,6 +224,9 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
 <script>
 let dtScraping = null;
 let currentJsonRaw = '';

@@ -145,7 +145,11 @@
                         </div>
                       </td>
                       <td class="fw-bold text-success">Rp <?= number_format((float)$k['deal_amount'], 0, ',', '.') ?></td>
-                      <td class="text-center"><span class="badge bg-primary rounded-pill"><?= $k['total_vt'] ?> Video (VT)</span></td>
+                      <td class="text-center">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2" title="Klik untuk lihat rincian tugas VT" onclick="viewKolTasks(<?= $k['id'] ?>, '<?= esc(addslashes($k['kol_name'])) ?>')">
+                          <i class="fas fa-video me-1"></i><?= $k['total_vt'] ?> VT
+                        </button>
+                      </td>
                       <td class="text-center">
                         <span class="badge bg-light text-secondary border"><?= esc($k['contract_status']) ?></span>
                       </td>
@@ -174,9 +178,14 @@
                         <?php endif; ?>
                       </td>
                       <td class="text-center">
-                        <button type="button" class="btn btn-outline-danger btn-sm rounded-2 py-1 px-2" title="Hapus Penugasan" onclick="removeAssignedKol(<?= $k['id'] ?>, '<?= esc(addslashes($k['kol_name'])) ?>')">
-                          <i class="fas fa-trash-alt"></i>
-                        </button>
+                        <div class="d-flex gap-1 justify-content-center">
+                          <button type="button" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Lihat Rincian Tugas VT" onclick="viewKolTasks(<?= $k['id'] ?>, '<?= esc(addslashes($k['kol_name'])) ?>')">
+                            <i class="fas fa-tasks"></i>
+                          </button>
+                          <button type="button" class="btn btn-outline-danger btn-sm rounded-2 py-1 px-2" title="Hapus Penugasan" onclick="removeAssignedKol(<?= $k['id'] ?>, '<?= esc(addslashes($k['kol_name'])) ?>')">
+                            <i class="fas fa-trash-alt"></i>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   <?php endforeach; ?>
@@ -691,5 +700,53 @@ function rejectApplication(appId, kolName) {
     }
   });
 }
+
+function viewKolTasks(campaignKolId, kolName) {
+  $('#modalKolTasksLabel').html('<i class="fas fa-tasks me-2 text-primary"></i>Rincian Tugas VT — ' + kolName);
+  $('#modalKolTasksBody').html('<div class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary me-2"></div>Memuat rincian tugas...</div>');
+  new bootstrap.Modal(document.getElementById('modalKolTasks')).show();
+
+  $.get('<?= base_url('campaign-kols/tasks-json') ?>/' + campaignKolId, function(res) {
+    if (res.success && res.tasks && res.tasks.length > 0) {
+      let html = '<div class="table-responsive"><table class="table table-sm table-hover align-middle mb-0" style="font-size:13px;"><thead class="table-light"><tr><th>No. VT</th><th>Judul Tugas</th><th>Fee Deliverable</th><th>Status</th><th>Deadline</th><th>Aksi</th></tr></thead><tbody>';
+      res.tasks.forEach(t => {
+        let deadline = t.deadline ? t.deadline : '<span class="text-muted small">Belum di-set</span>';
+        html += `<tr>
+          <td class="fw-bold">#${t.task_number}</td>
+          <td><b>${t.title || 'Video VT #' + t.task_number}</b></td>
+          <td class="text-success fw-bold">Rp ${Number(t.rate_amount || 0).toLocaleString('id-ID')}</td>
+          <td><span class="badge bg-primary-subtle text-primary border border-primary px-2 py-0.5 rounded-pill" style="font-size:10px;">${t.status}</span></td>
+          <td>${deadline}</td>
+          <td>
+            <a href="<?= base_url('tasks') ?>?campaign_id=<?= $campaign['id'] ?>" class="btn btn-outline-primary btn-xs rounded-pill px-2">Buka Task</a>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table></div>';
+      $('#modalKolTasksBody').html(html);
+    } else {
+      $('#modalKolTasksBody').html('<div class="text-center py-4 text-muted"><i class="fas fa-info-circle fa-2x mb-2 text-secondary opacity-50"></i><div>Belum ada tugas VT terdaftar untuk KOL ini.</div></div>');
+    }
+  }).fail(function() {
+    $('#modalKolTasksBody').html('<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><div>Gagal memuat data tugas dari server.</div></div>');
+  });
+}
 </script>
+
+<!-- Modal Rincian Tugas KOL -->
+<div class="modal fade" id="modalKolTasks" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header bg-light border-bottom py-3">
+        <h6 class="modal-title fw-bold text-dark mb-0" id="modalKolTasksLabel">Rincian Tugas VT</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-3" id="modalKolTasksBody">
+      </div>
+      <div class="modal-footer bg-light py-2 border-top">
+        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 <?= $this->endSection() ?>

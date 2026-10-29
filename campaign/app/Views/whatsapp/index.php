@@ -379,6 +379,9 @@
     </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
 <script>
 // Auto scroll chat to bottom
 function scrollChatToBottom() {

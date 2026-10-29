@@ -88,7 +88,7 @@
                 </td>
                 <td class="text-end pe-3">
                   <div class="btn-group btn-group-sm">
-                    <button class="btn btn-outline-info rounded-pill px-2.5 py-1 text-xs" title="Lihat Detail Profil">
+                    <button type="button" class="btn btn-outline-info rounded-pill px-2.5 py-1 text-xs" title="Lihat Detail Profil" onclick='showKolDetail(<?= json_encode($k) ?>)'>
                       <i class="fas fa-eye"></i> Detail
                     </button>
                     <?php if ($isAdmin): ?>
@@ -149,4 +149,50 @@
   </div>
 <?php endif; ?>
 
+<!-- Modal Detail Profil KOL -->
+<div class="modal fade" id="modal-kol-detail" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow">
+      <div class="modal-header bg-info text-white rounded-top-4 py-3">
+        <h5 class="modal-title fw-bold fs-6" id="kolDetailTitle"><i class="fas fa-user-circle me-2"></i>Detail Profil KOL</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="kolDetailBody">
+      </div>
+      <div class="modal-footer bg-light py-2 border-top">
+        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
+<script>
+function showKolDetail(kol) {
+    document.getElementById('kolDetailTitle').innerHTML = '<i class="fas fa-user-circle me-2"></i>' + (kol.name || 'Detail Profil KOL');
+    let html = `
+      <div class="d-flex align-items-center gap-3 mb-3 pb-3 border-bottom">
+        <div class="rounded-circle bg-info bg-opacity-10 text-info fw-bold d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; font-size: 20px;">
+          ${(kol.name || 'K').charAt(0).toUpperCase()}
+        </div>
+        <div>
+          <h5 class="fw-bold mb-0 text-dark">${kol.name || '-'}</h5>
+          <small class="text-muted"><i class="fas fa-map-marker-alt text-danger me-1"></i>${kol.city || 'Domisili tidak diatur'}</small>
+        </div>
+      </div>
+      <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 13px;">
+        <tr><td class="text-muted" style="width: 35%;">WhatsApp</td><td class="fw-bold text-dark">${kol.whatsapp || '-'}</td></tr>
+        <tr><td class="text-muted">NIK</td><td class="text-dark">${kol.nik || '-'}</td></tr>
+        <tr><td class="text-muted">NPWP</td><td class="text-dark">${kol.npwp || '-'}</td></tr>
+        <tr><td class="text-muted">Rekening Bank</td><td class="text-dark">${kol.bank_name || '-'} ${kol.bank_account || ''} ${kol.bank_holder ? '(' + kol.bank_holder + ')' : ''}</td></tr>
+        <tr><td class="text-muted">Alamat</td><td class="text-dark">${kol.address || '-'}</td></tr>
+        <tr><td class="text-muted">Catatan</td><td class="text-secondary small">${kol.notes || '-'}</td></tr>
+      </table>
+    `;
+    document.getElementById('kolDetailBody').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('modal-kol-detail')).show();
+}
+</script>
 <?= $this->endSection() ?>

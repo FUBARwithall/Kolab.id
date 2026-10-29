@@ -108,6 +108,9 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
 <script>
 function openApplyModal(id, title, budget) {
   $('#apply_campaign_id').val(id);

@@ -208,6 +208,9 @@
   </div>
 </div>
 
+<?= $this->endSection() ?>
+
+<?= $this->section('pageScript') ?>
 <script>
 let dtShipments = null;
 const availableProducts = <?= json_encode($allProducts) ?>;
