@@ -60,7 +60,7 @@
                       <?php endif; ?>
                     </td>
                     <td>
-                      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill">
+                      <button type="button" class="btn btn-sm btn-outline-primary rounded-pill btn-view-clause" data-contract="<?= esc($c['contract_number']) ?>" data-clauses="<?= esc($c['clauses_rendered']) ?>">
                         <i class="fas fa-eye me-1"></i> Lihat Klausul
                       </button>
                     </td>
@@ -74,5 +74,38 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Lihat Klausul Kontrak -->
+<div class="modal fade" id="clauseModal" tabindex="-1" aria-labelledby="clauseModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light py-3">
+        <h5 class="modal-title fw-bold fs-6" id="clauseModalLabel">
+          <i class="fas fa-file-contract text-primary me-2"></i>Klausul Dokumen Perjanjian
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="clauseModalBody" style="background-color: #f8fafc;">
+      </div>
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-secondary btn-sm px-3 rounded-pill" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-view-clause').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const contractNum = this.getAttribute('data-contract');
+            const clauses = this.getAttribute('data-clauses');
+            document.getElementById('clauseModalLabel').innerHTML = '<i class="fas fa-file-contract text-primary me-2"></i>Dokumen: ' + contractNum;
+            document.getElementById('clauseModalBody').innerHTML = clauses;
+            new bootstrap.Modal(document.getElementById('clauseModal')).show();
+        });
+    });
+});
+</script>
 
 <?= $this->endSection() ?>

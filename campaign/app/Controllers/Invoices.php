@@ -49,10 +49,6 @@ class Invoices extends BaseController
      */
     public function getDatatable()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Direct access not allowed']);
-        }
-
         $draw   = (int) ($this->request->getPost('draw') ?? 1);
         $start  = (int) ($this->request->getPost('start') ?? 0);
         $length = (int) ($this->request->getPost('length') ?? 10);

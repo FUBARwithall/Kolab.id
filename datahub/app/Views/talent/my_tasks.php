@@ -58,7 +58,7 @@
                     </td>
                     <td>
                       <small class="text-danger fw-semibold">
-                        <i class="fas fa-calendar-alt me-1"></i> <?= esc($task['deadline'] ?? '-') ?>
+                        <i class="fas fa-calendar-alt me-1"></i> <?= !empty($task['deadline']) && $task['deadline'] !== '0000-00-00' ? esc(date('d M Y', strtotime($task['deadline']))) : '-' ?>
                       </small>
                     </td>
                   </tr>

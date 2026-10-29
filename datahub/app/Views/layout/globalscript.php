@@ -26,3 +26,11 @@
 <script src="<?= base_url("asset/plugins/datatables/Buttons-2.0.1/js/buttons.html5.min.js") ;?>" type="text/javascript"></script>
 <script src="<?= base_url("asset/plugins/datatables/Responsive-2.2.9/js/dataTables.responsive.min.js") ;?>" type="text/javascript"></script>
 <script src="<?= base_url("asset/plugins/datatables/Responsive-2.2.9/js/responsive.bootstrap5.min.js") ;?>" type="text/javascript"></script>
+<script>
+    // Global AJAX setup to ensure all jQuery requests send standard headers
+    $.ajaxSetup({
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    });
+</script>
