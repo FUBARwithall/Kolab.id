@@ -106,21 +106,20 @@ class TaskModel extends Model
             ->join('campaigns', 'campaigns.id = campaign_kols.campaign_id', 'inner')
             ->join('kols', 'kols.id = campaign_kols.kol_id', 'inner')
             ->join('users', 'users.id = kols.user_id', 'left')
-            ->join('briefs', 'briefs.task_id = tasks.id', 'left')
-            ->join('drafts', 'drafts.task_id = tasks.id', 'left')
-            ->join('postings', 'postings.task_id = tasks.id', 'left');
+            ->join('briefs', 'briefs.id = (SELECT MAX(b.id) FROM briefs b WHERE b.task_id = tasks.id)', 'left')
+            ->join('drafts', 'drafts.id = (SELECT MAX(d.id) FROM drafts d WHERE d.task_id = tasks.id)', 'left')
+            ->join('postings', 'postings.id = (SELECT MAX(p.id) FROM postings p WHERE p.task_id = tasks.id)', 'left');
 
         // Apply tab / stage filter
         if (!empty($filters['stage'])) {
             switch ($filters['stage']) {
                 case 'sow':
-                    $builder->groupStart()
-                        ->where('tasks.status', '')
-                        ->orWhere('tasks.status', self::STATUS_DRAFT)
-                        ->orWhere('tasks.status', self::STATUS_BRIEF_SUBMITTED)
-                        ->orWhere('tasks.status', self::STATUS_BRIEF_REVISION)
-                        ->orWhere('tasks.status', self::STATUS_BRIEF_APPROVED)
-                        ->groupEnd();
+                    $builder->whereIn('tasks.status', [
+                        self::STATUS_DRAFT,
+                        self::STATUS_BRIEF_SUBMITTED,
+                        self::STATUS_BRIEF_REVISION,
+                        self::STATUS_BRIEF_APPROVED,
+                    ]);
                     break;
                 case 'draft':
                     $builder->whereIn('tasks.status', [
