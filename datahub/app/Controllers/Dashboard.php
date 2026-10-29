@@ -232,6 +232,17 @@ class Dashboard extends BaseController
             ->get()
             ->getResultArray();
 
+        foreach ($jobs as &$j) {
+            $url = $j['target_url'] ?? '';
+            $platform = 'other';
+            if (stripos($url, 'tiktok') !== false) $platform = 'tiktok';
+            elseif (stripos($url, 'instagram') !== false) $platform = 'instagram';
+            elseif (stripos($url, 'youtube') !== false || stripos($url, 'youtu.be') !== false) $platform = 'youtube';
+            
+            $j['platform'] = $platform;
+            $j['target_username'] = basename(parse_url($url, PHP_URL_PATH) ?? $url);
+        }
+
         $data = [
             'title'      => 'Apify Scraper Engine (Superadmin Only)',
             'controller' => 'Datahub',
@@ -239,6 +250,57 @@ class Dashboard extends BaseController
         ];
 
         return view('dashboard/scraper', $data);
+    }
+
+    /**
+     * Eksekusi Batch Apify Scraper Baru
+     */
+    public function runScraper()
+    {
+        $platform = $this->request->getPost('platform') ?? 'all';
+        $batchLimit = (int) ($this->request->getPost('batch_limit') ?? 10);
+
+        $builder = $this->db->table('kol_platforms kp')
+            ->select('kp.id, kp.kol_id, kp.platform_id, kp.account_handle, p.name as platform_name')
+            ->join('platforms p', 'p.id = kp.platform_id', 'inner');
+
+        if ($platform === 'tiktok') {
+            $builder->like('p.name', 'tiktok');
+        } elseif ($platform === 'instagram') {
+            $builder->like('p.name', 'instagram');
+        }
+
+        $targets = $builder->limit($batchLimit)->get()->getResultArray();
+        $queuedCount = 0;
+
+        foreach ($targets as $t) {
+            $targetUrl = 'https://www.' . strtolower($t['platform_name']) . '.com/' . ltrim($t['account_handle'], '@');
+            $this->db->table('apify_jobs')->insert([
+                'actor_type'    => 'profile',
+                'target_url'    => $targetUrl,
+                'status'        => 'QUEUED',
+                'response_data' => null,
+                'started_at'    => null,
+                'finished_at'   => null,
+                'created_at'    => date('Y-m-d H:i:s'),
+            ]);
+            $queuedCount++;
+        }
+
+        return redirect()->to(base_url('scraper'))->with('success', "Berhasil menjadwalkan {$queuedCount} akun ke dalam antrean Apify Scraper!");
+    }
+
+    /**
+     * Konfigurasi Sistem & API Keys
+     */
+    public function settings()
+    {
+        $data = [
+            'title'      => 'Konfigurasi Sistem & API Keys',
+            'controller' => 'Datahub',
+        ];
+
+        return view('dashboard/settings', $data);
     }
 
     /**
