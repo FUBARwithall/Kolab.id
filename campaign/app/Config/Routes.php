@@ -47,6 +47,7 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('products/variants/save', 'Products::saveVariant');
     $routes->post('products/variants/delete/(:num)', 'Products::deleteVariant/$1');
     $routes->get('stock-history', 'StockHistory::index');
+    $routes->post('stock-history/get-datatable', 'StockHistory::getDatatable');
 
     // Wave 2: Perencanaan Kampanye & Penugasan KOL
     $routes->get('campaigns', 'Campaigns::index');
