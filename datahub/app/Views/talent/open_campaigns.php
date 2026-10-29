@@ -52,7 +52,7 @@
                         <small class="text-muted" style="font-size: 11px;">Periode</small>
                         <small class="text-dark fw-semibold" style="font-size: 11px;"><?= esc($camp['start_date'] ?? '-') ?> s/d <?= esc($camp['end_date'] ?? '-') ?></small>
                       </div>
-                      <button type="button" class="btn btn-warning btn-sm w-100 fw-bold rounded-pill text-dark shadow-sm">
+                      <button type="button" class="btn btn-warning btn-sm w-100 fw-bold rounded-pill text-dark shadow-sm" onclick="openApplyModal(<?= $camp['id'] ?>, '<?= esc(addslashes($camp['title'])) ?>', <?= (float)($camp['budget_total'] ?? 0) ?>)">
                         <i class="fas fa-paper-plane me-1"></i> Lamar Kampanye
                       </button>
                     </div>
@@ -66,5 +66,100 @@
     </div>
   </div>
 </div>
+
+<!-- Modal Lamar Kampanye -->
+<div class="modal fade" id="modalApplyCampaign" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom py-3">
+        <h6 class="modal-title fw-bold text-dark mb-0">
+          <i class="fas fa-paper-plane text-warning me-2"></i> Ajukan Lamaran Kolaborasi
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formApplyCampaign">
+        <input type="hidden" name="campaign_id" id="apply_campaign_id">
+        <div class="modal-body p-4">
+          <div class="alert alert-light border mb-3">
+            <small class="text-muted d-block mb-1">Kampanye yang dipilih:</small>
+            <div class="fw-bold text-dark fs-6" id="apply_campaign_title">-</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Tarif Penawaran (IDR) <span class="text-danger">*</span></label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted">Rp</span>
+              <input type="number" class="form-control" name="proposed_rate" id="apply_proposed_rate" required placeholder="Contoh: 3000000" min="100000" step="50000">
+            </div>
+            <small class="text-muted text-xs">Masukkan penawaran harga Anda untuk keseluruhan paket VT/konten pada kampanye ini.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Ide Konten / Pitching Notes</label>
+            <textarea class="form-control" name="pitch_notes" id="apply_pitch_notes" rows="3" placeholder="Ceritakan konsep video singkat, angle produk, atau insight unik yang ingin Anda bawakan..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top py-2.5">
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-sm btn-warning rounded-pill px-4 fw-bold text-dark" id="btnSubmitApply">
+            <i class="fas fa-paper-plane me-1"></i> Kirim Lamaran
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function openApplyModal(id, title, budget) {
+  $('#apply_campaign_id').val(id);
+  $('#apply_campaign_title').text(title);
+  $('#apply_proposed_rate').val('');
+  $('#apply_pitch_notes').val('');
+  new bootstrap.Modal(document.getElementById('modalApplyCampaign')).show();
+}
+
+$(document).ready(function() {
+  $('#formApplyCampaign').on('submit', function(e) {
+    e.preventDefault();
+    const btn = $('#btnSubmitApply');
+    btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Mengirim...');
+
+    $.ajax({
+      url: '<?= base_url('apply-campaign') ?>',
+      method: 'POST',
+      data: $(this).serialize(),
+      dataType: 'json',
+      success: function(res) {
+        btn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i> Kirim Lamaran');
+        if (res.success) {
+          bootstrap.Modal.getInstance(document.getElementById('modalApplyCampaign')).hide();
+          Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: res.message,
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => {
+            window.location.href = '<?= base_url('my-applications') ?>';
+          });
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: res.message || 'Terjadi kesalahan saat mengajukan lamaran.'
+          });
+        }
+      },
+      error: function(xhr) {
+        btn.prop('disabled', false).html('<i class="fas fa-paper-plane me-1"></i> Kirim Lamaran');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Jaringan',
+          text: 'Gagal terhubung ke server (' + xhr.status + ').'
+        });
+      }
+    });
+  });
+});
+</script>
 
 <?= $this->endSection() ?>

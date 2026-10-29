@@ -81,6 +81,11 @@
           </button>
         </li>
         <li class="nav-item" role="presentation">
+          <button class="nav-link fw-semibold" id="applications-tab" data-bs-toggle="tab" data-bs-target="#tab-applications" type="button" role="tab" aria-selected="false">
+            <i class="fas fa-paper-plane text-info me-2"></i>Pelamar Terbuka (<?= count($campaign['applications'] ?? []) ?>)
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
           <button class="nav-link fw-semibold" id="metrics-tab" data-bs-toggle="tab" data-bs-target="#tab-metrics" type="button" role="tab" aria-selected="false">
             <i class="fas fa-chart-line text-success me-2"></i>Metrik Performa &amp; Analitik
           </button>
@@ -92,7 +97,7 @@
         </li>
         <li class="nav-item" role="presentation">
           <button class="nav-link fw-semibold" id="overview-tab" data-bs-toggle="tab" data-bs-target="#tab-overview" type="button" role="tab" aria-selected="false">
-            <i class="fas fa-info-circle text-info me-2"></i>Deskripsi &amp; Objektif
+            <i class="fas fa-info-circle text-secondary me-2"></i>Deskripsi &amp; Objektif
           </button>
         </li>
       </ul>
@@ -113,14 +118,14 @@
             <table class="table table-hover align-middle" style="font-size: 13.5px;">
               <thead class="table-light">
                 <tr>
-                  <th style="width: 50px;">#</th>
+                  <th style="width: 40px;">#</th>
                   <th>Nama Talent KOL</th>
-                  <th style="width: 110px;">Tier</th>
                   <th style="width: 140px;">Deal Amount (Fee)</th>
                   <th style="width: 110px;" class="text-center">Target SOW</th>
-                  <th style="width: 120px;" class="text-center">Status Kontrak</th>
-                  <th style="width: 120px;" class="text-center">Status Bayar</th>
-                  <th style="width: 100px;" class="text-center">Aksi</th>
+                  <th style="width: 110px;" class="text-center">Kontrak</th>
+                  <th style="width: 110px;" class="text-center">Pembayaran</th>
+                  <th style="width: 140px;" class="text-center">Rating &amp; Review</th>
+                  <th style="width: 80px;" class="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,11 +140,10 @@
                           </div>
                           <div>
                             <div class="fw-bold text-dark"><?= esc($k['kol_name']) ?></div>
-                            <small class="text-muted"><?= esc($k['notes'] ?? 'Tanpa catatan khusus') ?></small>
+                            <small class="text-muted"><i class="fas fa-map-marker-alt text-danger me-1"></i><?= esc($k['city'] ?? '-') ?> • <?= esc($k['whatsapp'] ?? '-') ?></small>
                           </div>
                         </div>
                       </td>
-                      <td><span class="badge bg-secondary"><?= esc($k['tier_name'] ?? 'Regular') ?></span></td>
                       <td class="fw-bold text-success">Rp <?= number_format((float)$k['deal_amount'], 0, ',', '.') ?></td>
                       <td class="text-center"><span class="badge bg-primary rounded-pill"><?= $k['total_vt'] ?> Video (VT)</span></td>
                       <td class="text-center">
@@ -150,6 +154,23 @@
                           <span class="badge bg-success">LUNAS</span>
                         <?php else: ?>
                           <span class="badge bg-warning text-dark">BELUM LUNAS</span>
+                        <?php endif; ?>
+                      </td>
+                      <td class="text-center">
+                        <?php if (!empty($k['review'])): ?>
+                          <div>
+                            <span class="text-warning fw-bold fs-6">
+                              <?= str_repeat('★', (int)$k['review']['rating']) . str_repeat('☆', 5 - (int)$k['review']['rating']) ?>
+                            </span>
+                            <small class="d-block text-muted text-xs"><?= esc($k['review']['rating']) ?>/5.0</small>
+                          </div>
+                          <button type="button" class="btn btn-link btn-xs p-0 text-primary text-decoration-none" onclick="openReviewModal(<?= $k['kol_id'] ?>, <?= $campaign['id'] ?>, '<?= esc(addslashes($k['kol_name'])) ?>', <?= (int)$k['review']['rating'] ?>, '<?= esc(addslashes($k['review']['review_text'] ?? '')) ?>')">
+                            <small><i class="fas fa-edit me-1"></i>Edit Review</small>
+                          </button>
+                        <?php else: ?>
+                          <button type="button" class="btn btn-outline-warning btn-xs rounded-pill px-2.5 py-1" onclick="openReviewModal(<?= $k['kol_id'] ?>, <?= $campaign['id'] ?>, '<?= esc(addslashes($k['kol_name'])) ?>', 5, '')">
+                            <i class="fas fa-star me-1"></i> Beri Nilai
+                          </button>
                         <?php endif; ?>
                       </td>
                       <td class="text-center">
@@ -169,7 +190,78 @@
           </div>
         </div>
 
-        <!-- Tab 2: Metrik & Performa Live -->
+        <!-- Tab 2: Pelamar Terbuka (Applications) -->
+        <div class="tab-pane fade" id="tab-applications" role="tabpanel">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="fw-bold mb-0 text-dark">Daftar Lamaran Masuk dari Kreator</h6>
+            <span class="badge bg-info text-white rounded-pill px-3 py-1"><?= count($campaign['applications'] ?? []) ?> Pelamar</span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle" style="font-size: 13.5px;">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th>Talent Pelamar</th>
+                  <th style="width: 140px;">Tarif Penawaran</th>
+                  <th>Ide Konten &amp; Pitching</th>
+                  <th style="width: 130px;" class="text-center">Status Seleksi</th>
+                  <th style="width: 110px;">Tgl Melamar</th>
+                  <th style="width: 160px;" class="text-center">Aksi Seleksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (!empty($campaign['applications'])): ?>
+                  <?php foreach ($campaign['applications'] as $aIdx => $app): ?>
+                    <tr>
+                      <td><?= $aIdx + 1 ?></td>
+                      <td>
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="rounded-circle bg-info bg-opacity-10 text-info fw-bold d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                            <?= strtoupper(substr($app['kol_name'], 0, 1)) ?>
+                          </div>
+                          <div>
+                            <div class="fw-bold text-dark"><?= esc($app['kol_name']) ?></div>
+                            <small class="text-muted"><i class="fas fa-map-marker-alt text-danger me-1"></i><?= esc($app['city'] ?? '-') ?> • <?= esc($app['whatsapp'] ?? '-') ?></small>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="fw-bold text-success">Rp <?= number_format((float)$app['proposed_rate'], 0, ',', '.') ?></td>
+                      <td><small class="text-secondary"><?= esc($app['pitch_notes'] ?? '-') ?></small></td>
+                      <td class="text-center">
+                        <?php if ($app['status'] === 'ACCEPTED'): ?>
+                          <span class="badge bg-success">DITERIMA</span>
+                        <?php elseif ($app['status'] === 'REJECTED'): ?>
+                          <span class="badge bg-danger">DITOLAK</span>
+                        <?php else: ?>
+                          <span class="badge bg-warning text-dark">MENUNGGU REVIEW</span>
+                        <?php endif; ?>
+                      </td>
+                      <td><small class="text-muted"><?= date('d M Y', strtotime($app['created_at'])) ?></small></td>
+                      <td class="text-center">
+                        <?php if ($app['status'] === 'APPLIED'): ?>
+                          <button type="button" class="btn btn-success btn-xs rounded-pill px-2.5 py-1 me-1" onclick="openAcceptAppModal(<?= $app['id'] ?>, '<?= esc(addslashes($app['kol_name'])) ?>', <?= (float)$app['proposed_rate'] ?>, '<?= esc(addslashes($app['pitch_notes'] ?? '')) ?>')">
+                            <i class="fas fa-check me-1"></i> Terima
+                          </button>
+                          <button type="button" class="btn btn-outline-danger btn-xs rounded-pill px-2.5 py-1" onclick="rejectApplication(<?= $app['id'] ?>, '<?= esc(addslashes($app['kol_name'])) ?>')">
+                            <i class="fas fa-times me-1"></i> Tolak
+                          </button>
+                        <?php else: ?>
+                          <small class="text-muted"><i class="fas fa-check-double text-success me-1"></i>Selesai ditinjau</small>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php else: ?>
+                  <tr>
+                    <td colspan="7" class="text-center text-muted py-4">Belum ada pelamar terbuka yang mendaftar pada kampanye ini.</td>
+                  </tr>
+                <?php endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 3: Metrik & Performa Live -->
         <div class="tab-pane fade" id="tab-metrics" role="tabpanel">
           <div class="row g-3 mb-4">
             <div class="col-md-3 col-6">
@@ -227,7 +319,7 @@
           </div>
         </div>
 
-        <!-- Tab 3: Produk Terkait -->
+        <!-- Tab 4: Produk Terkait -->
         <div class="tab-pane fade" id="tab-products" role="tabpanel">
           <div class="table-responsive">
             <table class="table table-hover align-middle">
@@ -259,7 +351,7 @@
           </div>
         </div>
 
-        <!-- Tab 4: Overview / Deskripsi -->
+        <!-- Tab 5: Overview / Deskripsi -->
         <div class="tab-pane fade" id="tab-overview" role="tabpanel">
           <div class="p-3 bg-light rounded-3 border">
             <h6 class="fw-bold text-dark mb-2">Objektif &amp; Ketentuan Khusus</h6>
@@ -273,10 +365,10 @@
 
 </div>
 
-<!-- Modal: Assign KOL ke Kampanye -->
+<!-- Modal 1: Assign KOL ke Kampanye -->
 <div class="modal fade" id="assignKolModal" tabindex="-1" aria-labelledby="assignKolModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow">
+    <div class="modal-content border-0 shadow-lg rounded-4">
       <div class="modal-header bg-light border-bottom">
         <h5 class="modal-title fw-bold" id="assignKolModalLabel"><i class="fas fa-user-plus me-2 text-primary"></i>Daftarkan Talent KOL</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -302,7 +394,7 @@
           <div class="mb-3">
             <label class="form-label fw-semibold">Target Jumlah Video Konten (VT) <span class="text-danger">*</span></label>
             <input type="number" min="1" max="10" class="form-control" name="total_vt" id="assignTotalVt" value="1" required>
-            <small class="text-muted">Sistem akan otomatis membuat draf tugas tugas sesuai jumlah VT.</small>
+            <small class="text-muted">Sistem akan otomatis membuat draf tugas sesuai jumlah VT.</small>
           </div>
           <div class="mb-3">
             <label class="form-label fw-semibold">Catatan / Scope of Work</label>
@@ -319,6 +411,94 @@
     </div>
   </div>
 </div>
+
+<!-- Modal 2: Review & Rating KOL -->
+<div class="modal fade" id="modalReviewKol" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom py-3">
+        <h6 class="modal-title fw-bold text-dark mb-0">
+          <i class="fas fa-star text-warning me-2"></i> Review &amp; Rating Kreator
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formReviewKol">
+        <input type="hidden" name="kol_id" id="rev_kol_id">
+        <input type="hidden" name="campaign_id" value="<?= $campaign['id'] ?>">
+        <div class="modal-body p-4">
+          <div class="alert alert-light border mb-3">
+            <small class="text-muted d-block">Talent yang dinilai:</small>
+            <div class="fw-bold text-dark fs-6" id="rev_kol_name">-</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Rating Kinerja (1 - 5 Bintang) <span class="text-danger">*</span></label>
+            <select class="form-select" name="rating" id="rev_rating" required>
+              <option value="5">★★★★★ (5/5) — Sangat Memuaskan / Luar Biasa</option>
+              <option value="4">★★★★☆ (4/5) — Bagus / Sesuai Ekspektasi</option>
+              <option value="3">★★★☆☆ (3/5) — Cukup / Standar</option>
+              <option value="2">★★☆☆☆ (2/5) — Kurang Memuaskan / Terlambat</option>
+              <option value="1">★☆☆☆☆ (1/5) — Sangat Buruk / Tidak Kooperatif</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Ulasan &amp; Catatan Evaluasi</label>
+            <textarea class="form-control" name="review_text" id="rev_review_text" rows="3" placeholder="Tuliskan umpan balik mengenai responsivitas, ketepatan waktu pengiriman draf, dan kualitas video..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top py-2.5">
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-sm btn-warning rounded-pill px-4 fw-bold text-dark" id="btnSubmitReview">
+            <i class="fas fa-save me-1"></i> Simpan Ulasan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal 3: Terima & Assign Pelamar Kampanye -->
+<div class="modal fade" id="modalAcceptApp" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg rounded-4">
+      <div class="modal-header border-bottom py-3">
+        <h6 class="modal-title fw-bold text-dark mb-0">
+          <i class="fas fa-check-circle text-success me-2"></i> Terima Lamaran &amp; Tugaskan KOL
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formAcceptApp">
+        <input type="hidden" name="application_id" id="accept_app_id">
+        <input type="hidden" name="action" value="ACCEPT">
+        <div class="modal-body p-4">
+          <div class="alert alert-light border mb-3">
+            <small class="text-muted d-block">Talent Pelamar:</small>
+            <div class="fw-bold text-dark fs-6" id="accept_kol_name">-</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Deal Amount Final (Rp) <span class="text-danger">*</span></label>
+            <input type="number" step="50000" class="form-control" name="deal_amount" id="accept_deal_amount" required>
+            <small class="text-muted text-xs">Nominal fee kerjasama akhir yang disepakati.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Target Jumlah Video Konten (VT) <span class="text-danger">*</span></label>
+            <input type="number" min="1" max="10" class="form-control" name="total_vt" id="accept_total_vt" value="1" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-bold text-dark text-xs text-uppercase">Catatan Scope of Work</label>
+            <textarea class="form-control" name="notes" id="accept_notes" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top py-2.5">
+          <button type="button" class="btn btn-sm btn-light border rounded-pill px-3" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 fw-bold" id="btnSubmitAccept">
+            <i class="fas fa-check me-1"></i> Setujui &amp; Buat Tugas
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScript') ?>
@@ -379,6 +559,125 @@ function removeAssignedKol(id, name) {
           Swal.fire({
             icon: 'success',
             title: 'Terhapus!',
+            text: res.message,
+            timer: 1800,
+            showConfirmButton: false
+          }).then(() => {
+            location.reload();
+          });
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      }, 'json');
+    }
+  });
+}
+
+function openReviewModal(kolId, campaignId, kolName, rating, reviewText) {
+  $('#rev_kol_id').val(kolId);
+  $('#rev_kol_name').text(kolName);
+  $('#rev_rating').val(rating || 5);
+  $('#rev_review_text').val(reviewText || '');
+  new bootstrap.Modal(document.getElementById('modalReviewKol')).show();
+}
+
+$('#formReviewKol').on('submit', function(e) {
+  e.preventDefault();
+  let btn = $('#btnSubmitReview');
+  btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
+
+  $.ajax({
+    url: '<?= base_url('campaign-kols/submit-review') ?>',
+    type: 'POST',
+    data: $(this).serialize(),
+    dataType: 'json',
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Ulasan');
+      if (res.success) {
+        bootstrap.Modal.getInstance(document.getElementById('modalReviewKol')).hide();
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: res.message,
+          timer: 1800,
+          showConfirmButton: false
+        }).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire('Gagal', res.message, 'error');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Simpan Ulasan');
+      Swal.fire('Error', 'Gagal menyimpan ulasan.', 'error');
+    }
+  });
+});
+
+function openAcceptAppModal(appId, kolName, proposedRate, notes) {
+  $('#accept_app_id').val(appId);
+  $('#accept_kol_name').text(kolName);
+  $('#accept_deal_amount').val(proposedRate);
+  $('#accept_total_vt').val(1);
+  $('#accept_notes').val(notes || '');
+  new bootstrap.Modal(document.getElementById('modalAcceptApp')).show();
+}
+
+$('#formAcceptApp').on('submit', function(e) {
+  e.preventDefault();
+  let btn = $('#btnSubmitAccept');
+  btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyetujui...');
+
+  $.ajax({
+    url: '<?= base_url('campaign-kols/review-application') ?>',
+    type: 'POST',
+    data: $(this).serialize(),
+    dataType: 'json',
+    success: function(res) {
+      btn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> Setujui &amp; Buat Tugas');
+      if (res.success) {
+        bootstrap.Modal.getInstance(document.getElementById('modalAcceptApp')).hide();
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil!',
+          text: res.message,
+          timer: 1800,
+          showConfirmButton: false
+        }).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire('Gagal', res.message, 'error');
+      }
+    },
+    error: function() {
+      btn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> Setujui &amp; Buat Tugas');
+      Swal.fire('Error', 'Gagal memproses persetujuan lamaran.', 'error');
+    }
+  });
+});
+
+function rejectApplication(appId, kolName) {
+  Swal.fire({
+    title: 'Tolak Lamaran ' + kolName + '?',
+    text: "Status lamaran akan diubah menjadi Ditolak.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, Tolak!',
+    cancelButtonText: 'Batal'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $.post('<?= base_url('campaign-kols/review-application') ?>', {
+        application_id: appId,
+        action: 'REJECT'
+      }, function(res) {
+        if (res.success) {
+          Swal.fire({
+            icon: 'success',
+            title: 'Ditolak!',
             text: res.message,
             timer: 1800,
             showConfirmButton: false

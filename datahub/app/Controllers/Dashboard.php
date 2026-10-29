@@ -107,8 +107,9 @@ class Dashboard extends BaseController
         $isAdmin = in_array('admin', $userRoles, true);
 
         $platforms = $this->db->table('kol_platforms kp')
-            ->select('kp.*, k.name as kol_name')
+            ->select('kp.*, k.name as kol_name, p.name as platform_name, p.icon as platform_icon')
             ->join('kols k', 'k.id = kp.kol_id', 'left')
+            ->join('platforms p', 'p.id = kp.platform_id', 'left')
             ->orderBy('kp.followers_count', 'DESC')
             ->get()
             ->getResultArray();
@@ -134,8 +135,9 @@ class Dashboard extends BaseController
         $isKol   = in_array('kol', $userRoles, true);
 
         $rateCards = $this->db->table('kol_rate_cards rc')
-            ->select('rc.*, k.name as kol_name')
+            ->select('rc.*, k.name as kol_name, p.name as platform_name')
             ->join('kols k', 'k.id = rc.kol_id', 'left')
+            ->join('platforms p', 'p.id = rc.platform_id', 'left')
             ->orderBy('rc.id', 'ASC')
             ->get()
             ->getResultArray();
@@ -211,8 +213,18 @@ class Dashboard extends BaseController
         $platforms = [];
         $rates = [];
         if ($kol) {
-            $platforms = $this->db->table('kol_platforms')->where('kol_id', $kol['id'])->get()->getResultArray();
-            $rates = $this->db->table('kol_rate_cards')->where('kol_id', $kol['id'])->get()->getResultArray();
+            $platforms = $this->db->table('kol_platforms kp')
+                ->select('kp.*, p.name as platform_name, p.icon as platform_icon')
+                ->join('platforms p', 'p.id = kp.platform_id', 'left')
+                ->where('kp.kol_id', $kol['id'])
+                ->get()
+                ->getResultArray();
+            $rates = $this->db->table('kol_rate_cards rc')
+                ->select('rc.*, p.name as platform_name')
+                ->join('platforms p', 'p.id = rc.platform_id', 'left')
+                ->where('rc.kol_id', $kol['id'])
+                ->get()
+                ->getResultArray();
         }
 
         $data = [
@@ -342,6 +354,66 @@ class Dashboard extends BaseController
         ];
 
         return view('talent/open_campaigns', $data);
+    }
+
+    /**
+     * Ajukan Lamaran Kolaborasi (KOL Creator Space)
+     */
+    public function applyCampaign()
+    {
+        $kolId = $this->getMyKolId();
+        if (!$kolId) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Anda harus terdaftar sebagai profil Talent KOL terlebih dahulu.',
+            ]);
+        }
+
+        $campaignId   = (int)$this->request->getPost('campaign_id');
+        $proposedRate = (float)$this->request->getPost('proposed_rate');
+        $pitchNotes   = trim($this->request->getPost('pitch_notes') ?? '');
+
+        if (!$campaignId || $proposedRate <= 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Silakan masukkan nominal tarif penawaran yang valid.',
+            ]);
+        }
+
+        $campaign = $this->db->table('campaigns')->where('id', $campaignId)->where('status', 'ACTIVE')->get()->getRowArray();
+        if (!$campaign) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Kampanye tidak ditemukan atau status sudah tidak aktif menerima kreator.',
+            ]);
+        }
+
+        $existing = $this->db->table('campaign_applications')
+            ->where('campaign_id', $campaignId)
+            ->where('kol_id', $kolId)
+            ->get()
+            ->getRowArray();
+
+        if ($existing) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Anda sudah mengajukan lamaran untuk kampanye ini.',
+            ]);
+        }
+
+        $this->db->table('campaign_applications')->insert([
+            'campaign_id'   => $campaignId,
+            'kol_id'        => $kolId,
+            'proposed_rate' => $proposedRate,
+            'pitch_notes'   => $pitchNotes,
+            'status'        => 'APPLIED',
+            'created_at'    => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Lamaran kolaborasi berhasil diajukan! Tim brand akan meninjau penawaran Anda.',
+        ]);
     }
 
     /**

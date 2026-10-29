@@ -24,6 +24,7 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
     $routes->get('datahub/dashboard', 'Dashboard::index');
     $routes->get('kols', 'Dashboard::kols');
     $routes->get('platforms', 'Dashboard::platforms');
+    $routes->get('market', 'Dashboard::platforms');
     $routes->get('rate-cards', 'Dashboard::rateCards');
     $routes->get('categories', 'Dashboard::categories');
     $routes->get('tiers', 'Dashboard::tiers');
@@ -32,6 +33,7 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
     $routes->get('my-profile', 'Dashboard::myProfile');
     $routes->get('my-rates', 'Dashboard::myRates');
     $routes->get('open-campaigns', 'Dashboard::openCampaigns');
+    $routes->post('apply-campaign', 'Dashboard::applyCampaign');
     $routes->get('my-applications', 'Dashboard::myApplications');
     $routes->get('my-tasks', 'Dashboard::myTasks');
     $routes->get('my-contracts', 'Dashboard::myContracts');

@@ -32,9 +32,9 @@
             <?php foreach ($rateCards as $r): ?>
               <tr>
                 <td class="ps-3 fw-bold text-dark"><?= esc($r['kol_name'] ?? 'KOL #' . $r['kol_id']) ?></td>
-                <td class="fw-bold text-dark"><?= esc($r['service_name'] ?? 'Video Post') ?></td>
-                <td><span class="badge bg-secondary text-uppercase"><?= esc($r['platform'] ?? 'All') ?></span></td>
-                <td><span class="fw-bold text-success">Rp <?= number_format($r['rate_amount'] ?? 0, 0, ',', '.') ?></span></td>
+                <td class="fw-bold text-dark"><?= esc($r['content_type'] ?? $r['service_name'] ?? 'Video Post') ?></td>
+                <td><span class="badge bg-secondary text-uppercase"><?= esc($r['platform_name'] ?? $r['platform'] ?? 'All') ?></span></td>
+                <td><span class="fw-bold text-success">Rp <?= number_format((float) ($r['rate_price'] ?? $r['rate_amount'] ?? 0), 0, ',', '.') ?></span></td>
                 <td class="text-muted text-xs"><?= esc($r['notes'] ?? '-') ?></td>
               </tr>
             <?php endforeach; ?>

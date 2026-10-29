@@ -43,11 +43,11 @@
                       <span class="badge bg-dark px-2 py-1"><?= esc($r['platform_name'] ?? 'Social Media') ?></span>
                     </td>
                     <td>
-                      <div class="fw-bold text-dark"><?= esc($r['service_type'] ?? 'Dedicated Video Post') ?></div>
-                      <small class="text-muted"><?= esc($r['notes'] ?? 'Termasuk hak pemakaian iklan 30 hari') ?></small>
+                      <div class="fw-bold text-dark"><?= esc($r['content_type'] ?? $r['service_type'] ?? 'Dedicated Video Post') ?></div>
+                      <small class="text-muted"><?= esc($r['notes'] ?? '-') ?></small>
                     </td>
                     <td class="fw-bold text-success fs-6">
-                      Rp <?= number_format((float) ($r['price'] ?? 0), 0, ',', '.') ?>
+                      Rp <?= number_format((float) ($r['rate_price'] ?? $r['price'] ?? 0), 0, ',', '.') ?>
                     </td>
                     <td>
                       <span class="badge bg-success-subtle text-success px-2 py-1 rounded-pill" style="font-size: 10px;">

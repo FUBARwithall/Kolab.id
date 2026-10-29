@@ -25,7 +25,7 @@ class AuthFilter implements FilterInterface
 
         // 1. Check if user is logged in
         if (!$session->get('is_logged_in') || !$session->get('user_id')) {
-            return redirect()->to('/datahub/login')->with('error', 'Silakan masuk ke portal KOL Data Hub terlebih dahulu.');
+            return redirect()->to(base_url('login'))->with('error', 'Silakan masuk ke portal KOL Data Hub terlebih dahulu.');
         }
 
         // 2. If specific roles are required, check user roles
@@ -51,7 +51,7 @@ class AuthFilter implements FilterInterface
                 if (in_array('staff', $userRoles, true) || in_array('leader', $userRoles, true)) {
                     return redirect()->to('/campaign/dashboard')->with('error', 'Portal KOL Data Hub khusus untuk Talent KOL dan Superadmin. Silakan kelola operasional di Campaign Portal.');
                 }
-                return redirect()->to('/datahub/dashboard')->with('error', 'Akses dibatasi. Fitur ini memerlukan hak akses Superadmin.');
+                return redirect()->to(base_url('dashboard'))->with('error', 'Akses dibatasi. Fitur ini memerlukan hak akses Superadmin.');
             }
         }
     }

@@ -38,7 +38,7 @@
     <div class="card border-0 shadow-sm rounded-4 mb-4">
       <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
         <h5 class="card-title mb-0 fw-bold text-dark fs-6">
-          <i class="fas fa-share-alt text-info me-2"></i> Akun Media Sosial & Metrik
+          <i class="fas fa-share-alt text-info me-2"></i> Akun Media Sosial &amp; Metrik
         </h5>
         <span class="badge bg-info text-white rounded-pill px-3 py-1"><?= count($platforms) ?> Channels</span>
       </div>
@@ -50,8 +50,8 @@
                 <th class="ps-3">Platform</th>
                 <th>Username</th>
                 <th>Followers / Subscribers</th>
-                <th>Engagement Rate</th>
-                <th>Terakhir Disinkron</th>
+                <th>Avg Views</th>
+                <th>Avg ER</th>
               </tr>
             </thead>
             <tbody>
@@ -64,19 +64,30 @@
                   <tr>
                     <td class="ps-3">
                       <span class="badge bg-dark text-uppercase px-2.5 py-1">
-                        <?= esc($p['platform'] ?? 'tiktok') ?>
+                        <i class="<?= esc($p['platform_icon'] ?? 'fas fa-globe') ?> me-1"></i>
+                        <?= esc($p['platform_name'] ?? $p['platform'] ?? 'tiktok') ?>
                       </span>
                     </td>
-                    <td class="fw-bold text-dark">@<?= esc($p['username']) ?></td>
+                    <td class="fw-bold text-dark">
+                      <?php if (!empty($p['profile_url'])): ?>
+                        <a href="<?= esc($p['profile_url']) ?>" target="_blank" class="text-decoration-none text-dark">
+                          @<?= esc($p['username']) ?> <i class="fas fa-external-link-alt text-xs text-muted"></i>
+                        </a>
+                      <?php else: ?>
+                        @<?= esc($p['username']) ?>
+                      <?php endif; ?>
+                    </td>
                     <td>
                       <span class="fw-bold text-success"><?= number_format($p['followers_count'] ?? 0) ?></span>
                     </td>
                     <td>
+                      <span class="fw-bold text-primary"><?= number_format($p['avg_views'] ?? 0) ?></span>
+                    </td>
+                    <td>
                       <span class="badge bg-success bg-opacity-10 text-success fw-bold px-2 py-1">
-                        <?= number_format($p['engagement_rate'] ?? 0, 2) ?>%
+                        <?= number_format(((float)($p['avg_er'] ?? $p['engagement_rate'] ?? 0)) * 100, 2) ?>%
                       </span>
                     </td>
-                    <td class="text-muted text-xs"><?= date('d M Y', strtotime($p['last_scraped_at'] ?? 'now')) ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>
@@ -90,7 +101,7 @@
     <div class="card border-0 shadow-sm rounded-4">
       <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
         <h5 class="card-title mb-0 fw-bold text-dark fs-6">
-          <i class="fas fa-tags text-warning me-2"></i> Rate Card & Paket Konten Saya
+          <i class="fas fa-tags text-warning me-2"></i> Rate Card &amp; Paket Konten
         </h5>
         <span class="badge bg-warning text-dark rounded-pill px-3 py-1"><?= count($rates) ?> Paket Terdaftar</span>
       </div>
@@ -102,21 +113,21 @@
                 <th class="ps-3">Paket Layanan</th>
                 <th>Platform</th>
                 <th>Harga Normal</th>
-                <th>Slot / Keterangan</th>
+                <th>Catatan &amp; Term</th>
               </tr>
             </thead>
             <tbody>
               <?php if (empty($rates)): ?>
                 <tr>
-                  <td colspan="4" class="text-center py-4 text-muted">Belum ada rate card khusus. Menggunakan standar tier industri.</td>
+                  <td colspan="4" class="text-center py-4 text-muted">Belum ada rate card khusus. Silakan tambahkan tarif penawaran.</td>
                 </tr>
               <?php else: ?>
                 <?php foreach ($rates as $r): ?>
                   <tr>
-                    <td class="ps-3 fw-bold text-dark"><?= esc($r['service_name'] ?? 'Video Endorsement') ?></td>
-                    <td><span class="badge bg-secondary"><?= esc($r['platform'] ?? 'Semua') ?></span></td>
-                    <td class="fw-bold text-success">Rp <?= number_format($r['rate_amount'] ?? 0, 0, ',', '.') ?></td>
-                    <td class="text-muted text-xs"><?= esc($r['notes'] ?? 'Termasuk 1x revisi minor') ?></td>
+                    <td class="ps-3 fw-bold text-dark"><?= esc($r['content_type'] ?? $r['service_name'] ?? 'Video Endorsement') ?></td>
+                    <td><span class="badge bg-secondary"><?= esc($r['platform_name'] ?? $r['platform'] ?? 'Semua') ?></span></td>
+                    <td class="fw-bold text-success">Rp <?= number_format((float)($r['rate_price'] ?? $r['rate_amount'] ?? 0), 0, ',', '.') ?></td>
+                    <td class="text-muted text-xs"><?= esc($r['notes'] ?? '-') ?></td>
                   </tr>
                 <?php endforeach; ?>
               <?php endif; ?>

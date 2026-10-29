@@ -65,6 +65,8 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('campaign-kols/assign', 'CampaignKols::assign');
     $routes->get('campaign-kols/tasks-json/(:num)', 'CampaignKols::getTasksJson/$1');
     $routes->post('campaign-kols/remove/(:num)', 'CampaignKols::remove/$1');
+    $routes->post('campaign-kols/submit-review', 'CampaignKols::submitReview');
+    $routes->post('campaign-kols/review-application', 'CampaignKols::reviewApplication');
 
     // Wave 3: Tasks Engine, Briefs, Drafts & Logistik Pengiriman Sampel
     $routes->get('tasks', 'Tasks::index');
@@ -145,7 +147,9 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->get('internal-evaluation/export-excel', 'InternalEvaluation::exportExcel');
     // Wave 6: Executive Finance Hub
     $routes->get('finance', 'FinanceHub::index');
+    $routes->get('finance-hub', 'FinanceHub::index');
     $routes->post('finance/get-datatable', 'FinanceHub::getDatatable');
+    $routes->post('finance-hub/get-datatable', 'FinanceHub::getDatatable');
     $routes->post('finance/reject-invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
     $routes->post('finance/upload-bupot/(:num)', 'FinanceHub::uploadBupot/$1');
     $routes->get('finance/invoice-print/(:num)', 'FinanceHub::printInvoice/$1');

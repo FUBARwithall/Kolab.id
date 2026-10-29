@@ -212,6 +212,27 @@ class CampaignModel extends Model
             ->get()
             ->getResultArray();
 
+        // Cek rating & review per KOL jika ada
+        foreach ($campaign['kols'] as &$ckKol) {
+            $ckReview = $db->table('kol_reviews')
+                ->where('kol_id', $ckKol['kol_id'])
+                ->where('campaign_id', $id)
+                ->get()
+                ->getRowArray();
+            $ckKol['review'] = $ckReview;
+        }
+        unset($ckKol);
+
+        // 2b. Pelamar Terbuka (Campaign Applications)
+        $campaign['applications'] = $db->table('campaign_applications ca')
+            ->select('ca.*, kols.name as kol_name, users.avatar, kols.city, kols.whatsapp')
+            ->join('kols', 'kols.id = ca.kol_id', 'inner')
+            ->join('users', 'users.id = kols.user_id', 'left')
+            ->where('ca.campaign_id', $id)
+            ->orderBy('ca.id', 'desc')
+            ->get()
+            ->getResultArray();
+
         // 3. Ringkasan Metrik Aktual dari Postingan Live
         $metricsRow = $db->table('campaign_kols')
             ->select('

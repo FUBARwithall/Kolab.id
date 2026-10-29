@@ -8,7 +8,7 @@
       <h5 class="card-title mb-0 fw-bold text-dark fs-6">
         <i class="fas fa-hashtag text-info me-2"></i> <?= esc($title) ?>
       </h5>
-      <p class="text-muted text-xs mb-0">Total <?= count($platforms) ?> akun media sosial terdata & tersinkronisasi</p>
+      <p class="text-muted text-xs mb-0">Total <?= count($platforms) ?> akun media sosial terdata &amp; tersinkronisasi</p>
     </div>
   </div>
   <div class="card-body p-0">
@@ -20,6 +20,7 @@
             <th>Platform</th>
             <th>Username</th>
             <th>Followers</th>
+            <th>Avg Views</th>
             <th>Engagement Rate</th>
             <th>Status Scraping</th>
           </tr>
@@ -27,26 +28,43 @@
         <tbody>
           <?php if (empty($platforms)): ?>
             <tr>
-              <td colspan="6" class="text-center py-4 text-muted">Belum ada akun media sosial tersimpan.</td>
+              <td colspan="7" class="text-center py-4 text-muted">Belum ada akun media sosial tersimpan.</td>
             </tr>
           <?php else: ?>
             <?php foreach ($platforms as $p): ?>
               <tr>
                 <td class="ps-3 fw-bold text-dark"><?= esc($p['kol_name'] ?? 'KOL #' . $p['kol_id']) ?></td>
                 <td>
-                  <?php if (strtolower($p['platform'] ?? '') === 'tiktok'): ?>
-                    <span class="badge bg-dark"><i class="fab fa-tiktok me-1"></i> TikTok</span>
-                  <?php elseif (strtolower($p['platform'] ?? '') === 'instagram'): ?>
-                    <span class="badge bg-danger"><i class="fab fa-instagram me-1"></i> Instagram</span>
-                  <?php elseif (strtolower($p['platform'] ?? '') === 'youtube'): ?>
-                    <span class="badge bg-danger"><i class="fab fa-youtube me-1"></i> YouTube</span>
+                  <?php 
+                    $plat = strtolower($p['platform_name'] ?? $p['platform'] ?? '');
+                    $badgeBg = 'bg-secondary';
+                    $icon = $p['platform_icon'] ?? 'fas fa-globe';
+                    if (str_contains($plat, 'tiktok')) $badgeBg = 'bg-dark';
+                    elseif (str_contains($plat, 'instagram')) $badgeBg = 'bg-danger';
+                    elseif (str_contains($plat, 'youtube')) $badgeBg = 'bg-danger';
+                    elseif (str_contains($plat, 'twitter') || str_contains($plat, 'x')) $badgeBg = 'bg-black';
+                    elseif (str_contains($plat, 'facebook')) $badgeBg = 'bg-primary';
+                  ?>
+                  <span class="badge <?= $badgeBg ?> text-uppercase">
+                    <i class="<?= esc($icon) ?> me-1"></i> <?= esc($p['platform_name'] ?? $p['platform'] ?? 'Other') ?>
+                  </span>
+                </td>
+                <td class="fw-bold">
+                  <?php if (!empty($p['profile_url'])): ?>
+                    <a href="<?= esc($p['profile_url']) ?>" target="_blank" class="text-dark text-decoration-none">
+                      @<?= esc($p['username']) ?> <i class="fas fa-external-link-alt text-xs text-muted"></i>
+                    </a>
                   <?php else: ?>
-                    <span class="badge bg-secondary"><?= esc($p['platform'] ?? 'Other') ?></span>
+                    @<?= esc($p['username']) ?>
                   <?php endif; ?>
                 </td>
-                <td class="fw-bold">@<?= esc($p['username']) ?></td>
                 <td><span class="fw-bold text-success"><?= number_format($p['followers_count'] ?? 0) ?></span></td>
-                <td><span class="badge bg-success bg-opacity-10 text-success fw-bold"><?= number_format($p['engagement_rate'] ?? 0, 2) ?>%</span></td>
+                <td><span class="fw-bold text-primary"><?= number_format($p['avg_views'] ?? 0) ?></span></td>
+                <td>
+                  <span class="badge bg-success bg-opacity-10 text-success fw-bold">
+                    <?= number_format(((float)($p['avg_er'] ?? $p['engagement_rate'] ?? 0)) * 100, 2) ?>%
+                  </span>
+                </td>
                 <td><span class="badge bg-light text-muted border">Up to date</span></td>
               </tr>
             <?php endforeach; ?>

@@ -124,4 +124,12 @@ class AuditLogModel extends Model
 
         return (int)$this->insert($data, true);
     }
+
+    /**
+     * Static helper untuk logging cepat di controller
+     */
+    public static function log(string $action, string $entityType, int $entityId, $oldValues = null, $newValues = null, ?int $userId = null): int
+    {
+        return (new self())->record($action, $entityType, $entityId, $oldValues, $newValues, $userId);
+    }
 }
