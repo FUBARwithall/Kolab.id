@@ -128,9 +128,15 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
     $routes->get('internal-evaluation', 'InternalEvaluation::index');
     $routes->get('internal-evaluation/export-excel', 'InternalEvaluation::exportExcel');
+    // Wave 6: Executive Finance Hub
+    $routes->get('finance', 'FinanceHub::index');
+    $routes->post('finance/get-datatable', 'FinanceHub::getDatatable');
+    $routes->post('finance/reject-invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
+    $routes->post('finance/upload-bupot/(:num)', 'FinanceHub::uploadBupot/$1');
+    $routes->get('finance/invoice-print/(:num)', 'FinanceHub::printInvoice/$1');
+
     // Wave 6: Invoices & Finansial
     $routes->get('invoices', 'Invoices::index');
-    $routes->get('finance', 'Invoices::index');
     $routes->post('invoices/get-datatable', 'Invoices::getDatatable');
     $routes->get('invoices/get-one/(:num)', 'Invoices::getOne/$1');
     $routes->post('invoices/create-from-deal/(:num)', 'Invoices::createFromDeal/$1');
@@ -142,6 +148,8 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->post('contracts/get-datatable', 'Contracts::getDatatable');
     $routes->get('contracts/get-one/(:num)', 'Contracts::getOne/$1');
     $routes->post('contracts/generate', 'Contracts::generate');
+    $routes->get('contracts/print/(:num)', 'Contracts::printContract/$1');
+    $routes->post('contracts/sign/(:num)', 'Contracts::signContract/$1');
     $routes->get('payments', 'Invoices::index');
     $routes->get('budget', 'Invoices::index');
     $routes->get('approvals', 'Invoices::index');

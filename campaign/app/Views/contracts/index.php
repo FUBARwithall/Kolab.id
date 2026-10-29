@@ -190,5 +190,18 @@ function viewContract(id) {
         }
     });
 }
+
+function signContract(id) {
+    if (!confirm('Tandatangani surat perjanjian ini secara elektronik (E-Sign)?')) return;
+
+    $.post('<?= base_url('contracts/sign/') ?>' + id, function(res) {
+        if (res.success) {
+            dtContracts.ajax.reload(null, false);
+            alert(res.message);
+        } else {
+            alert(res.message || 'Gagal menandatangani kontrak');
+        }
+    });
+}
 </script>
 <?= $this->endSection() ?>

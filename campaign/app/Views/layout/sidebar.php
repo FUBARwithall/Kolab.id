@@ -178,9 +178,18 @@ $isActive = function(string $route) use ($currentPath): string {
         <?php if ($isAdmin || $isLeader): ?>
           <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">STRATEGI &amp; KEUANGAN</li>
           <li class="nav-item">
+            <a href="<?= base_url('finance') ?>" class="nav-link <?= $isActive('finance') ?>">
+              <i class="nav-icon fas fa-coins text-warning"></i>
+              <p>
+                Finance Hub
+                <span class="badge bg-warning text-dark float-end">Eksekutif</span>
+              </p>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="<?= base_url('invoices') ?>" class="nav-link <?= $isActive('invoices') ?>">
-              <i class="nav-icon fas fa-receipt text-warning"></i>
-              <p>Finance &amp; Invoices</p>
+              <i class="nav-icon fas fa-receipt text-secondary"></i>
+              <p>Daftar Invoices</p>
             </a>
           </li>
           <li class="nav-item">

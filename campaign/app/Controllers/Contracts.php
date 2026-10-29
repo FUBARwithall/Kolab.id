@@ -81,6 +81,14 @@ class Contracts extends BaseController
                 ? '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="fas fa-file-signature me-1"></i>SIGNED (' . date('d M Y', strtotime($row['signed_at'])) . ')</span>'
                 : '<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1"><i class="far fa-clock me-1"></i>DRAFT KONTRAK</span>';
 
+            $actions = '
+                <div class="d-flex gap-1 justify-content-center">
+                    <button type="button" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Baca Surat Kontrak" onclick="viewContract(' . $row['id'] . ')"><i class="fas fa-eye"></i></button>
+                    <a href="' . base_url('contracts/print/' . $row['id']) . '" target="_blank" class="btn btn-outline-secondary btn-sm rounded-2 py-1 px-2" title="Cetak / PDF Surat Perjanjian"><i class="fas fa-print"></i></a>
+                    ' . (!$isSigned ? '<button type="button" class="btn btn-outline-success btn-sm rounded-2 py-1 px-2" title="Tandatangani Kontrak (E-Sign)" onclick="signContract(' . $row['id'] . ')"><i class="fas fa-file-signature"></i></button>' : '') . '
+                </div>
+            ';
+
             $formattedData[] = [
                 'id'          => $row['id'],
                 'contract_no' => '
@@ -94,11 +102,7 @@ class Contracts extends BaseController
                 ',
                 'fee'         => '<strong class="text-dark">Rp ' . number_format((float)$row['deal_amount'], 0, ',', '.') . '</strong> (' . $row['total_vt'] . ' VT)',
                 'status'      => $statusBadge,
-                'action'      => '
-                    <div class="d-flex gap-1 justify-content-center">
-                        <button type="button" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Baca Surat Kontrak" onclick="viewContract(' . $row['id'] . ')"><i class="fas fa-eye"></i></button>
-                    </div>
-                ',
+                'action'      => $actions,
             ];
         }
 
@@ -139,6 +143,65 @@ class Contracts extends BaseController
             'success'     => true,
             'message'     => 'Draft kontrak perjanjian berhasil digenerate!',
             'contract_id' => $contractId,
+        ]);
+    }
+
+    /**
+     * Print View / Legal PDF Layout Kontrak
+     */
+    public function printContract(int $id)
+    {
+        $db = \Config\Database::connect();
+        $contract = $db->table('campaign_kol_contracts')
+            ->select('
+                campaign_kol_contracts.*,
+                campaign_kols.deal_amount,
+                campaign_kols.total_vt,
+                campaigns.title as campaign_title,
+                campaigns.start_date,
+                campaigns.end_date,
+                kols.name as kol_name,
+                kols.nik as kol_nik,
+                kols.address as kol_address,
+                kols.whatsapp as kol_whatsapp,
+                kols.bank_name,
+                kols.bank_account,
+                kols.bank_holder
+            ')
+            ->join('campaign_kols', 'campaign_kols.id = campaign_kol_contracts.campaign_kol_id', 'inner')
+            ->join('campaigns', 'campaigns.id = campaign_kols.campaign_id', 'inner')
+            ->join('kols', 'kols.id = campaign_kols.kol_id', 'inner')
+            ->where('campaign_kol_contracts.id', $id)
+            ->get()
+            ->getRowArray();
+
+        if (!$contract) {
+            return redirect()->to(base_url('contracts'))->with('error', 'Kontrak tidak ditemukan.');
+        }
+
+        $data = [
+            'title'    => 'Surat Perjanjian Kerjasama #' . $contract['contract_number'],
+            'contract' => $contract,
+        ];
+
+        return view('contracts/print_contract', $data);
+    }
+
+    /**
+     * E-Sign Action by Admin / Brand
+     */
+    public function signContract(int $id)
+    {
+        $clientIp = $this->request->getIPAddress();
+
+        $this->contractModel->update($id, [
+            'signed_at' => date('Y-m-d H:i:s'),
+            'signed_ip' => $clientIp,
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Surat kontrak berhasil ditandatangani secara elektronik (E-Sign)!',
         ]);
     }
 }

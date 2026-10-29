@@ -235,6 +235,7 @@ class InvoiceModel extends Model
                 kols.whatsapp as kol_whatsapp,
                 kols.nik as kol_nik,
                 kols.npwp as kol_npwp,
+                kols.city as kol_city,
                 kols.bank_name,
                 kols.bank_account,
                 kols.bank_holder,
