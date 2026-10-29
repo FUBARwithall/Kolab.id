@@ -105,6 +105,16 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('articles/get-one/(:num)', 'Articles::getOne/$1');
     $routes->post('articles/save', 'Articles::save');
     $routes->post('articles/delete/(:num)', 'Articles::delete/$1');
+
+    // Wave 8: WhatsApp Communication Console & Broadcast
+    $routes->get('whatsapp', 'Whatsapp::index');
+    $routes->get('whatsapp/chat/(:num)', 'Whatsapp::chat/$1');
+    $routes->post('whatsapp/send', 'Whatsapp::ajaxSendMessage');
+    $routes->get('whatsapp/poll/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->get('whatsapp/session-status', 'Whatsapp::ajaxSessionStatus');
+    $routes->post('whatsapp/start-session', 'Whatsapp::ajaxStartSession');
+    $routes->get('whatsapp/broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->post('whatsapp/send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
 });
 
 // --------------------------------------------------------------------

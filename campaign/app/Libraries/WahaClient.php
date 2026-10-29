@@ -61,6 +61,51 @@ class WahaClient
     }
 
     /**
+     * Send media file via WAHA
+     */
+    public function sendMedia(string $phone, string $fileUrl, string $caption = ''): array
+    {
+        $chatId = self::formatChatId($phone);
+        $payload = [
+            'chatId'  => $chatId,
+            'file'    => ['url' => $fileUrl],
+            'caption' => $caption,
+            'session' => $this->defaultSession,
+        ];
+
+        return $this->request('/api/sendFile', 'POST', $payload);
+    }
+
+    /**
+     * Get WAHA session status
+     */
+    public function getSessionStatus(?string $session = null): array
+    {
+        $session = $session ?: $this->defaultSession;
+        $res = $this->request('/api/sessions/' . urlencode($session), 'GET');
+        if ($res['success'] && !empty($res['data'])) {
+            $status = strtoupper($res['data']['status'] ?? 'CONNECTED');
+            return [
+                'status'  => $status,
+                'online'  => in_array($status, ['WORKING', 'CONNECTED', 'STARTING'], true),
+                'qr'      => $res['data']['qr'] ?? null,
+                'gateway' => 'WAHA Live API',
+            ];
+        }
+
+        $db = \Config\Database::connect();
+        $dbSession = $db->table('whatsapp_sessions')->where('session_name', $session)->get()->getRowArray();
+        $status = $dbSession['status'] ?? 'CONNECTED';
+
+        return [
+            'status'  => $status,
+            'online'  => ($status === 'CONNECTED'),
+            'qr'      => $dbSession['qr_code'] ?? null,
+            'gateway' => 'Gateway Standby / Simulation',
+        ];
+    }
+
+    /**
      * Template 1: Pemberitahuan Brief Konten Siap
      */
     public function notifyBriefReady(string $phone, string $kolName, string $campaignTitle, string $taskTitle): array

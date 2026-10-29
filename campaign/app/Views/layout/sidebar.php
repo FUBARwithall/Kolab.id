@@ -141,6 +141,18 @@ $isActive = function(string $route) use ($currentPath): string {
           </a>
         </li>
 
+        <!-- Section: KOMUNIKASI & TALENT -->
+        <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KOMUNIKASI &amp; TALENT</li>
+        <li class="nav-item">
+          <a href="<?= base_url('whatsapp') ?>" class="nav-link <?= $isActive('whatsapp') ?>">
+            <i class="nav-icon fab fa-whatsapp text-success"></i>
+            <p>
+              WhatsApp Console
+              <span class="badge bg-success float-end">Live</span>
+            </p>
+          </a>
+        </li>
+
         <!-- Section: KATALOG & LOGISTIK -->
         <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KATALOG &amp; LOGISTIK</li>
         <li class="nav-item">

@@ -14,7 +14,7 @@ class Dashboard extends BaseController
         $totalCampaigns = $db->table('campaigns')->countAllResults();
         $activeCampaigns = $db->table('campaigns')->where('status', 'ACTIVE')->countAllResults();
         $totalBriefs = $db->table('briefs')->countAllResults();
-        $pendingDrafts = $db->table('drafts')->where('status', 'SUBMITTED')->countAllResults();
+        $pendingDrafts = $db->table('drafts')->where('status', 'PENDING')->countAllResults();
         $totalInvoices = $db->table('invoices')->countAllResults();
 
         $recentCampaigns = $db->table('campaigns')
