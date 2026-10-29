@@ -195,15 +195,10 @@ class ShipmentModel extends Model
                         StockHistoryModel::TYPE_OUT,
                         $qty,
                         'Pemberian sampel KOL (Resi: ' . ($data['tracking_number'] ?? '-') . ')',
-                        $userId
+                        $userId,
+                        'SHIPMENT',
+                        $shipmentId
                     );
-                    // Deduct product stock
-                    $prod = $productModel->find($productId);
-                    if ($prod) {
-                        $productModel->update($productId, [
-                            'stock' => max(0, (int)$prod['stock'] - $qty),
-                        ]);
-                    }
                 }
             }
         }

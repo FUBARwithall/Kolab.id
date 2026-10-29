@@ -43,6 +43,9 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('products/save', 'Products::save');
     $routes->post('products/adjust-stock', 'Products::adjustStock');
     $routes->post('products/delete/(:num)', 'Products::delete/$1');
+    $routes->get('products/variants/(:num)', 'Products::getVariants/$1');
+    $routes->post('products/variants/save', 'Products::saveVariant');
+    $routes->post('products/variants/delete/(:num)', 'Products::deleteVariant/$1');
     $routes->get('stock-history', 'StockHistory::index');
 
     // Wave 2: Perencanaan Kampanye & Penugasan KOL
@@ -113,6 +116,8 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->get('evaluations', 'InternalEvaluation::index');
     $routes->get('evaluations/staff', 'InternalEvaluation::staff');
     $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
+    $routes->get('internal-evaluation', 'InternalEvaluation::index');
+    $routes->get('internal-evaluation/export-excel', 'InternalEvaluation::exportExcel');
     // Wave 6: Invoices & Finansial
     $routes->get('invoices', 'Invoices::index');
     $routes->get('finance', 'Invoices::index');

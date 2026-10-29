@@ -26,11 +26,15 @@ class Campaigns extends BaseController
      */
     public function index()
     {
+        $db = \Config\Database::connect();
         $data = [
             'title'      => 'Manajemen Kampanye (Campaigns)',
             'controller' => 'Campaigns',
             'summary'    => $this->campaignModel->getSummaryMetrics(),
             'products'   => $this->productModel->where('is_active', 1)->findAll(),
+            'tiers'      => $db->table('tiers')->orderBy('id', 'asc')->get()->getResultArray(),
+            'categories' => $db->table('categories')->orderBy('name', 'asc')->get()->getResultArray(),
+            'platforms'  => $db->table('platforms')->where('is_active', 1)->orderBy('name', 'asc')->get()->getResultArray(),
         ];
 
         return view('campaigns/index', $data);
@@ -173,7 +177,28 @@ class Campaigns extends BaseController
             ->get()
             ->getResultArray();
 
-        $campaign['product_ids'] = array_column($productIds, 'product_id');
+        $tierIds = $db->table('campaign_allowed_tiers')
+            ->select('tier_id')
+            ->where('campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        $categoryIds = $db->table('campaign_allowed_categories')
+            ->select('category_id')
+            ->where('campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        $platformIds = $db->table('campaign_required_platforms')
+            ->select('platform_id')
+            ->where('campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        $campaign['product_ids']  = array_column($productIds, 'product_id');
+        $campaign['tier_ids']     = array_column($tierIds, 'tier_id');
+        $campaign['category_ids'] = array_column($categoryIds, 'category_id');
+        $campaign['platform_ids'] = array_column($platformIds, 'platform_id');
 
         return $this->response->setJSON([
             'success' => true,
@@ -244,6 +269,48 @@ class Campaigns extends BaseController
                 ];
             }
             $db->table('campaign_products')->insertBatch($insertProds);
+        }
+
+        // Simpan kriteria Tiers
+        $tierIds = $this->request->getPost('tier_ids');
+        $db->table('campaign_allowed_tiers')->where('campaign_id', $campaignId)->delete();
+        if (is_array($tierIds) && !empty($tierIds)) {
+            $insertTiers = [];
+            foreach ($tierIds as $tId) {
+                $insertTiers[] = [
+                    'campaign_id' => $campaignId,
+                    'tier_id'     => (int)$tId,
+                ];
+            }
+            $db->table('campaign_allowed_tiers')->insertBatch($insertTiers);
+        }
+
+        // Simpan kriteria Kategori
+        $categoryIds = $this->request->getPost('category_ids');
+        $db->table('campaign_allowed_categories')->where('campaign_id', $campaignId)->delete();
+        if (is_array($categoryIds) && !empty($categoryIds)) {
+            $insertCats = [];
+            foreach ($categoryIds as $cId) {
+                $insertCats[] = [
+                    'campaign_id' => $campaignId,
+                    'category_id' => (int)$cId,
+                ];
+            }
+            $db->table('campaign_allowed_categories')->insertBatch($insertCats);
+        }
+
+        // Simpan kriteria Platform
+        $platformIds = $this->request->getPost('platform_ids');
+        $db->table('campaign_required_platforms')->where('campaign_id', $campaignId)->delete();
+        if (is_array($platformIds) && !empty($platformIds)) {
+            $insertPlats = [];
+            foreach ($platformIds as $plId) {
+                $insertPlats[] = [
+                    'campaign_id' => $campaignId,
+                    'platform_id' => (int)$plId,
+                ];
+            }
+            $db->table('campaign_required_platforms')->insertBatch($insertPlats);
         }
 
         $db->transComplete();

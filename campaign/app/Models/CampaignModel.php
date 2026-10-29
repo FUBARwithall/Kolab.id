@@ -180,6 +180,28 @@ class CampaignModel extends Model
             ->get()
             ->getResultArray();
 
+        // 1b. Syarat Kriteria (Tiers, Kategori, Platform)
+        $campaign['allowed_tiers'] = $db->table('campaign_allowed_tiers')
+            ->select('tiers.*')
+            ->join('tiers', 'tiers.id = campaign_allowed_tiers.tier_id', 'inner')
+            ->where('campaign_allowed_tiers.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        $campaign['allowed_categories'] = $db->table('campaign_allowed_categories')
+            ->select('categories.*')
+            ->join('categories', 'categories.id = campaign_allowed_categories.category_id', 'inner')
+            ->where('campaign_allowed_categories.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        $campaign['required_platforms'] = $db->table('campaign_required_platforms')
+            ->select('platforms.*')
+            ->join('platforms', 'platforms.id = campaign_required_platforms.platform_id', 'inner')
+            ->where('campaign_required_platforms.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
         // 2. Daftar KOL yang di-assign beserta progress tugasnya
         $campaign['kols'] = $db->table('campaign_kols')
             ->select('campaign_kols.*, kols.name as kol_name, users.avatar, kols.whatsapp, kols.city')

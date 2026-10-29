@@ -63,6 +63,8 @@ class CampaignKolModel extends Model
                 $variantData[] = [
                     'campaign_kol_id' => $campaignKolId,
                     'variant_id'      => (int)$vId,
+                    'qty'             => 1,
+                    'created_at'      => date('Y-m-d H:i:s'),
                 ];
             }
             $db->table('campaign_kol_variants')->insertBatch($variantData);

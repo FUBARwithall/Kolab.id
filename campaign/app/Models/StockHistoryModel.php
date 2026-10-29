@@ -6,6 +6,10 @@ use CodeIgniter\Model;
 
 class StockHistoryModel extends Model
 {
+    public const TYPE_IN         = 'IN';
+    public const TYPE_OUT        = 'OUT';
+    public const TYPE_ADJUSTMENT = 'ADJUSTMENT';
+
     protected $table            = 'stock_history';
     protected $primaryKey       = 'id';
     protected $useAutoIncrement = true;
@@ -45,6 +49,61 @@ class StockHistoryModel extends Model
             'created_by'     => $userId ?: (session()->get('user_id') ?: 1),
             'created_at'     => date('Y-m-d H:i:s'),
         ]);
+    }
+
+    /**
+     * Mencatat mutasi stok sekaligus sinkronisasi otomatis saldo stok produk & varian
+     */
+    public function recordMutation(int $productId, ?int $variantId, string $type, int $qty, ?string $notes = null, ?int $userId = null, string $refType = 'MANUAL', ?int $refId = null): bool
+    {
+        $productModel = new ProductModel();
+        $product = $productModel->find($productId);
+        if (!$product) {
+            return false;
+        }
+
+        $type = strtoupper($type);
+        $currentStock = (int)$product['stock_qty'];
+
+        if ($type === self::TYPE_IN) {
+            $newStock = $currentStock + $qty;
+        } elseif ($type === self::TYPE_OUT) {
+            $newStock = max(0, $currentStock - $qty);
+        } else { // ADJUSTMENT
+            $newStock = $qty;
+        }
+
+        // Update product stock_qty
+        $productModel->update($productId, ['stock_qty' => $newStock]);
+
+        // Jika terdapat varian, update juga stok varian terkait
+        if ($variantId) {
+            $variantModel = new VariantModel();
+            $variant = $variantModel->find($variantId);
+            if ($variant) {
+                $curVarStock = (int)$variant['stock_qty'];
+                if ($type === self::TYPE_IN) {
+                    $newVarStock = $curVarStock + $qty;
+                } elseif ($type === self::TYPE_OUT) {
+                    $newVarStock = max(0, $curVarStock - $qty);
+                } else {
+                    $newVarStock = $qty;
+                }
+                $variantModel->update($variantId, ['stock_qty' => $newVarStock]);
+            }
+        }
+
+        return $this->record(
+            $productId,
+            $variantId,
+            $type,
+            $qty,
+            $newStock,
+            $refType,
+            $refId,
+            $notes,
+            $userId
+        );
     }
 
     /**

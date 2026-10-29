@@ -5,17 +5,20 @@ namespace App\Controllers;
 use App\Controllers\BaseController;
 use App\Models\ProductModel;
 use App\Models\StockHistoryModel;
+use App\Models\VariantModel;
 use CodeIgniter\HTTP\ResponseInterface;
 
 class Products extends BaseController
 {
     protected ProductModel $productModel;
     protected StockHistoryModel $stockHistoryModel;
+    protected VariantModel $variantModel;
 
     public function __construct()
     {
         $this->productModel = new ProductModel();
         $this->stockHistoryModel = new StockHistoryModel();
+        $this->variantModel = new VariantModel();
     }
 
     /**
@@ -81,6 +84,9 @@ class Products extends BaseController
 
             $actionBtns = '
                 <div class="d-flex gap-1 justify-content-center">
+                    <button type="button" class="btn btn-outline-warning text-dark btn-sm rounded-2 py-1 px-2" title="Kelola Varian" onclick="openVariantsModal(' . $row['id'] . ', \'' . esc(addslashes($row['name'])) . '\')">
+                        <i class="fas fa-tags"></i>
+                    </button>
                     <button type="button" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Sesuaikan Stok" onclick="openStockModal(' . $row['id'] . ', \'' . esc(addslashes($row['name'])) . '\', ' . $row['stock_qty'] . ')">
                         <i class="fas fa-boxes"></i>
                     </button>
@@ -319,6 +325,127 @@ class Products extends BaseController
             'success' => true,
             'message' => 'Produk berhasil dihapus.',
             'summary' => $this->productModel->getSummary(),
+        ]);
+    }
+
+    /**
+     * Ambil daftar varian untuk sebuah produk (JSON)
+     */
+    public function getVariants(int $productId): ResponseInterface
+    {
+        $product = $this->productModel->find($productId);
+        if (!$product) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Produk tidak ditemukan.',
+            ]);
+        }
+
+        $variants = $this->variantModel->where('product_id', $productId)->orderBy('id', 'asc')->findAll();
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'product'  => $product,
+            'variants' => $variants,
+        ]);
+    }
+
+    /**
+     * Simpan varian produk (Tambah atau Update)
+     */
+    public function saveVariant(): ResponseInterface
+    {
+        $id = $this->request->getPost('id');
+        $isUpdate = !empty($id);
+        $productId = (int)$this->request->getPost('product_id');
+
+        $rules = [
+            'product_id'       => 'required|is_not_unique[products.id]',
+            'name'             => 'required|min_length[2]|max_length[100]',
+            'sku'              => 'required|min_length[2]|max_length[100]|is_unique[variants.sku,id,' . ($id ?: 0) . ']',
+            'stock_qty'        => 'required|integer',
+            'additional_price' => 'permit_empty|numeric',
+        ];
+
+        if (!$this->validate($rules)) {
+            return $this->response->setJSON([
+                'success'  => false,
+                'messages' => $this->validator->getErrors(),
+            ]);
+        }
+
+        $payload = [
+            'product_id'       => $productId,
+            'name'             => trim($this->request->getPost('name')),
+            'sku'              => strtoupper(trim($this->request->getPost('sku'))),
+            'stock_qty'        => (int)$this->request->getPost('stock_qty'),
+            'additional_price' => (float)($this->request->getPost('additional_price') ?? 0),
+        ];
+
+        if ($isUpdate) {
+            $this->variantModel->update($id, $payload);
+            $message = 'Varian berhasil diperbarui.';
+        } else {
+            $newVarId = $this->variantModel->insert($payload);
+            if ($payload['stock_qty'] > 0) {
+                $this->stockHistoryModel->record(
+                    $productId,
+                    $newVarId,
+                    'IN',
+                    $payload['stock_qty'],
+                    $payload['stock_qty'],
+                    'INITIAL_STOCK',
+                    $newVarId,
+                    'Stok Awal Varian Baru: ' . $payload['name']
+                );
+            }
+            $message = 'Varian baru berhasil ditambahkan.';
+        }
+
+        $variants = $this->variantModel->where('product_id', $productId)->orderBy('id', 'asc')->findAll();
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'message'  => $message,
+            'variants' => $variants,
+        ]);
+    }
+
+    /**
+     * Hapus varian produk
+     */
+    public function deleteVariant(int $id): ResponseInterface
+    {
+        $variant = $this->variantModel->find($id);
+        if (!$variant) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Varian tidak ditemukan.',
+            ]);
+        }
+
+        $productId = $variant['product_id'];
+
+        // Cek jika varian sudah terasosiasi di campaign_variants atau kol_shipment_items
+        $db = \Config\Database::connect();
+        $usedInShipment = $db->table('kol_shipment_items')->where('variant_id', $id)->countAllResults();
+        $usedInCampaign = $db->table('campaign_variants')->where('variant_id', $id)->countAllResults();
+
+        if ($usedInShipment > 0 || $usedInCampaign > 0) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Varian tidak dapat dihapus karena sudah digunakan dalam kampanye atau pengiriman.',
+            ]);
+        }
+
+        $this->variantModel->delete($id);
+
+        $variants = $this->variantModel->where('product_id', $productId)->orderBy('id', 'asc')->findAll();
+
+        return $this->response->setJSON([
+            'success'  => true,
+            'message'  => 'Varian berhasil dihapus.',
+            'variants' => $variants,
         ]);
     }
 }

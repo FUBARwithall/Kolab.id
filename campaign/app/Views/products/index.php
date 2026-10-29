@@ -208,6 +208,81 @@
     </div>
   </div>
 </div>
+
+<!-- Modal 3: Kelola Varian Produk -->
+<div class="modal fade" id="variantsModal" tabindex="-1" aria-labelledby="variantsModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light border-bottom">
+        <h5 class="modal-title fw-bold" id="variantsModalLabel"><i class="fas fa-tags me-2 text-warning text-dark"></i>Kelola Varian Produk</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="mb-3 pb-2 border-bottom">
+          <span class="text-muted small">Produk Induk:</span>
+          <h5 class="fw-bold text-dark mb-0" id="varProductName">-</h5>
+        </div>
+
+        <!-- Tabel Daftar Varian -->
+        <div class="mb-4">
+          <h6 class="fw-bold text-secondary mb-2"><i class="fas fa-list me-1"></i>Daftar Varian Aktif</h6>
+          <div class="table-responsive">
+            <table class="table table-bordered table-sm align-middle" style="font-size: 13px;" id="variantTable">
+              <thead class="table-light">
+                <tr>
+                  <th>SKU Varian</th>
+                  <th>Nama Varian (Shade / Ukuran / Konsep)</th>
+                  <th class="text-center" style="width: 90px;">Stok</th>
+                  <th class="text-end" style="width: 120px;">Biaya Tambahan</th>
+                  <th class="text-center" style="width: 90px;">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="variantListBody">
+                <tr><td colspan="5" class="text-center text-muted py-3">Memuat varian...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Form Tambah / Edit Varian -->
+        <div class="card border bg-light">
+          <div class="card-body p-3">
+            <h6 class="fw-bold text-dark mb-3" id="variantFormTitle"><i class="fas fa-plus-circle me-1 text-primary"></i>Tambah Varian Baru</h6>
+            <form id="variantForm">
+              <input type="hidden" name="id" id="variantId">
+              <input type="hidden" name="product_id" id="variantProductId">
+              <div class="row g-2">
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold">SKU Varian <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control form-control-sm text-uppercase" name="sku" id="variantSku" placeholder="PRD-VAR-01" required>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label small fw-semibold">Nama Varian <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control form-control-sm" name="name" id="variantName" placeholder="Contoh: 30ml / Shade #02" required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small fw-semibold">Stok <span class="text-danger">*</span></label>
+                  <input type="number" class="form-control form-control-sm" name="stock_qty" id="variantStock" placeholder="0" required>
+                </div>
+                <div class="col-md-2">
+                  <label class="form-label small fw-semibold">Biaya Tambah</label>
+                  <input type="number" step="1000" class="form-control form-control-sm" name="additional_price" id="variantPrice" placeholder="0">
+                </div>
+                <div class="col-12 mt-2 d-flex justify-content-end gap-2">
+                  <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCancelVariantEdit" onclick="resetVariantForm()" style="display:none;">Batal Edit</button>
+                  <button type="submit" class="btn btn-primary btn-sm px-3" id="btnSaveVariant"><i class="fas fa-save me-1"></i>Simpan Varian</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer bg-light border-top">
+        <button type="button" class="btn btn-secondary rounded-2" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
 <?= $this->endSection() ?>
 
 <?= $this->section('pageScript') ?>
@@ -417,6 +492,140 @@ function deleteProduct(id) {
           });
           table.ajax.reload(null, false);
           if (res.summary) updateSummaryCards(res.summary);
+        } else {
+          Swal.fire('Gagal', res.message, 'error');
+        }
+      }, 'json');
+    }
+  });
+}
+
+// ----------------------------------------------------
+// Logika Kelola Varian Produk
+// ----------------------------------------------------
+let currentLoadedVariants = [];
+
+function openVariantsModal(productId, productName) {
+  $('#varProductName').text(productName);
+  $('#variantProductId').val(productId);
+  resetVariantForm();
+  $('#variantListBody').html('<tr><td colspan="5" class="text-center text-muted py-3"><div class="spinner-border spinner-border-sm me-1 text-primary"></div> Memuat varian...</td></tr>');
+  
+  new bootstrap.Modal(document.getElementById('variantsModal')).show();
+
+  $.get('<?= base_url('products/variants') ?>/' + productId, function(res) {
+    if (res.success) {
+      currentLoadedVariants = res.variants || [];
+      renderVariantRows(currentLoadedVariants);
+    } else {
+      $('#variantListBody').html('<tr><td colspan="5" class="text-center text-danger py-3">' + (res.message || 'Gagal memuat varian') + '</td></tr>');
+    }
+  }, 'json');
+}
+
+function renderVariantRows(variants) {
+  if (!variants || variants.length === 0) {
+    $('#variantListBody').html('<tr><td colspan="5" class="text-center text-muted py-3">Belum ada varian untuk produk ini. Tambahkan melalui form di bawah.</td></tr>');
+    return;
+  }
+
+  let html = '';
+  variants.forEach(function(v) {
+    let priceFormatted = v.additional_price > 0 ? '+Rp ' + Number(v.additional_price).toLocaleString('id-ID') : '-';
+    html += `
+      <tr>
+        <td class="fw-semibold text-secondary">${$('<div>').text(v.sku).html()}</td>
+        <td class="fw-bold text-dark">${$('<div>').text(v.name).html()}</td>
+        <td class="text-center"><span class="badge bg-primary">${Number(v.stock_qty).toLocaleString('id-ID')}</span></td>
+        <td class="text-end text-success">${priceFormatted}</td>
+        <td class="text-center">
+          <div class="d-flex gap-1 justify-content-center">
+            <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" title="Edit" onclick="editVariant(${v.id})"><i class="fas fa-edit"></i></button>
+            <button type="button" class="btn btn-outline-danger btn-sm py-0 px-2" title="Hapus" onclick="deleteVariant(${v.id})"><i class="fas fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+  $('#variantListBody').html(html);
+}
+
+function resetVariantForm() {
+  let prodId = $('#variantProductId').val();
+  $('#variantForm')[0].reset();
+  $('#variantId').val('');
+  $('#variantProductId').val(prodId);
+  $('#variantFormTitle').html('<i class="fas fa-plus-circle me-1 text-primary"></i>Tambah Varian Baru');
+  $('#btnCancelVariantEdit').hide();
+  $('#btnSaveVariant').html('<i class="fas fa-save me-1"></i>Simpan Varian');
+}
+
+function editVariant(varId) {
+  let v = currentLoadedVariants.find(item => item.id == varId);
+  if (!v) return;
+
+  $('#variantId').val(v.id);
+  $('#variantProductId').val(v.product_id);
+  $('#variantSku').val(v.sku);
+  $('#variantName').val(v.name);
+  $('#variantStock').val(v.stock_qty);
+  $('#variantPrice').val(v.additional_price);
+
+  $('#variantFormTitle').html('<i class="fas fa-edit me-1 text-warning"></i>Edit Varian: ' + $('<div>').text(v.name).html());
+  $('#btnCancelVariantEdit').show();
+  $('#btnSaveVariant').html('<i class="fas fa-check me-1"></i>Perbarui Varian');
+  $('#variantSku').focus();
+}
+
+$('#variantForm').on('submit', function(e) {
+  e.preventDefault();
+  let formData = $(this).serialize();
+  let btn = $('#btnSaveVariant');
+  btn.prop('disabled', true);
+
+  $.post('<?= base_url('products/variants/save') ?>', formData, function(res) {
+    btn.prop('disabled', false);
+    if (res.success) {
+      currentLoadedVariants = res.variants || [];
+      renderVariantRows(currentLoadedVariants);
+      resetVariantForm();
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil',
+        text: res.message,
+        timer: 1500,
+        showConfirmButton: false
+      });
+    } else {
+      let errMsg = res.message || Object.values(res.messages || {}).join('<br>') || 'Gagal menyimpan varian.';
+      Swal.fire('Gagal', errMsg, 'error');
+    }
+  }, 'json');
+});
+
+function deleteVariant(varId) {
+  Swal.fire({
+    title: 'Hapus varian ini?',
+    text: "Varian yang sudah digunakan dalam pengiriman sampel tidak dapat dihapus.",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Ya, Hapus!',
+    cancelButtonText: 'Batal'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $.post('<?= base_url('products/variants/delete') ?>/' + varId, function(res) {
+        if (res.success) {
+          currentLoadedVariants = res.variants || [];
+          renderVariantRows(currentLoadedVariants);
+          Swal.fire({
+            icon: 'success',
+            title: 'Terhapus',
+            text: res.message,
+            timer: 1500,
+            showConfirmButton: false
+          });
         } else {
           Swal.fire('Gagal', res.message, 'error');
         }
