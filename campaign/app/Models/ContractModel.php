@@ -81,9 +81,9 @@ class ContractModel extends Model
     }
 
     /**
-     * Generate contract draft from Campaign KOL deal
+     * Generate contract draft from Campaign KOL deal with dynamic template support
      */
-    public function generateContract(int $campaignKolId): int
+    public function generateContract(int $campaignKolId, ?int $templateId = null): int
     {
         $db = $this->db;
         $ck = $db->table('campaign_kols')
@@ -100,26 +100,65 @@ class ContractModel extends Model
 
         $contractNumber = sprintf('KTR/%s/%04d', date('Ym'), $campaignKolId);
 
-        $clauses = "PERJANJIAN KERJASAMA KREATIF KOL / INFLUENCER\nNomor: {$contractNumber}\n\n";
-        $clauses .= "Pada hari ini, disepakati kerjasama pembuatan dan penayangan konten video antara:\n";
-        $clauses .= "PIHAK PERTAMA (Brand / KOLAB.ID)\n";
-        $clauses .= "Nama Kampanye : {$ck['campaign_title']}\n\n";
-        $clauses .= "PIHAK KEDUA (Talent KOL)\n";
-        $clauses .= "Nama Lengkap  : {$ck['kol_name']}\n";
-        $clauses .= "NIK           : " . ($ck['nik'] ?: '-') . "\n";
-        $clauses .= "Alamat        : " . ($ck['address'] ?: '-') . "\n\n";
-        $clauses .= "RUANG LINGKUP PEKERJAAN (SOW):\n";
-        $clauses .= "- Jumlah Video (VT): {$ck['total_vt']} Video\n";
-        $clauses .= "- Kompensasi / Fee : Rp " . number_format((float)$ck['deal_amount'], 0, ',', '.') . "\n";
-        $clauses .= "- Rekening Bank    : {$ck['bank_name']} No. {$ck['bank_account']} a/n {$ck['bank_holder']}\n\n";
-        $clauses .= "SYARAT DAN KETENTUAN:\n";
-        $clauses .= "1. Konten video wajib melalui proses approval brief dan draft oleh tim KOLAB.ID.\n";
-        $clauses .= "2. Video tayang selama masa kampanye dan tidak boleh dihapus minimal 90 hari setelah tayang.\n";
-        $clauses .= "3. Pembayaran diproses setelah video tayang live dan diverifikasi tim finance.";
+        // Cari template jika dipilih atau gunakan template aktif
+        $tplRow = null;
+        if ($templateId) {
+            $tplRow = $db->table('contract_templates')->where('id', $templateId)->get()->getRowArray();
+        } else {
+            $tplRow = $db->table('contract_templates')->where('is_active', 1)->orderBy('id', 'ASC')->get()->getRowArray();
+        }
+
+        if ($tplRow && !empty($tplRow['body_template'])) {
+            $prod = $db->table('campaign_products')
+                ->select('products.name')
+                ->join('products', 'products.id = campaign_products.product_id', 'left')
+                ->where('campaign_products.campaign_id', $ck['campaign_id'])
+                ->get()
+                ->getRowArray();
+            $productName = $prod['name'] ?? $ck['campaign_title'];
+
+            $replacements = [
+                '{nomor_kontrak}'    => $contractNumber,
+                '{tanggal}'          => date('d F Y'),
+                '{brand_name}'       => 'KOLAB.ID / Brand Partner',
+                '{campaign_title}'   => $ck['campaign_title'],
+                '{product_name}'     => $productName,
+                '{kol_name}'         => $ck['kol_name'],
+                '{kol_nik}'          => $ck['nik'] ?: '-',
+                '{kol_address}'      => $ck['address'] ?: '-',
+                '{kol_whatsapp}'     => $ck['whatsapp'] ?: '-',
+                '{deal_amount}'      => 'Rp ' . number_format((float)$ck['deal_amount'], 0, ',', '.'),
+                '{total_vt}'         => (string)$ck['total_vt'],
+                '{kol_bank_name}'    => $ck['bank_name'] ?: '-',
+                '{kol_bank_account}' => $ck['bank_account'] ?: '-',
+                '{kol_bank_holder}'  => $ck['bank_holder'] ?: '-',
+            ];
+
+            $clauses = str_replace(array_keys($replacements), array_values($replacements), $tplRow['body_template']);
+            $usedTemplateId = (int)$tplRow['id'];
+        } else {
+            $clauses = "PERJANJIAN KERJASAMA KREATIF KOL / INFLUENCER\nNomor: {$contractNumber}\n\n";
+            $clauses .= "Pada hari ini, disepakati kerjasama pembuatan dan penayangan konten video antara:\n";
+            $clauses .= "PIHAK PERTAMA (Brand / KOLAB.ID)\n";
+            $clauses .= "Nama Kampanye : {$ck['campaign_title']}\n\n";
+            $clauses .= "PIHAK KEDUA (Talent KOL)\n";
+            $clauses .= "Nama Lengkap  : {$ck['kol_name']}\n";
+            $clauses .= "NIK           : " . ($ck['nik'] ?: '-') . "\n";
+            $clauses .= "Alamat        : " . ($ck['address'] ?: '-') . "\n\n";
+            $clauses .= "RUANG LINGKUP PEKERJAAN (SOW):\n";
+            $clauses .= "- Jumlah Video (VT): {$ck['total_vt']} Video\n";
+            $clauses .= "- Kompensasi / Fee : Rp " . number_format((float)$ck['deal_amount'], 0, ',', '.') . "\n";
+            $clauses .= "- Rekening Bank    : {$ck['bank_name']} No. {$ck['bank_account']} a/n {$ck['bank_holder']}\n\n";
+            $clauses .= "SYARAT DAN KETENTUAN:\n";
+            $clauses .= "1. Konten video wajib melalui proses approval brief dan draft oleh tim KOLAB.ID.\n";
+            $clauses .= "2. Video tayang selama masa kampanye dan tidak boleh dihapus minimal 90 hari setelah tayang.\n";
+            $clauses .= "3. Pembayaran diproses setelah video tayang live dan diverifikasi tim finance.";
+            $usedTemplateId = null;
+        }
 
         $contractData = [
             'campaign_kol_id'  => $campaignKolId,
-            'template_id'      => null,
+            'template_id'      => $usedTemplateId,
             'contract_number'  => $contractNumber,
             'clauses_rendered' => $clauses,
         ];

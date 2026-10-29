@@ -30,11 +30,18 @@ class Contracts extends BaseController
             ->get()
             ->getResultArray();
 
+        $contractTemplates = $db->table('contract_templates')
+            ->where('is_active', 1)
+            ->orderBy('id', 'ASC')
+            ->get()
+            ->getResultArray();
+
         $data = [
-            'title'        => 'Kontrak KOL & Komisi Kerjasama',
-            'controller'   => 'Contracts',
-            'assignedKols' => $assignedKols,
-            'allCampaigns' => $this->campaignModel->select('id, title')->orderBy('id', 'DESC')->findAll(),
+            'title'             => 'Kontrak KOL & Komisi Kerjasama',
+            'controller'        => 'Contracts',
+            'assignedKols'      => $assignedKols,
+            'contractTemplates' => $contractTemplates,
+            'allCampaigns'      => $this->campaignModel->select('id, title')->orderBy('id', 'DESC')->findAll(),
         ];
 
         return view('contracts/index', $data);
@@ -133,11 +140,12 @@ class Contracts extends BaseController
     public function generate()
     {
         $campaignKolId = (int)$this->request->getPost('campaign_kol_id');
+        $templateId    = (int)$this->request->getPost('template_id') ?: null;
         if (empty($campaignKolId)) {
             return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Pilih penugasan KOL']);
         }
 
-        $contractId = $this->contractModel->generateContract($campaignKolId);
+        $contractId = $this->contractModel->generateContract($campaignKolId, $templateId);
 
         return $this->response->setJSON([
             'success'     => true,

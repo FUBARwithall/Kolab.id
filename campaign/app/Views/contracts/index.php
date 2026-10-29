@@ -86,7 +86,18 @@
                 </option>
               <?php endforeach; ?>
             </select>
-            <small class="text-muted">Klausul pasal, hak &amp; kewajiban otomatis dirender dari database.</small>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Template Kontrak / Klausul</label>
+            <select class="form-select" id="ktrTemplateId" name="template_id">
+              <option value="">-- Default Template Standar --</option>
+              <?php if (!empty($contractTemplates)): ?>
+                <?php foreach ($contractTemplates as $tpl): ?>
+                  <option value="<?= $tpl['id'] ?>"><?= esc($tpl['title']) ?></option>
+                <?php endforeach; ?>
+              <?php endif; ?>
+            </select>
+            <small class="text-muted">Klausul pasal, hak &amp; kewajiban otomatis dirender sesuai master template yang dipilih.</small>
           </div>
         </div>
         <div class="modal-footer bg-light">

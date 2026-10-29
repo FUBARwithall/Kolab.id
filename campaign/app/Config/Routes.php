@@ -150,6 +150,13 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->post('contracts/generate', 'Contracts::generate');
     $routes->get('contracts/print/(:num)', 'Contracts::printContract/$1');
     $routes->post('contracts/sign/(:num)', 'Contracts::signContract/$1');
+
+    // Wave 6: Master Contract Templates
+    $routes->get('contract-templates', 'ContractTemplates::index');
+    $routes->post('contract-templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->get('contract-templates/get-one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->post('contract-templates/save', 'ContractTemplates::save');
+    $routes->post('contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
     $routes->get('payments', 'Invoices::index');
     $routes->get('budget', 'Invoices::index');
     $routes->get('approvals', 'Invoices::index');

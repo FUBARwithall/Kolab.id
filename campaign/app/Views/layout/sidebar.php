@@ -199,6 +199,12 @@ $isActive = function(string $route) use ($currentPath): string {
             </a>
           </li>
           <li class="nav-item">
+            <a href="<?= base_url('contract-templates') ?>" class="nav-link <?= $isActive('contract-templates') ?>">
+              <i class="nav-icon fas fa-file-invoice text-info"></i>
+              <p>Template Kontrak</p>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="<?= base_url('evaluations') ?>" class="nav-link <?= $isActive('evaluations') ?>">
               <i class="nav-icon fas fa-medal text-warning"></i>
               <p>Evaluasi Kinerja KPI</p>
