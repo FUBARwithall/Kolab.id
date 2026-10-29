@@ -238,6 +238,17 @@ $isActive = function(string $route) use ($currentPath): string {
           </li>
         <?php endif; ?>
 
+        <!-- Section: SISTEM & AUDIT (Khusus Leader & Superadmin) -->
+        <?php if ($isAdmin || $isLeader): ?>
+          <li class="nav-header text-uppercase text-xs text-muted px-3 mt-3">SISTEM &amp; KEAMANAN</li>
+          <li class="nav-item">
+            <a href="<?= base_url('audit-logs') ?>" class="nav-link <?= $isActive('audit-logs') ?>">
+              <i class="nav-icon fas fa-history text-secondary"></i>
+              <p>Audit Trail &amp; Log</p>
+            </a>
+          </li>
+        <?php endif; ?>
+
         <!-- Section: DEVELOPER TOOLS (Cicool Legacy parent 130 - Khusus Superadmin) -->
         <?php if ($isAdmin): ?>
           <li class="nav-header text-uppercase text-xs text-muted px-3 mt-3">DEVELOPER TOOLS</li>

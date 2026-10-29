@@ -165,6 +165,12 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->get('contract-templates/get-one/(:num)', 'ContractTemplates::getOne/$1');
     $routes->post('contract-templates/save', 'ContractTemplates::save');
     $routes->post('contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
+
+    // Wave 10: Audit Trail & Activity Logs
+    $routes->get('audit-logs', 'AuditLogs::index');
+    $routes->post('audit-logs/get-datatable', 'AuditLogs::getDatatable');
+    $routes->get('audit-logs/get-one/(:num)', 'AuditLogs::getOne/$1');
+
     $routes->get('payments', 'Invoices::index');
     $routes->get('budget', 'Invoices::index');
     $routes->get('approvals', 'Invoices::index');
