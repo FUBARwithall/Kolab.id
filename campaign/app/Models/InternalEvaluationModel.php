@@ -242,4 +242,164 @@ class InternalEvaluationModel extends Model
             'grade_c_count'    => $countC,
         ];
     }
+
+    /**
+     * Scorecard KPI Khusus Leader & Campaign Strategist
+     */
+    public function getLeaderKpis(?int $campaignId = null): array
+    {
+        $db = $this->db;
+
+        // Fetch leaders (role_id 2) and superadmin (role_id 1)
+        $leaders = $db->table('users')
+            ->select('users.id, users.name, users.email, users.avatar')
+            ->join('user_roles', 'user_roles.user_id = users.id')
+            ->whereIn('user_roles.role_id', [1, 2])
+            ->where('users.deleted_at IS NULL')
+            ->get()
+            ->getResultArray();
+
+        $scorecard = [];
+        foreach ($leaders as $ld) {
+            $lid = (int)$ld['id'];
+
+            // Campaigns managed
+            $campBuilder = $db->table('campaigns');
+            if ($campaignId) {
+                $campBuilder->where('id', $campaignId);
+            }
+            $campaigns = $campBuilder->get()->getResultArray();
+            $totalCampaigns = count($campaigns);
+
+            $totalBudget = 0;
+            $targetViews = 0;
+            $campIds = [];
+            foreach ($campaigns as $c) {
+                $totalBudget += (float)$c['budget_total'];
+                $targetViews += (int)$c['target_views'];
+                $campIds[] = (int)$c['id'];
+            }
+
+            $actualSpent = 0;
+            $actualViews = 0;
+            $actualEngagements = 0;
+
+            if (!empty($campIds)) {
+                $spentRow = $db->table('campaign_kols')
+                    ->select('COALESCE(SUM(deal_amount), 0) as spent')
+                    ->whereIn('campaign_id', $campIds)
+                    ->get()
+                    ->getRowArray();
+                $actualSpent = (float)($spentRow['spent'] ?? 0);
+
+                $viewsRow = $db->table('posting_metrics pm')
+                    ->select('COALESCE(SUM(pm.views_count), 0) as tot_views, COALESCE(SUM(pm.likes_count + pm.comments_count + pm.shares_count), 0) as tot_eng')
+                    ->join('postings p', 'p.id = pm.posting_id')
+                    ->join('tasks t', 't.id = p.task_id')
+                    ->join('campaign_kols ck', 'ck.id = t.campaign_kol_id')
+                    ->whereIn('ck.campaign_id', $campIds)
+                    ->get()
+                    ->getRowArray();
+                $actualViews = (int)($viewsRow['tot_views'] ?? 0);
+                $actualEngagements = (int)($viewsRow['tot_eng'] ?? 0);
+            }
+
+            $viewRate = ($targetViews > 0) ? min(150, round(($actualViews / $targetViews) * 100, 1)) : 100;
+            $budgetRate = ($totalBudget > 0) ? round(($actualSpent / $totalBudget) * 100, 1) : 0;
+            $cpv = ($actualViews > 0) ? round($actualSpent / $actualViews, 2) : 0;
+
+            // Poin View Achievement (Max 40)
+            if ($viewRate >= 100) $viewPoints = 40;
+            elseif ($viewRate >= 80) $viewPoints = 30;
+            elseif ($viewRate >= 60) $viewPoints = 20;
+            else $viewPoints = 10;
+
+            // Poin Budget Efficiency (Max 35)
+            if ($budgetRate >= 80 && $budgetRate <= 100) $budgetPoints = 35;
+            elseif ($budgetRate > 100 && $budgetRate <= 110) $budgetPoints = 25;
+            elseif ($budgetRate >= 50 && $budgetRate < 80) $budgetPoints = 25;
+            else $budgetPoints = 15;
+
+            // Poin Execution & Engagement (Max 25)
+            $engPoints = ($actualEngagements > 10000) ? 25 : (($actualEngagements > 2000) ? 20 : 15);
+
+            $totalScore = $viewPoints + $budgetPoints + $engPoints;
+
+            if ($totalScore >= 85) {
+                $grade = 'A';
+                $gradeLabel = 'Sangat Memuaskan';
+                $gradeClass = 'success';
+            } elseif ($totalScore >= 65) {
+                $grade = 'B';
+                $gradeLabel = 'Memenuhi Target';
+                $gradeClass = 'primary';
+            } else {
+                $grade = 'C';
+                $gradeLabel = 'Perlu Evaluasi';
+                $gradeClass = 'warning';
+            }
+
+            $scorecard[] = [
+                'leader_id'          => $lid,
+                'leader_name'        => $ld['name'],
+                'leader_email'       => $ld['email'],
+                'leader_avatar'      => $ld['avatar'],
+                'total_campaigns'    => $totalCampaigns,
+                'total_budget'       => $totalBudget,
+                'actual_spent'       => $actualSpent,
+                'budget_rate'        => $budgetRate,
+                'budget_points'      => $budgetPoints,
+                'target_views'       => $targetViews,
+                'actual_views'       => $actualViews,
+                'view_rate'          => $viewRate,
+                'view_points'        => $viewPoints,
+                'actual_engagements' => $actualEngagements,
+                'eng_points'         => $engPoints,
+                'cpv'                => $cpv,
+                'total_score'        => $totalScore,
+                'grade'              => $grade,
+                'grade_label'        => $gradeLabel,
+                'grade_class'        => $gradeClass,
+            ];
+        }
+
+        return $scorecard;
+    }
+
+    /**
+     * Leader KPI Team Summary
+     */
+    public function getLeaderTeamSummary(array $leaderKpis): array
+    {
+        if (empty($leaderKpis)) {
+            return [
+                'total_leaders'    => 0,
+                'avg_leader_score' => 0,
+                'avg_view_rate'    => 0,
+                'avg_budget_rate'  => 0,
+                'tot_actual_views' => 0,
+            ];
+        }
+
+        $totScore = 0;
+        $totViewRate = 0;
+        $totBudgetRate = 0;
+        $totViews = 0;
+        $n = count($leaderKpis);
+
+        foreach ($leaderKpis as $k) {
+            $totScore += $k['total_score'];
+            $totViewRate += $k['view_rate'];
+            $totBudgetRate += $k['budget_rate'];
+            $totViews += $k['actual_views'];
+        }
+
+        return [
+            'total_leaders'    => $n,
+            'avg_leader_score' => round($totScore / $n, 1),
+            'avg_view_rate'    => round($totViewRate / $n, 1),
+            'avg_budget_rate'  => round($totBudgetRate / $n, 1),
+            'tot_actual_views' => $totViews,
+        ];
+    }
 }

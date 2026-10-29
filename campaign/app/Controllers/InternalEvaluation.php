@@ -17,7 +17,7 @@ class InternalEvaluation extends BaseController
     }
 
     /**
-     * Halaman Utama Evaluasi Kinerja Internal Tim Operasional
+     * Halaman Utama Evaluasi Kinerja Internal Tim Operasional & Leader
      */
     public function index()
     {
@@ -25,13 +25,18 @@ class InternalEvaluation extends BaseController
         $staffKpis = $this->evalModel->getStaffOperationalKpis($campaignId ? (int)$campaignId : null);
         $teamSummary = $this->evalModel->getOperationalTeamSummary($staffKpis);
 
+        $leaderKpis = $this->evalModel->getLeaderKpis($campaignId ? (int)$campaignId : null);
+        $leaderSummary = $this->evalModel->getLeaderTeamSummary($leaderKpis);
+
         $data = [
-            'title'        => 'Evaluasi Kinerja Internal — KPI & Scorecard Tim',
-            'controller'   => 'InternalEvaluation',
-            'staffKpis'    => $staffKpis,
-            'teamSummary'  => $teamSummary,
-            'campaignId'   => $campaignId,
-            'allCampaigns' => $this->campaignModel->select('id, title')->orderBy('id', 'DESC')->findAll(),
+            'title'         => 'Evaluasi Kinerja Internal — KPI & Scorecard Tim',
+            'controller'    => 'InternalEvaluation',
+            'staffKpis'     => $staffKpis,
+            'teamSummary'   => $teamSummary,
+            'leaderKpis'    => $leaderKpis,
+            'leaderSummary' => $leaderSummary,
+            'campaignId'    => $campaignId,
+            'allCampaigns'  => $this->campaignModel->select('id, title')->orderBy('id', 'DESC')->findAll(),
         ];
 
         return view('evaluations/index', $data);
@@ -74,7 +79,7 @@ class InternalEvaluation extends BaseController
             'Total Skor KPI (Max 100)',
             'Grade',
             'Predikat'
-        ]);
+        ], ',', '"', "\\");
 
         foreach ($staffKpis as $row) {
             fputcsv($out, [
@@ -92,7 +97,7 @@ class InternalEvaluation extends BaseController
                 $row['total_score'],
                 $row['grade'],
                 $row['grade_label']
-            ]);
+            ], ',', '"', "\\");
         }
 
         fclose($out);
