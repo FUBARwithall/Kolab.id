@@ -114,9 +114,29 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('tasks', 'Tasks::index');
     $routes->post('tasks/get-datatable', 'Tasks::getDatatable');
     $routes->get('tasks/get-one/(:num)', 'Tasks::getOne/$1');
-    $routes->post('tasks/update-status/(:num)', 'Tasks::updateStatus/$1');
+    $routes->get('tasks/view/(:num)', 'Tasks::view/$1');
+    $routes->post('tasks/save', 'Tasks::save');
+    $routes->match(['GET', 'POST'], 'tasks/update-status/(:num)', 'Tasks::updateStatus/$1');
+    $routes->match(['GET', 'POST'], 'tasks/set-status/(:num)', 'Tasks::setStatus/$1');
+    $routes->match(['GET', 'POST'], 'tasks/set-status/(:num)/(:segment)', 'Tasks::setStatus/$1/$2');
     $routes->post('tasks/set-schedule/(:num)', 'Tasks::setSchedule/$1');
-    $routes->post('tasks/delete/(:num)', 'Tasks::delete/$1');
+    $routes->post('tasks/set-live-url/(:num)', 'Tasks::setLiveUrl/$1');
+    $routes->post('tasks/sync-posting-metrics/(:num)', 'Tasks::syncPostingMetrics/$1');
+    $routes->post('tasks/analyze-sentiment/(:num)', 'Tasks::analyzeSentiment/$1');
+    $routes->match(['GET', 'POST'], 'tasks/delete/(:num)', 'Tasks::delete/$1');
+    $routes->post('tasks/bulk-delete', 'Tasks::bulkDelete');
+    $routes->get('tasks/export', 'Tasks::export');
+
+    // CI3 Parity Aliases for tasks
+    $routes->get('administrator/tasks', 'Tasks::index');
+    $routes->get('administrator/tasks/index', 'Tasks::index');
+    $routes->get('administrator/tasks/view/(:num)', 'Tasks::view/$1');
+    $routes->get('administrator/tasks/edit/(:num)', 'Tasks::view/$1');
+    $routes->post('administrator/tasks/save', 'Tasks::save');
+    $routes->match(['GET', 'POST'], 'administrator/tasks/delete/(:num)', 'Tasks::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/tasks/set_status/(:num)', 'Tasks::setStatus/$1');
+    $routes->match(['GET', 'POST'], 'administrator/tasks/set_status/(:num)/(:segment)', 'Tasks::setStatus/$1/$2');
+    $routes->get('administrator/tasks/export', 'Tasks::export');
 
     $routes->get('briefs', 'Briefs::index');
     $routes->post('briefs/get-datatable', 'Briefs::getDatatable');
