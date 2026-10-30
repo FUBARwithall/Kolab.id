@@ -158,6 +158,15 @@ $isActive = function(string $route) use ($currentPath): string {
             </p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="<?= base_url('kols') ?>" class="nav-link <?= $isActive('kols') ?>">
+            <i class="nav-icon fas fa-user-astronaut text-warning"></i>
+            <p>
+              Direktori &amp; Performance KOL
+              <span class="badge bg-info text-dark float-end">View Only</span>
+            </p>
+          </a>
+        </li>
 
         <!-- Section: KATALOG & LOGISTIK -->
         <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KATALOG &amp; LOGISTIK</li>

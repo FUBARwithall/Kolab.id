@@ -132,6 +132,13 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('scraping-jobs/retry/(:num)', 'ScrapingJobs::retry/$1');
     $routes->post('scraping-jobs/trigger', 'ScrapingJobs::triggerNew');
     $routes->get('apify-jobs', static fn() => redirect()->to(base_url('scraping-jobs')));
+
+    // Wave 12: Direktori & Performance KOL (View Only Intelligence)
+    $routes->get('kols', 'Kols::index');
+    $routes->post('kols/get-datatable', 'Kols::getDatatable');
+    $routes->get('kols/view/(:num)', 'Kols::view/$1');
+    $routes->get('kols/performance-card/(:num)', 'Kols::performanceCard/$1');
+    $routes->get('kols/chart-data/(:num)', 'Kols::chartData/$1');
 });
 
 // --------------------------------------------------------------------
