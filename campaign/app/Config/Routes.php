@@ -55,6 +55,24 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('stock-history', 'StockHistory::index');
     $routes->post('stock-history/get-datatable', 'StockHistory::getDatatable');
 
+    // Wave 13: Variant Konsep Konten (Full Parity with CI3 modules/variants)
+    $routes->get('variants', 'Variants::index');
+    $routes->post('variants/get-datatable', 'Variants::getDatatable');
+    $routes->get('variants/get-one/(:num)', 'Variants::getOne/$1');
+    $routes->get('variants/view/(:num)', 'Variants::view/$1');
+    $routes->post('variants/save', 'Variants::save');
+    $routes->match(['GET', 'POST'], 'variants/delete/(:num)', 'Variants::delete/$1');
+    $routes->post('variants/bulk-delete', 'Variants::bulkDelete');
+    $routes->get('variants/export', 'Variants::export');
+
+    // CI3 Parity Aliases for Variants
+    $routes->get('administrator/variants', 'Variants::index');
+    $routes->get('administrator/variants/index', 'Variants::index');
+    $routes->get('administrator/variants/view/(:num)', 'Variants::view/$1');
+    $routes->get('administrator/variants/edit/(:num)', 'Variants::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/variants/delete/(:num)', 'Variants::delete/$1');
+    $routes->get('administrator/variants/export', 'Variants::export');
+
     // Wave 2: Perencanaan Kampanye & Penugasan KOL
     $routes->get('campaigns', 'Campaigns::index');
     $routes->post('campaigns/get-datatable', 'Campaigns::getDatatable');

@@ -129,6 +129,12 @@ $isActive = function(string $route) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
+          <a href="<?= base_url('variants') ?>" class="nav-link <?= $isActive('variants') ?>">
+            <i class="nav-icon fas fa-layer-group text-info"></i>
+            <p>Variant Konsep Konten</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="<?= base_url('postings') ?>" class="nav-link <?= $isActive('postings') ?>">
             <i class="nav-icon fas fa-chart-bar text-success"></i>
             <p>Postings &amp; Analytics</p>
