@@ -185,6 +185,12 @@ $isActive = function(string $route) use ($currentPath): string {
             <p>Akun Platform KOL</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="<?= base_url('kol-rate-cards') ?>" class="nav-link <?= ($isActive('kol-rate-cards') || $isActive('kol_rate_cards')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-hand-holding-usd text-success"></i>
+            <p>Master Rate Card KOL</p>
+          </a>
+        </li>
 
         <!-- Section: KATALOG & LOGISTIK -->
         <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KATALOG &amp; LOGISTIK</li>

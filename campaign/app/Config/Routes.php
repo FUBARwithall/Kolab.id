@@ -226,6 +226,29 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/kol_platforms/delete/(:num)', 'KolPlatforms::delete/$1');
     $routes->get('administrator/kol_platforms/export', 'KolPlatforms::export');
 
+    // Wave 16: Master Rate Card KOL (Full Parity with CI3 modules/kol_rate_cards)
+    $routes->get('kol-rate-cards', 'KolRateCards::index');
+    $routes->post('kol-rate-cards/get-datatable', 'KolRateCards::getDatatable');
+    $routes->get('kol-rate-cards/get-one/(:num)', 'KolRateCards::getOne/$1');
+    $routes->get('kol-rate-cards/view/(:num)', 'KolRateCards::view/$1');
+    $routes->post('kol-rate-cards/save', 'KolRateCards::save');
+    $routes->match(['GET', 'POST'], 'kol-rate-cards/delete/(:num)', 'KolRateCards::delete/$1');
+    $routes->post('kol-rate-cards/bulk-delete', 'KolRateCards::bulkDelete');
+    $routes->get('kol-rate-cards/export', 'KolRateCards::export');
+
+    // CI3 Parity Aliases for kol_rate_cards
+    $routes->get('kol_rate_cards', 'KolRateCards::index');
+    $routes->post('kol_rate_cards/get-datatable', 'KolRateCards::getDatatable');
+    $routes->get('kol_rate_cards/view/(:num)', 'KolRateCards::view/$1');
+    $routes->match(['GET', 'POST'], 'kol_rate_cards/delete/(:num)', 'KolRateCards::delete/$1');
+    $routes->get('kol_rate_cards/export', 'KolRateCards::export');
+    $routes->get('administrator/kol_rate_cards', 'KolRateCards::index');
+    $routes->get('administrator/kol_rate_cards/index', 'KolRateCards::index');
+    $routes->get('administrator/kol_rate_cards/view/(:num)', 'KolRateCards::view/$1');
+    $routes->get('administrator/kol_rate_cards/edit/(:num)', 'KolRateCards::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_rate_cards/delete/(:num)', 'KolRateCards::delete/$1');
+    $routes->get('administrator/kol_rate_cards/export', 'KolRateCards::export');
+
     // Leaderboard & Komparasi KOL
     $routes->get('rankings', 'Dashboard::rankings');
     $routes->post('dashboard/compare-kol', 'Dashboard::compareKol');
