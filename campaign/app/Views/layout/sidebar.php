@@ -17,12 +17,21 @@ $portalBadgeClass = 'bg-primary';
 $portalAccent = '#0d6efd';
 
 // Helper function to check active state
-$isActive = function(string $route) use ($currentPath): string {
-    $cleanRoute = trim($route, '/');
-    if ($cleanRoute === '' || $cleanRoute === 'dashboard') {
-        return ($currentPath === '' || $currentPath === 'campaign' || $currentPath === 'campaign/dashboard' || $currentPath === 'dashboard') ? 'active' : '';
+$isActive = function(string|array ...$routes) use ($currentPath): string {
+    foreach ($routes as $route) {
+        $routesList = is_array($route) ? $route : [$route];
+        foreach ($routesList as $r) {
+            $cleanRoute = trim($r, '/');
+            if ($cleanRoute === '' || $cleanRoute === 'dashboard') {
+                if ($currentPath === '' || $currentPath === 'campaign' || $currentPath === 'campaign/dashboard' || $currentPath === 'dashboard') {
+                    return 'active';
+                }
+            } elseif (str_contains($currentPath, $cleanRoute)) {
+                return 'active';
+            }
+        }
     }
-    return (str_contains($currentPath, $cleanRoute)) ? 'active' : '';
+    return '';
 };
 ?>
 <!-- Main Sidebar Container -->
@@ -111,6 +120,12 @@ $isActive = function(string $route) use ($currentPath): string {
           <a href="<?= base_url('briefs') ?>" class="nav-link <?= $isActive('briefs') ?>">
             <i class="nav-icon fas fa-file-alt text-info"></i>
             <p><?= ($isAdmin || $isLeader) ? 'Briefs & Approval' : 'Briefs & Guidelines' ?></p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="<?= base_url('campaign-variants') ?>" class="nav-link <?= $isActive(['campaign-variants', 'campaign_variants']) ?>">
+            <i class="nav-icon fas fa-boxes text-success"></i>
+            <p>Varian Produk Sampel</p>
           </a>
         </li>
 

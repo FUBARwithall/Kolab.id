@@ -273,6 +273,29 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/kol_rate_cards/delete/(:num)', 'KolRateCards::delete/$1');
     $routes->get('administrator/kol_rate_cards/export', 'KolRateCards::export');
 
+    // Wave 17: Varian Produk Kampanye (Full Parity with CI3 modules/campaign_variants)
+    $routes->get('campaign-variants', 'CampaignVariants::index');
+    $routes->post('campaign-variants/get-datatable', 'CampaignVariants::getDatatable');
+    $routes->get('campaign-variants/get-one/(:num)', 'CampaignVariants::getOne/$1');
+    $routes->get('campaign-variants/view/(:num)', 'CampaignVariants::view/$1');
+    $routes->post('campaign-variants/save', 'CampaignVariants::save');
+    $routes->match(['GET', 'POST'], 'campaign-variants/delete/(:num)', 'CampaignVariants::delete/$1');
+    $routes->post('campaign-variants/bulk-delete', 'CampaignVariants::bulkDelete');
+    $routes->get('campaign-variants/export', 'CampaignVariants::export');
+
+    // CI3 Parity Aliases for campaign_variants
+    $routes->get('campaign_variants', 'CampaignVariants::index');
+    $routes->post('campaign_variants/get-datatable', 'CampaignVariants::getDatatable');
+    $routes->get('campaign_variants/view/(:num)', 'CampaignVariants::view/$1');
+    $routes->match(['GET', 'POST'], 'campaign_variants/delete/(:num)', 'CampaignVariants::delete/$1');
+    $routes->get('campaign_variants/export', 'CampaignVariants::export');
+    $routes->get('administrator/campaign_variants', 'CampaignVariants::index');
+    $routes->get('administrator/campaign_variants/index', 'CampaignVariants::index');
+    $routes->get('administrator/campaign_variants/view/(:num)', 'CampaignVariants::view/$1');
+    $routes->get('administrator/campaign_variants/edit/(:num)', 'CampaignVariants::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_variants/delete/(:num)', 'CampaignVariants::delete/$1');
+    $routes->get('administrator/campaign_variants/export', 'CampaignVariants::export');
+
     // Leaderboard & Komparasi KOL
     $routes->get('rankings', 'Dashboard::rankings');
     $routes->post('dashboard/compare-kol', 'Dashboard::compareKol');
