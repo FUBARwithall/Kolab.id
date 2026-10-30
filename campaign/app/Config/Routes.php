@@ -73,13 +73,37 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/variants/delete/(:num)', 'Variants::delete/$1');
     $routes->get('administrator/variants/export', 'Variants::export');
 
-    // Wave 2: Perencanaan Kampanye & Penugasan KOL
+    // Wave 2: Perencanaan Kampanye & Penugasan KOL (Full Parity with CI3 modules/campaigns)
     $routes->get('campaigns', 'Campaigns::index');
     $routes->post('campaigns/get-datatable', 'Campaigns::getDatatable');
     $routes->get('campaigns/get-one/(:num)', 'Campaigns::getOne/$1');
     $routes->get('campaigns/view/(:num)', 'Campaigns::view/$1');
+    $routes->get('campaigns/analytics/(:num)', 'Campaigns::analytics/$1');
     $routes->post('campaigns/save', 'Campaigns::save');
-    $routes->post('campaigns/delete/(:num)', 'Campaigns::delete/$1');
+    $routes->match(['GET', 'POST'], 'campaigns/delete/(:num)', 'Campaigns::delete/$1');
+    $routes->post('campaigns/update-status/(:num)', 'Campaigns::updateStatus/$1');
+    $routes->post('campaigns/update_status/(:num)', 'Campaigns::updateStatus/$1');
+    $routes->match(['GET', 'POST'], 'campaigns/accept-applicant/(:num)', 'Campaigns::acceptApplicant/$1');
+    $routes->match(['GET', 'POST'], 'campaigns/accept_applicant/(:num)', 'Campaigns::acceptApplicant/$1');
+    $routes->match(['GET', 'POST'], 'campaigns/reject-applicant/(:num)', 'Campaigns::rejectApplicant/$1');
+    $routes->match(['GET', 'POST'], 'campaigns/reject_applicant/(:num)', 'Campaigns::rejectApplicant/$1');
+    $routes->get('campaigns/export', 'Campaigns::export');
+    $routes->get('campaigns/export-single/(:num)', 'Campaigns::exportSingle/$1');
+    $routes->get('campaigns/export_single/(:num)', 'Campaigns::exportSingle/$1');
+
+    // CI3 Parity Aliases for administrator/campaigns
+    $routes->get('administrator/campaigns', 'Campaigns::index');
+    $routes->get('administrator/campaigns/index', 'Campaigns::index');
+    $routes->post('administrator/campaigns/get-datatable', 'Campaigns::getDatatable');
+    $routes->get('administrator/campaigns/view/(:num)', 'Campaigns::view/$1');
+    $routes->get('administrator/campaigns/edit/(:num)', 'Campaigns::view/$1');
+    $routes->get('administrator/campaigns/analytics/(:num)', 'Campaigns::analytics/$1');
+    $routes->get('administrator/campaigns/export', 'Campaigns::export');
+    $routes->get('administrator/campaigns/export_single/(:num)', 'Campaigns::exportSingle/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaigns/delete/(:num)', 'Campaigns::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaigns/accept_applicant/(:num)', 'Campaigns::acceptApplicant/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaigns/reject_applicant/(:num)', 'Campaigns::rejectApplicant/$1');
+
     $routes->post('campaign-kols/assign', 'CampaignKols::assign');
     $routes->get('campaign-kols/tasks-json/(:num)', 'CampaignKols::getTasksJson/$1');
     $routes->post('campaign-kols/remove/(:num)', 'CampaignKols::remove/$1');

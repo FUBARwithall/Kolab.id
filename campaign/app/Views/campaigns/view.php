@@ -30,6 +30,9 @@
           <a href="<?= base_url('campaigns') ?>" class="btn btn-outline-secondary btn-sm rounded-2">
             <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar
           </a>
+          <a href="<?= base_url('campaigns/analytics/' . $campaign['id']) ?>" class="btn btn-outline-success btn-sm rounded-2">
+            <i class="fas fa-chart-line me-1"></i> Analitik &amp; Finansial
+          </a>
           <button type="button" class="btn btn-primary btn-sm rounded-2 shadow-sm" onclick="openAssignKolModal()">
             <i class="fas fa-user-plus me-1"></i> Daftarkan KOL
           </button>

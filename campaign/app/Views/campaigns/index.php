@@ -74,6 +74,9 @@
           <option value="COMPLETED">Selesai</option>
           <option value="CANCELLED">Dibatalkan</option>
         </select>
+        <a href="<?= base_url('campaigns/export') ?>" class="btn btn-outline-success btn-sm rounded-2" title="Export CSV Data Kampanye">
+          <i class="fas fa-file-csv me-1"></i> Export CSV
+        </a>
         <button type="button" class="btn btn-primary btn-sm rounded-2 shadow-sm" onclick="openAddModal()">
           <i class="fas fa-plus me-1"></i> Buat Kampanye Baru
         </button>

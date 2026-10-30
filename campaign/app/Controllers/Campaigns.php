@@ -100,6 +100,9 @@ class Campaigns extends BaseController
                     <a href="' . base_url('campaigns/view/' . $row['id']) . '" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Detail Kampanye">
                         <i class="fas fa-eye"></i>
                     </a>
+                    <a href="' . base_url('campaigns/analytics/' . $row['id']) . '" class="btn btn-outline-success btn-sm rounded-2 py-1 px-2" title="Analitik Finansial & Performa">
+                        <i class="fas fa-chart-line"></i>
+                    </a>
                     <button type="button" class="btn btn-outline-primary btn-sm rounded-2 py-1 px-2" title="Edit Kampanye" onclick="editCampaign(' . $row['id'] . ')">
                         <i class="fas fa-edit"></i>
                     </button>
@@ -329,18 +332,293 @@ class Campaigns extends BaseController
     {
         $campaign = $this->campaignModel->find($id);
         if (!$campaign) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Kampanye tidak ditemukan.',
-            ]);
+            $msg = 'Kampanye tidak ditemukan.';
+            return $this->request->isAJAX()
+                ? $this->response->setJSON(['success' => false, 'message' => $msg])
+                : redirect()->to(base_url('campaigns'))->with('error', $msg);
         }
 
         $this->campaignModel->delete($id);
 
+        $msg = 'Kampanye berhasil dihapus.';
+        return $this->request->isAJAX()
+            ? $this->response->setJSON([
+                'success' => true,
+                'message' => $msg,
+                'summary' => $this->campaignModel->getSummaryMetrics(),
+            ])
+            : redirect()->to(base_url('campaigns'))->with('success', $msg);
+    }
+
+    /**
+     * Halaman Konsolidasi Finansial & Performance Analytics (CI3 Parity)
+     */
+    public function analytics(int $id)
+    {
+        $analytics = $this->campaignModel->getAnalyticsData($id);
+        if (!$analytics) {
+            return redirect()->to(base_url('campaigns'))->with('error', 'Kampanye tidak ditemukan.');
+        }
+
+        $data = [
+            'title'      => 'Analitik Kampanye - ' . esc($analytics['campaign']['title']),
+            'controller' => 'Campaigns',
+            'campaign'   => $analytics['campaign'],
+            'financial'  => $analytics['financial'],
+            'performance'=> $analytics['performance'],
+            'kols'       => $analytics['kol_analytics'],
+            'chartData'  => $analytics['chart_data'],
+        ];
+
+        return view('campaigns/analytics', $data);
+    }
+
+    /**
+     * Update Cepat Status Kampanye
+     */
+    public function updateStatus(int $id): ResponseInterface
+    {
+        $campaign = $this->campaignModel->find($id);
+        if (!$campaign) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kampanye tidak ditemukan.']);
+        }
+
+        $status = strtoupper(trim((string)$this->request->getPost('status')));
+        $validStatuses = ['DRAFT', 'ACTIVE', 'COMPLETED', 'CANCELLED'];
+        if (!in_array($status, $validStatuses, true)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Status tidak valid.']);
+        }
+
+        $this->campaignModel->update($id, ['status' => $status, 'updated_at' => date('Y-m-d H:i:s')]);
+
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'Kampanye berhasil dihapus.',
-            'summary' => $this->campaignModel->getSummaryMetrics(),
+            'message' => "Status kampanye berhasil diubah menjadi {$status}.",
+            'status'  => $status,
         ]);
+    }
+
+    /**
+     * Terima Pelamar Terbuka Kampanye (CI3 Parity)
+     */
+    public function acceptApplicant(int $id): ResponseInterface
+    {
+        $db = \Config\Database::connect();
+        $app = $db->table('campaign_applications')->where('id', $id)->get()->getRowArray();
+        if (!$app) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Lamaran kreator tidak ditemukan.']);
+        }
+
+        $dealAmount = (float)($this->request->getPost('deal_amount') ?: $app['proposed_rate']);
+        $userId = session()->get('user_id') ?: 1;
+
+        $db->transStart();
+
+        // 1. Assign to campaign_kols
+        $existing = $db->table('campaign_kols')
+            ->where('campaign_id', $app['campaign_id'])
+            ->where('kol_id', $app['kol_id'])
+            ->get()
+            ->getRowArray();
+
+        if (!$existing) {
+            $db->table('campaign_kols')->insert([
+                'campaign_id'   => $app['campaign_id'],
+                'kol_id'        => $app['kol_id'],
+                'deal_amount'   => $dealAmount,
+                'currency_code' => 'IDR',
+                'status'        => 'ASSIGNED',
+                'created_at'    => date('Y-m-d H:i:s'),
+                'updated_at'    => date('Y-m-d H:i:s'),
+            ]);
+        } else {
+            $db->table('campaign_kols')->where('id', $existing['id'])->update([
+                'deal_amount' => $dealAmount,
+                'status'      => 'ASSIGNED',
+                'updated_at'  => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        // 2. Mark application accepted
+        $db->table('campaign_applications')->where('id', $id)->update([
+            'status'      => 'ACCEPTED',
+            'reviewed_by' => $userId,
+            'reviewed_at' => date('Y-m-d H:i:s'),
+            'updated_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        $db->transComplete();
+
+        if ($db->transStatus() === false) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Gagal menyetujui pelamar.']);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Pelamar berhasil disetujui dan ditambahkan ke daftar talent kampanye.',
+        ]);
+    }
+
+    /**
+     * Tolak Pelamar Terbuka Kampanye (CI3 Parity)
+     */
+    public function rejectApplicant(int $id): ResponseInterface
+    {
+        $db = \Config\Database::connect();
+        $app = $db->table('campaign_applications')->where('id', $id)->get()->getRowArray();
+        if (!$app) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Lamaran tidak ditemukan.']);
+        }
+
+        $userId = session()->get('user_id') ?: 1;
+
+        $db->table('campaign_applications')->where('id', $id)->update([
+            'status'      => 'REJECTED',
+            'reviewed_by' => $userId,
+            'reviewed_at' => date('Y-m-d H:i:s'),
+            'updated_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Lamaran pelamar berhasil ditolak.',
+        ]);
+    }
+
+    /**
+     * Export Seluruh Kampanye ke File CSV (CI3 Parity)
+     */
+    public function export()
+    {
+        $campaigns = $this->campaignModel->getAllForExport();
+
+        $filename = 'campaigns_export_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        // UTF-8 BOM
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        fputcsv($output, [
+            'ID',
+            'Judul Kampanye',
+            'Status',
+            'Total Anggaran (IDR)',
+            'Total Serapan Deal (IDR)',
+            'Sisa Anggaran (IDR)',
+            'Serapan Anggaran (%)',
+            'Target Total Views',
+            'Tanggal Mulai',
+            'Tanggal Selesai',
+            'Jumlah KOL Terdaftar',
+            'Open Post Registration',
+            'Tanggal Dibuat'
+        ]);
+
+        foreach ($campaigns as $c) {
+            $budget = (float)$c['budget_total'];
+            $spent = (float)$c['total_spent'];
+            $remaining = max(0, $budget - $spent);
+            $pct = $budget > 0 ? round(($spent / $budget) * 100, 1) : 0;
+
+            fputcsv($output, [
+                $c['id'],
+                $c['title'],
+                $c['status'],
+                number_format($budget, 0, ',', '.'),
+                number_format($spent, 0, ',', '.'),
+                number_format($remaining, 0, ',', '.'),
+                $pct . '%',
+                number_format((int)$c['target_views'], 0, ',', '.'),
+                $c['start_date'],
+                $c['end_date'],
+                (int)$c['total_kols'],
+                $c['is_open_registration'] == 1 ? 'Terbuka' : 'Tertutup',
+                $c['created_at'],
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Export Detail 1 Kampanye beserta KOL dan Metriknya (CI3 Parity)
+     */
+    public function exportSingle(int $id)
+    {
+        $analytics = $this->campaignModel->getAnalyticsData($id);
+        if (!$analytics) {
+            return redirect()->to(base_url('campaigns'))->with('error', 'Kampanye tidak ditemukan.');
+        }
+
+        $c = $analytics['campaign'];
+        $filename = 'campaign_' . $id . '_analytics_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $output = fopen('php://output', 'w');
+        fprintf($output, chr(0xEF).chr(0xBB).chr(0xBF));
+
+        // Header Kampanye
+        fputcsv($output, ['RINGKASAN KAMPANYE']);
+        fputcsv($output, ['ID Kampanye', $c['id']]);
+        fputcsv($output, ['Judul Kampanye', $c['title']]);
+        fputcsv($output, ['Status', $c['status']]);
+        fputcsv($output, ['Total Anggaran (IDR)', number_format((float)$c['budget_total'], 0, ',', '.')]);
+        fputcsv($output, ['Total Deal Terpakai (IDR)', number_format($analytics['financial']['total_deals'], 0, ',', '.')]);
+        fputcsv($output, ['Total Terbayar (IDR)', number_format($analytics['financial']['total_paid'], 0, ',', '.')]);
+        fputcsv($output, ['Total Views Aktual', number_format($analytics['performance']['total_views'], 0, ',', '.')]);
+        fputcsv($output, ['Total Engagements', number_format($analytics['performance']['total_engagements'], 0, ',', '.')]);
+        fputcsv($output, ['Rata-rata ER (%)', $analytics['performance']['avg_er'] . '%']);
+        fputcsv($output, []);
+
+        // Rincian per KOL
+        fputcsv($output, [
+            'ID Talent',
+            'Nama KOL',
+            'WhatsApp',
+            'Kota Domisili',
+            'Nominal Deal (IDR)',
+            'Status Pembayaran',
+            'Total Tugas SOW',
+            'Tugas Selesai',
+            'Progress Tugas (%)',
+            'Total Views',
+            'Total Likes',
+            'Total Comments',
+            'Total Engagements',
+            'ER (%)',
+            'CPM (IDR)',
+            'CPE (IDR)'
+        ]);
+
+        $kolsList = $analytics['kol_analytics'] ?? ($analytics['kols'] ?? []);
+        foreach ($kolsList as $k) {
+            fputcsv($output, [
+                $k['kol_id'],
+                $k['kol_name'],
+                $k['kol_whatsapp'] ?: '-',
+                $k['kol_city'] ?: '-',
+                number_format($k['deal_amount'], 0, ',', '.'),
+                $k['payment_status'],
+                $k['task_total'],
+                $k['task_completed'],
+                $k['task_progress'] . '%',
+                number_format($k['views'], 0, ',', '.'),
+                number_format($k['likes'], 0, ',', '.'),
+                number_format($k['comments'], 0, ',', '.'),
+                number_format($k['engagements'], 0, ',', '.'),
+                $k['er'] . '%',
+                number_format($k['cpm'], 0, ',', '.'),
+                number_format($k['cpe'], 0, ',', '.')
+            ]);
+        }
+
+        fclose($output);
+        exit;
     }
 }
