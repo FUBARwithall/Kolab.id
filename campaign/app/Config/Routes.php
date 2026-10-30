@@ -139,13 +139,16 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('kols/view/(:num)', 'Kols::view/$1');
     $routes->get('kols/performance-card/(:num)', 'Kols::performanceCard/$1');
     $routes->get('kols/chart-data/(:num)', 'Kols::chartData/$1');
+
+    // Leaderboard & Komparasi KOL
+    $routes->get('rankings', 'Dashboard::rankings');
+    $routes->post('dashboard/compare-kol', 'Dashboard::compareKol');
 });
 
 // --------------------------------------------------------------------
 // CAMPAIGN MANAGEMENT — AKSES STRATEGIS, EVALUASI & KEUANGAN (LEADER & SUPERADMIN)
 // --------------------------------------------------------------------
 $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) {
-    $routes->get('rankings', 'Dashboard::index');
     // Wave 5: Evaluasi Kinerja Internal Tim Operasional
     $routes->get('evaluations', 'InternalEvaluation::index');
     $routes->get('evaluations/staff', 'InternalEvaluation::staff');

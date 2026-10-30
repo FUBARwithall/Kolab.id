@@ -225,6 +225,12 @@ $isActive = function(string $route) use ($currentPath): string {
               <p>Evaluasi Kinerja KPI</p>
             </a>
           </li>
+          <li class="nav-item">
+            <a href="<?= base_url('rankings') ?>" class="nav-link <?= $isActive('rankings') ?>">
+              <i class="nav-icon fas fa-trophy text-warning"></i>
+              <p>Leaderboard &amp; Ranking</p>
+            </a>
+          </li>
         <?php else: ?>
           <!-- Keuangan Operasional untuk Staff (Hanya Verifikasi Invoices Lapangan) -->
           <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KEUANGAN LAPANGAN</li>
