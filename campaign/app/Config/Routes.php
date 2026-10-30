@@ -177,6 +177,29 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('kols/performance-card/(:num)', 'Kols::performanceCard/$1');
     $routes->get('kols/chart-data/(:num)', 'Kols::chartData/$1');
 
+    // Wave 14: Kategori & Tagging KOL (Full Parity with CI3 modules/kol_categories)
+    $routes->get('kol-categories', 'KolCategories::index');
+    $routes->post('kol-categories/get-datatable', 'KolCategories::getDatatable');
+    $routes->get('kol-categories/get-one/(:num)', 'KolCategories::getOne/$1');
+    $routes->get('kol-categories/view/(:num)', 'KolCategories::view/$1');
+    $routes->post('kol-categories/save', 'KolCategories::save');
+    $routes->match(['GET', 'POST'], 'kol-categories/delete/(:num)', 'KolCategories::delete/$1');
+    $routes->post('kol-categories/bulk-delete', 'KolCategories::bulkDelete');
+    $routes->get('kol-categories/export', 'KolCategories::export');
+
+    // CI3 Parity Aliases for kol_categories
+    $routes->get('kol_categories', 'KolCategories::index');
+    $routes->post('kol_categories/get-datatable', 'KolCategories::getDatatable');
+    $routes->get('kol_categories/view/(:num)', 'KolCategories::view/$1');
+    $routes->match(['GET', 'POST'], 'kol_categories/delete/(:num)', 'KolCategories::delete/$1');
+    $routes->get('kol_categories/export', 'KolCategories::export');
+    $routes->get('administrator/kol_categories', 'KolCategories::index');
+    $routes->get('administrator/kol_categories/index', 'KolCategories::index');
+    $routes->get('administrator/kol_categories/view/(:num)', 'KolCategories::view/$1');
+    $routes->get('administrator/kol_categories/edit/(:num)', 'KolCategories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_categories/delete/(:num)', 'KolCategories::delete/$1');
+    $routes->get('administrator/kol_categories/export', 'KolCategories::export');
+
     // Leaderboard & Komparasi KOL
     $routes->get('rankings', 'Dashboard::rankings');
     $routes->post('dashboard/compare-kol', 'Dashboard::compareKol');
