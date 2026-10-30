@@ -158,13 +158,28 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('shipments/save', 'Shipments::save');
     $routes->post('shipments/update-status/(:num)', 'Shipments::updateStatus/$1');
 
-    // Wave 4: Postings, Metrics, Sentiment & Kalender
+    // Wave 4: Postings, Metrics, Sentiment & Kalender (Full Parity with CI3 modules/postings)
     $routes->get('postings', 'Postings::index');
     $routes->post('postings/get-datatable', 'Postings::getDatatable');
     $routes->get('postings/get-one/(:num)', 'Postings::getOne/$1');
+    $routes->get('postings/view/(:num)', 'Postings::view/$1');
     $routes->post('postings/save', 'Postings::save');
     $routes->post('postings/update-metrics/(:num)', 'Postings::updateMetrics/$1');
     $routes->post('postings/analyze-sentiment/(:num)', 'Postings::analyzeSentiment/$1');
+    $routes->match(['GET', 'POST'], 'postings/trigger-scrape/(:num)', 'Postings::triggerScrape/$1');
+    $routes->match(['GET', 'POST'], 'postings/trigger_scrape/(:num)', 'Postings::triggerScrape/$1');
+    $routes->match(['GET', 'POST'], 'postings/delete/(:num)', 'Postings::delete/$1');
+    $routes->post('postings/bulk-delete', 'Postings::bulkDelete');
+    $routes->get('postings/export', 'Postings::export');
+
+    // CI3 Parity Aliases for postings
+    $routes->get('administrator/postings', 'Postings::index');
+    $routes->get('administrator/postings/index', 'Postings::index');
+    $routes->get('administrator/postings/view/(:num)', 'Postings::view/$1');
+    $routes->get('administrator/postings/edit/(:num)', 'Postings::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/postings/trigger_scrape/(:num)', 'Postings::triggerScrape/$1');
+    $routes->match(['GET', 'POST'], 'administrator/postings/delete/(:num)', 'Postings::delete/$1');
+    $routes->get('administrator/postings/export', 'Postings::export');
 
     $routes->get('kalender', 'Kalender::index');
     $routes->get('calendar', 'Kalender::index');

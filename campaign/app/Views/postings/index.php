@@ -3,22 +3,24 @@
 <?= $this->section('content') ?>
 <div class="app-content-header">
   <div class="container-fluid">
-    <div class="row">
+    <div class="row align-items-center">
       <div class="col-sm-6">
         <h3 class="mb-0 fw-bold text-dark"><i class="fas fa-chart-bar text-success me-2"></i>Postings &amp; Analytics Hub</h3>
         <p class="text-muted small mb-0">Pemantauan performa video live secara aktual: views, likes, shares, engagement rate (ER), CPV, dan analisis sentimen IndoBERT.</p>
       </div>
-      <div class="col-sm-6">
-        <ol class="breadcrumb float-sm-end">
-          <li class="breadcrumb-item"><a href="<?= base_url('dashboard') ?>" class="text-decoration-none">Home</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Postings &amp; Analytics</li>
-        </ol>
+      <div class="col-sm-6 text-sm-end mt-2 mt-sm-0">
+        <a href="<?= base_url('postings/export') ?>" class="btn btn-outline-success btn-sm rounded-2 px-3 me-2" id="btnExportCsv" title="Export CSV Data Postings">
+          <i class="fas fa-file-csv me-1"></i> Export CSV
+        </a>
+        <button type="button" class="btn btn-outline-secondary btn-sm rounded-2 px-3" onclick="reloadPostingTable()">
+          <i class="fas fa-sync-alt me-1"></i> Refresh
+        </button>
       </div>
     </div>
   </div>
 </div>
 
-<div class="app-content">
+<div class="app-content pb-5">
   <div class="container-fluid">
 
     <!-- KPI Metrics Row -->
@@ -80,25 +82,36 @@
     <!-- Main Card & DataTables -->
     <div class="card border-0 shadow-sm rounded-3">
       <div class="card-header bg-white border-bottom py-3">
-        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+        <div class="d-flex flex-column flex-lg-row align-items-lg-center justify-content-between gap-3">
           
-          <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm rounded-2" id="filterCampaignPost" style="min-width: 220px;" onchange="reloadPostingTable()">
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <select class="form-select form-select-sm rounded-2" id="filterCampaignPost" style="min-width: 200px;" onchange="reloadPostingTable()">
               <option value="">Semua Kampanye</option>
               <?php foreach ($allCampaigns as $c): ?>
-                <option value="<?= $c['id'] ?>"><?= esc($c['title']) ?></option>
+                <option value="<?= $c['id'] ?>"><?= esc($c['title'] ?: $c['name']) ?></option>
               <?php endforeach; ?>
             </select>
-            <select class="form-select form-select-sm rounded-2" id="filterPlatformPost" style="min-width: 150px;" onchange="reloadPostingTable()">
+            <select class="form-select form-select-sm rounded-2" id="filterPlatformPost" style="min-width: 140px;" onchange="reloadPostingTable()">
               <option value="">Semua Platform</option>
               <?php foreach ($platforms as $p): ?>
                 <option value="<?= $p['id'] ?>"><?= esc($p['name']) ?></option>
               <?php endforeach; ?>
             </select>
+            <select class="form-select form-select-sm rounded-2" id="filterStatusPost" style="min-width: 130px;" onchange="reloadPostingTable()">
+              <option value="">Semua Status</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="TAKEN_DOWN">TAKEN DOWN</option>
+              <option value="DELETED">DELETED</option>
+            </select>
           </div>
 
-          <div class="text-muted small">
-            <i class="fas fa-info-circle me-1 text-primary"></i> Analisis sentimen IndoBERT menganalisis respons komentar publik.
+          <div class="d-flex align-items-center gap-2">
+            <button type="button" class="btn btn-outline-danger btn-sm rounded-2 d-none" id="btnBulkDelete" onclick="handleBulkDelete()">
+              <i class="fas fa-trash me-1"></i> Hapus Terpilih (<span id="selectedCount">0</span>)
+            </button>
+            <div class="text-muted small">
+              <i class="fas fa-info-circle me-1 text-primary"></i> IndoBERT otomatis mengukur kepuasan penonton video.
+            </div>
           </div>
 
         </div>
@@ -108,16 +121,21 @@
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0" id="tablePostings" style="width: 100%;">
             <thead class="table-light">
-              <tr>
-                <th style="width: 50px;" class="text-center">#</th>
+              <tr class="text-uppercase fs-7 text-muted">
+                <th style="width: 35px;" class="text-center">
+                  <input type="checkbox" class="form-check-input" id="checkAll">
+                </th>
+                <th style="width: 45px;" class="text-center">#</th>
                 <th>Konten VT &amp; Link Post</th>
                 <th>Kampanye</th>
                 <th>Talent KOL</th>
-                <th style="width: 110px;">Views</th>
-                <th style="width: 150px;">Engagement</th>
+                <th style="width: 100px;">Views</th>
+                <th style="width: 130px;">Engagement</th>
                 <th style="width: 110px;">CPV Aktual</th>
-                <th style="width: 110px;">Sentimen</th>
-                <th style="width: 110px;" class="text-center">Aksi</th>
+                <th style="width: 90px;" class="text-center">Sentimen</th>
+                <th style="width: 90px;" class="text-center">Status</th>
+                <th style="width: 110px;">Waktu Tayang</th>
+                <th style="width: 130px;" class="text-center">Aksi</th>
               </tr>
             </thead>
             <tbody></tbody>
@@ -211,9 +229,11 @@ $(document).ready(function() {
             data: function(d) {
                 d.campaign_id = $('#filterCampaignPost').val();
                 d.platform_id = $('#filterPlatformPost').val();
+                d.status      = $('#filterStatusPost').val();
             }
         },
         columns: [
+            { data: 'checkbox', orderable: false, className: 'text-center' },
             { data: 'id', className: 'text-center text-muted small' },
             { data: 'url' },
             { data: 'campaign' },
@@ -222,114 +242,195 @@ $(document).ready(function() {
             { data: 'er' },
             { data: 'cpv' },
             { data: 'sentiment', className: 'text-center' },
+            { data: 'status', className: 'text-center' },
+            { data: 'posted_at' },
             { data: 'action', orderable: false, className: 'text-center' }
         ],
-        order: [[0, 'desc']],
+        order: [[1, 'desc']],
         language: {
             search: "_INPUT_",
             searchPlaceholder: "Cari postingan, URL, KOL...",
             lengthMenu: "Tampil _MENU_",
             info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ postingan",
             paginate: { first: "«", previous: "‹", next: "›", last: "»" }
+        },
+        drawCallback: function() {
+            $('#checkAll').prop('checked', false);
+            updateBulkDeleteButton();
         }
+    });
+
+    // Handle Check All
+    $('#checkAll').on('change', function() {
+        const isChecked = $(this).is(':checked');
+        $('.row-checkbox').prop('checked', isChecked);
+        updateBulkDeleteButton();
+    });
+
+    // Handle Individual Row Checkbox
+    $(document).on('change', '.row-checkbox', function() {
+        const total = $('.row-checkbox').length;
+        const checked = $('.row-checkbox:checked').length;
+        $('#checkAll').prop('checked', total > 0 && total === checked);
+        updateBulkDeleteButton();
+    });
+
+    // Single Delete Handler
+    $(document).on('click', '.btn-delete-posting', function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name') || ('Postingan #' + id);
+
+        Swal.fire({
+            title: 'Hapus Postingan?',
+            html: `Apakah Anda yakin ingin menghapus data <strong>${name}</strong>? Seluruh snapshot performa terkait juga akan dibersihkan.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '<?= base_url('postings/delete') ?>/' + id,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Terhapus!',
+                                text: res.message,
+                                timer: 1800,
+                                showConfirmButton: false
+                            });
+                            reloadPostingTable();
+                        } else {
+                            Swal.fire('Gagal!', res.message, 'error');
+                        }
+                    },
+                    error: function() {
+                        Swal.fire('Error', 'Gagal memproses penghapusan data postingan.', 'error');
+                    }
+                });
+            }
+        });
+    });
+
+    // Trigger Scrape Handler
+    $(document).on('click', '.btn-trigger-scrape', function() {
+        const id = $(this).data('id');
+        const $btn = $(this);
+
+        Swal.fire({
+            title: 'Memicu Scraping Apify?',
+            text: 'Sistem akan mengeksekusi scraper dan mencatat snapshot performa baru untuk postingan ini.',
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#0284c7',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-sync-alt me-1"></i> Ya, Scrape Sekarang',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Sedang Scraping...',
+                    text: 'Mengambil metrik dan memperbarui statistik...',
+                    allowOutsideClick: false,
+                    didOpen: () => { Swal.showLoading(); }
+                });
+
+                $.ajax({
+                    url: '<?= base_url('postings/trigger-scrape') ?>/' + id,
+                    type: 'POST',
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Scraping Berhasil!',
+                                text: res.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                            reloadPostingTable();
+                        } else {
+                            Swal.fire('Gagal', res.message, 'error');
+                        }
+                    },
+                    error: function(xhr) {
+                        const msg = xhr.responseJSON ? xhr.responseJSON.message : 'Gagal menghubungi server untuk scraping.';
+                        Swal.fire('Error', msg, 'error');
+                    }
+                });
+            }
+        });
     });
 });
 
-function reloadPostingTable() {
-    dtPostings.ajax.reload();
+function updateBulkDeleteButton() {
+    const count = $('.row-checkbox:checked').length;
+    $('#selectedCount').text(count);
+    if (count > 0) {
+        $('#btnBulkDelete').removeClass('d-none');
+    } else {
+        $('#btnBulkDelete').addClass('d-none');
+    }
 }
 
-function viewPostingDetail(id) {
-    $('#modalViewPosting').modal('show');
-    $('#viewPostingBody').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div></div>');
+function handleBulkDelete() {
+    const selectedIds = [];
+    $('.row-checkbox:checked').each(function() {
+        selectedIds.push($(this).val());
+    });
 
-    $.get('<?= base_url('postings/get-one/') ?>' + id, function(res) {
-        if (res.success) {
-            const p = res.data;
-            const views = Number(p.views_count || 0);
-            const likes = Number(p.likes_count || 0);
-            const comments = Number(p.comments_count || 0);
-            const shares = Number(p.shares_count || 0);
-            const saves = Number(p.saves_count || 0);
-            const interactions = likes + comments + shares + saves;
-            const er = views > 0 ? ((interactions / views) * 100).toFixed(2) : '0.00';
+    if (selectedIds.length === 0) {
+        Swal.fire('Peringatan', 'Pilih minimal satu postingan untuk dihapus.', 'warning');
+        return;
+    }
 
-            let sentimentHtml = '';
-            if (p.sentiment_score !== null) {
-                sentimentHtml = `
-                    <div class="row g-2 text-center mt-2">
-                        <div class="col-4">
-                            <div class="border rounded-2 p-2 bg-success-subtle text-success">
-                                <div class="small fw-semibold">Positif</div>
-                                <h5 class="mb-0 fw-bold">${p.positive_count || 0}</h5>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="border rounded-2 p-2 bg-warning-subtle text-warning">
-                                <div class="small fw-semibold">Netral</div>
-                                <h5 class="mb-0 fw-bold">${p.neutral_count || 0}</h5>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="border rounded-2 p-2 bg-danger-subtle text-danger">
-                                <div class="small fw-semibold">Negatif</div>
-                                <h5 class="mb-0 fw-bold">${p.negative_count || 0}</h5>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            } else {
-                sentimentHtml = `
-                    <div class="alert alert-light border text-center p-3">
-                        <div class="text-muted small mb-2">Belum ada analisis sentimen IndoBERT untuk konten ini.</div>
-                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill" onclick="runSentimentAnalysis(${p.task_id})"><i class="fas fa-brain me-1"></i>Jalankan IndoBERT Analyzer</button>
-                    </div>
-                `;
-            }
-
-            $('#viewPostingBody').html(`
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="badge bg-dark">${p.platform_name || 'Video'}</span>
-                    <a href="${p.live_url}" target="_blank" class="btn btn-outline-success btn-sm rounded-pill px-3"><i class="fas fa-external-link-alt me-1"></i>Buka Video Asli</a>
-                </div>
-                <h5 class="fw-bold text-dark mb-1">${p.task_title || ('Task #' + p.task_number)}</h5>
-                <div class="text-muted small mb-3">Kampanye: <strong>${p.campaign_title}</strong> &bull; KOL: <strong>${p.kol_name}</strong></div>
-                
-                <div class="row g-3 mb-3">
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-light border-0 p-3 text-center">
-                            <div class="text-muted small">Total Views</div>
-                            <h4 class="fw-bold text-dark mb-0">${views.toLocaleString('id-ID')}</h4>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-light border-0 p-3 text-center">
-                            <div class="text-muted small">Engagement Rate</div>
-                            <h4 class="fw-bold text-success mb-0">${er}%</h4>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-light border-0 p-3 text-center">
-                            <div class="text-muted small">Actual CPV</div>
-                            <h4 class="fw-bold text-dark mb-0">Rp ${Number(p.actual_cpv || 0).toLocaleString('id-ID', {minimumFractionDigits: 2})}</h4>
-                        </div>
-                    </div>
-                    <div class="col-6 col-md-3">
-                        <div class="card bg-light border-0 p-3 text-center">
-                            <div class="text-muted small">Interaksi Total</div>
-                            <h4 class="fw-bold text-primary mb-0">${interactions.toLocaleString('id-ID')}</h4>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="border rounded-3 p-3 bg-white mb-3">
-                    <h6 class="fw-bold mb-2"><i class="fas fa-brain text-primary me-2"></i>Analisis Sentimen Komentar (IndoBERT)</h6>
-                    ${sentimentHtml}
-                </div>
-                <div class="text-muted small text-end">Terakhir diperbarui: ${p.last_scraped_at || '-'}</div>
-            `);
+    Swal.fire({
+        title: 'Hapus ' + selectedIds.length + ' Postingan?',
+        text: 'Semua postingan terpilih beserta riwayat performanya akan dihapus permanen.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash-alt me-1"></i> Ya, Hapus Semua',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '<?= base_url('postings/bulk-delete') ?>',
+                type: 'POST',
+                data: { ids: selectedIds },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Terhapus!',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                        reloadPostingTable();
+                    } else {
+                        Swal.fire('Gagal!', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'Gagal menghapus postingan secara massal.', 'error');
+                }
+            });
         }
     });
+}
+
+function reloadPostingTable() {
+    if (dtPostings) {
+        dtPostings.ajax.reload();
+    }
 }
 
 function updateMetricsModal(id) {
@@ -351,13 +452,13 @@ function savePostingMetrics(e) {
     e.preventDefault();
     const id = $('#upPostingId').val();
     const btn = $('#btnSaveMetrics');
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span>Menyimpan...');
+    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...');
 
     $.post('<?= base_url('postings/update-metrics/') ?>' + id, $('#formMetrics').serialize(), function(res) {
         btn.prop('disabled', false).text('Simpan Metrik');
         if (res.success) {
             $('#modalUpdateMetrics').modal('hide');
-            dtPostings.ajax.reload(null, false);
+            reloadPostingTable();
             Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
         }
     }).fail(function(xhr) {
@@ -379,7 +480,7 @@ function runSentimentAnalysis(taskId) {
 
     $.post('<?= base_url('postings/analyze-sentiment/') ?>' + taskId, function(res) {
         if (res.success) {
-            dtPostings.ajax.reload(null, false);
+            reloadPostingTable();
             Swal.fire({ icon: 'success', title: 'Analisis Selesai', text: `Skor Sentimen Positif: ${res.score}%`, timer: 2000, showConfirmButton: false });
         }
     }).fail(function(xhr) {
