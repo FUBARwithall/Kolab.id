@@ -14,6 +14,9 @@ class DraftReviewHistoryModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'draft_id',
+        'action',
+        'acted_by',
+        'note',
         'reviewed_by',
         'status',
         'timestamp_notes',

@@ -145,12 +145,30 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('briefs/approve/(:num)', 'Briefs::approve/$1');
     $routes->post('briefs/revision/(:num)', 'Briefs::revision/$1');
 
+    // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
     $routes->get('drafts/get-one/(:num)', 'Drafts::getOne/$1');
+    $routes->get('drafts/view/(:num)', 'Drafts::view/$1');
+    $routes->post('drafts/save', 'Drafts::save');
     $routes->post('drafts/submit', 'Drafts::submit');
-    $routes->post('drafts/approve/(:num)', 'Drafts::approve/$1');
-    $routes->post('drafts/revision/(:num)', 'Drafts::revision/$1');
+    $routes->match(['GET', 'POST'], 'drafts/submit-review/(:num)', 'Drafts::submitReview/$1');
+    $routes->match(['GET', 'POST'], 'drafts/approve/(:num)', 'Drafts::approve/$1');
+    $routes->match(['GET', 'POST'], 'drafts/revision/(:num)', 'Drafts::revision/$1');
+    $routes->match(['GET', 'POST'], 'drafts/delete/(:num)', 'Drafts::delete/$1');
+    $routes->post('drafts/bulk-delete', 'Drafts::bulkDelete');
+    $routes->get('drafts/export', 'Drafts::export');
+
+    // CI3 Parity Aliases for drafts
+    $routes->get('administrator/drafts', 'Drafts::index');
+    $routes->get('administrator/drafts/index', 'Drafts::index');
+    $routes->get('administrator/drafts/view/(:num)', 'Drafts::view/$1');
+    $routes->get('administrator/drafts/edit/(:num)', 'Drafts::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/drafts/submit/(:num)', 'Drafts::submitReview/$1');
+    $routes->match(['GET', 'POST'], 'administrator/drafts/approve/(:num)', 'Drafts::approve/$1');
+    $routes->match(['GET', 'POST'], 'administrator/drafts/revision/(:num)', 'Drafts::revision/$1');
+    $routes->match(['GET', 'POST'], 'administrator/drafts/delete/(:num)', 'Drafts::delete/$1');
+    $routes->get('administrator/drafts/export', 'Drafts::export');
 
     $routes->get('shipments', 'Shipments::index');
     $routes->post('shipments/get-datatable', 'Shipments::getDatatable');
