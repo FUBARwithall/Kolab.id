@@ -11,6 +11,9 @@
         <p class="text-muted small mb-0">Antrian dan riwayat penarikan otomatis metrik video konten, engagement, dan profil KOL.</p>
       </div>
       <div class="col-sm-6 text-sm-end mt-2 mt-sm-0">
+        <a href="<?= site_url('scraping-jobs/export') ?>" class="btn btn-outline-success btn-sm rounded-2 px-3 me-2" title="Export CSV Data Apify Jobs">
+          <i class="fas fa-file-csv me-1"></i> Export CSV
+        </a>
         <button type="button" class="btn btn-outline-secondary btn-sm rounded-2 px-3 me-2" onclick="reloadJobTable()">
           <i class="fas fa-sync-alt me-1"></i> Refresh
         </button>
@@ -356,6 +359,30 @@ function retryJob(id) {
                 }
             }).fail(function() {
                 Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan pada server' });
+            });
+        }
+    });
+}
+
+function deleteJob(id) {
+    Swal.fire({
+        title: 'Hapus Job?',
+        text: 'Apakah Anda yakin ingin menghapus scraping job #' + id + '?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('<?= base_url('scraping-jobs/delete/') ?>/' + id, {}, function(res) {
+                if (res.success) {
+                    dtScraping.ajax.reload(null, false);
+                    Swal.fire({ icon: 'success', title: 'Terhapus', text: res.message, timer: 1500, showConfirmButton: false });
+                }
+            }).fail(function(xhr) {
+                const err = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan saat menghapus';
+                Swal.fire({ icon: 'error', title: 'Gagal', text: err });
             });
         }
     });

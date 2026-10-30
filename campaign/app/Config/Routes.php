@@ -125,13 +125,32 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('whatsapp/broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
     $routes->post('whatsapp/send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
 
-    // Wave 9: Monitoring Scraping & Apify Jobs
+    // Wave 9: Monitoring Scraping & Apify Jobs (Full Parity with CI3 modules/apify_jobs)
     $routes->get('scraping-jobs', 'ScrapingJobs::index');
     $routes->post('scraping-jobs/get-datatable', 'ScrapingJobs::getDatatable');
+    $routes->get('scraping-jobs/view/(:num)', 'ScrapingJobs::view/$1');
     $routes->get('scraping-jobs/get-one/(:num)', 'ScrapingJobs::getOne/$1');
     $routes->post('scraping-jobs/retry/(:num)', 'ScrapingJobs::retry/$1');
     $routes->post('scraping-jobs/trigger', 'ScrapingJobs::triggerNew');
-    $routes->get('apify-jobs', static fn() => redirect()->to(base_url('scraping-jobs')));
+    $routes->match(['GET', 'POST'], 'scraping-jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
+    $routes->post('scraping-jobs/bulk-delete', 'ScrapingJobs::bulkDelete');
+    $routes->get('scraping-jobs/export', 'ScrapingJobs::export');
+
+    // CI3 Parity Aliases (apify-jobs & apify_jobs)
+    $routes->get('apify-jobs', 'ScrapingJobs::index');
+    $routes->get('apify_jobs', 'ScrapingJobs::index');
+    $routes->post('apify-jobs/get-datatable', 'ScrapingJobs::getDatatable');
+    $routes->post('apify_jobs/get-datatable', 'ScrapingJobs::getDatatable');
+    $routes->get('apify-jobs/view/(:num)', 'ScrapingJobs::view/$1');
+    $routes->get('apify_jobs/view/(:num)', 'ScrapingJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
+    $routes->get('apify-jobs/export', 'ScrapingJobs::export');
+    $routes->get('apify_jobs/export', 'ScrapingJobs::export');
+    $routes->get('administrator/apify_jobs', 'ScrapingJobs::index');
+    $routes->get('administrator/apify_jobs/view/(:num)', 'ScrapingJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
+    $routes->get('administrator/apify_jobs/export', 'ScrapingJobs::export');
 
     // Wave 12: Direktori & Performance KOL (View Only Intelligence)
     $routes->get('kols', 'Kols::index');

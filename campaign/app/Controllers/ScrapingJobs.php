@@ -126,25 +126,50 @@ class ScrapingJobs extends BaseController
                 ? '<div class="fw-semibold text-dark">' . esc($row['kol_name'] ?? 'KOL') . '</div><small class="text-muted">' . esc($row['campaign_title'] ?? '-') . '</small>'
                 : '<span class="text-muted fst-italic">Standalone Target</span>';
 
+            if (!empty($row['posting_id'])) {
+                $campaignKolDisplay .= ' <span class="badge bg-light text-secondary border px-1" style="font-size:10px;">Post #' . $row['posting_id'] . '</span>';
+            }
+
+            // Status display with error snippet if any
+            $statusCol = $statusBadge;
+            if (!empty($row['error_message']) && $row['status'] === 'FAILED') {
+                $statusCol .= '<div class="text-danger small mt-1 text-truncate" style="max-width: 170px; font-size: 11px;" title="' . esc($row['error_message']) . '"><i class="fas fa-exclamation-circle me-1"></i>' . esc($row['error_message']) . '</div>';
+            }
+
+            // Run ID & Attempt sub-label
+            $idDisplay = '<div class="fw-bold font-monospace text-dark">#' . $row['id'] . '</div>';
+            if (!empty($row['external_run_id'])) {
+                $idDisplay .= '<span class="badge bg-light text-muted border font-monospace mt-1" style="font-size: 10px;" title="External Run ID">' . esc(substr($row['external_run_id'], 0, 16)) . '</span>';
+            }
+            if (!empty($row['attempt_number']) && $row['attempt_number'] > 1) {
+                $idDisplay .= ' <span class="badge bg-warning-subtle text-warning border border-warning-subtle" style="font-size: 10px;" title="Percobaan ke-' . $row['attempt_number'] . '">#' . $row['attempt_number'] . '</span>';
+            }
+
             // Actions
             $hasData = !empty($row['response_data']);
             $actions = '
                 <div class="d-flex gap-1 justify-content-center">
+                    <a href="' . site_url('scraping-jobs/view/' . $row['id']) . '" class="btn btn-outline-primary btn-sm rounded-2 py-1 px-2" title="Lihat Detail Job">
+                        <i class="fas fa-eye"></i>
+                    </a>
                     <button type="button" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Lihat Response Data (JSON)" onclick="viewJobData(' . $row['id'] . ')" ' . (!$hasData ? 'disabled' : '') . '>
                         <i class="fas fa-code"></i>
                     </button>
                     <button type="button" class="btn btn-outline-warning btn-sm rounded-2 py-1 px-2" title="Scrape Ulang (Re-Queue)" onclick="retryJob(' . $row['id'] . ')">
                         <i class="fas fa-redo"></i>
                     </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2 py-1 px-2" title="Hapus Job" onclick="deleteJob(' . $row['id'] . ')">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
                 </div>
             ';
 
             $formattedData[] = [
-                'id'         => '<span class="font-monospace text-muted">#' . $row['id'] . '</span>',
+                'id'         => $idDisplay,
                 'type'       => $typeBadge,
                 'target_url' => $urlDisplay,
                 'context'    => $campaignKolDisplay,
-                'status'     => $statusBadge,
+                'status'     => $statusCol,
                 'created_at' => '<span class="text-muted small">' . date('d M Y H:i', strtotime($row['created_at'])) . '</span>',
                 'action'     => $actions,
             ];
@@ -219,5 +244,131 @@ class ScrapingJobs extends BaseController
             'message' => 'Job scraping #' . $jobId . ' berhasil dibuat dan masuk antrian!',
             'job_id'  => $jobId,
         ]);
+    }
+
+    /**
+     * View dedicated scraping job detail (CI3 Parity)
+     */
+    public function view(int $id)
+    {
+        $job = $this->jobModel->getJobDetail($id);
+        if (!$job) {
+            return redirect()->to(base_url('scraping-jobs'))->with('error', 'Job #' . $id . ' tidak ditemukan');
+        }
+
+        $formattedJson = null;
+        if (!empty($job['response_data'])) {
+            $decoded = json_decode($job['response_data'], true);
+            $formattedJson = $decoded ? json_encode($decoded, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $job['response_data'];
+        }
+
+        $data = [
+            'title'         => 'Detail Apify Scraping Job #' . $id,
+            'controller'    => 'ScrapingJobs',
+            'job'           => $job,
+            'formattedJson' => $formattedJson,
+        ];
+
+        return view('scraping_jobs/view', $data);
+    }
+
+    /**
+     * Delete single job (CI3 Parity)
+     */
+    public function delete(int $id)
+    {
+        $job = $this->jobModel->find($id);
+        if (!$job) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Job #' . $id . ' tidak ditemukan']);
+            }
+            return redirect()->to(base_url('scraping-jobs'))->with('error', 'Job #' . $id . ' tidak ditemukan');
+        }
+
+        $this->jobModel->delete($id);
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true, 'message' => 'Job #' . $id . ' berhasil dihapus']);
+        }
+
+        return redirect()->to(base_url('scraping-jobs'))->with('success', 'Job #' . $id . ' berhasil dihapus');
+    }
+
+    /**
+     * Bulk delete jobs
+     */
+    public function bulkDelete()
+    {
+        $ids = $this->request->getPost('ids');
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Pilih setidaknya satu job untuk dihapus']);
+        }
+
+        $cleanIds = array_map('intval', $ids);
+        $this->jobModel->whereIn('id', $cleanIds)->delete();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => count($cleanIds) . ' job berhasil dihapus',
+        ]);
+    }
+
+    /**
+     * Export jobs to CSV (CI3 Parity with XLS/CSV export)
+     */
+    public function export()
+    {
+        $status = $this->request->getGet('status') ?: null;
+        $jobs = $this->jobModel->getAllJobsForExport(['status' => $status]);
+
+        $filename = 'apify_jobs_export_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        // UTF-8 BOM for Microsoft Excel compatibility
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, [
+            'Job ID',
+            'Posting ID',
+            'Posting Live URL',
+            'External Run ID',
+            'Attempt Number',
+            'Actor Type',
+            'Target URL',
+            'Status',
+            'Error Message',
+            'Campaign Title',
+            'KOL Name',
+            'Started At',
+            'Finished At',
+            'Created At',
+        ]);
+
+        foreach ($jobs as $j) {
+            fputcsv($output, [
+                $j['id'],
+                $j['posting_id'] ?? '',
+                $j['postings_live_url'] ?? '',
+                $j['external_run_id'] ?? '',
+                $j['attempt_number'] ?? 1,
+                $j['actor_type'] ?? '',
+                $j['target_url'] ?? '',
+                $j['status'] ?? '',
+                $j['error_message'] ?? '',
+                $j['campaign_title'] ?? '',
+                $j['kol_name'] ?? '',
+                $j['started_at'] ?? '',
+                $j['finished_at'] ?? '',
+                $j['created_at'] ?? '',
+            ]);
+        }
+
+        fclose($output);
+        exit;
     }
 }
