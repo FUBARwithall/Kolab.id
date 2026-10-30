@@ -179,6 +179,12 @@ $isActive = function(string $route) use ($currentPath): string {
             <p>Kategori &amp; Tagging KOL</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="<?= base_url('kol-platforms') ?>" class="nav-link <?= ($isActive('kol-platforms') || $isActive('kol_platforms')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-share-nodes text-primary"></i>
+            <p>Akun Platform KOL</p>
+          </a>
+        </li>
 
         <!-- Section: KATALOG & LOGISTIK -->
         <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KATALOG &amp; LOGISTIK</li>

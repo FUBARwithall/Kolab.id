@@ -200,6 +200,32 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/kol_categories/delete/(:num)', 'KolCategories::delete/$1');
     $routes->get('administrator/kol_categories/export', 'KolCategories::export');
 
+    // Wave 15: Akun Platform KOL (Full Parity with CI3 modules/kol_platforms)
+    $routes->get('kol-platforms', 'KolPlatforms::index');
+    $routes->post('kol-platforms/get-datatable', 'KolPlatforms::getDatatable');
+    $routes->get('kol-platforms/get-one/(:num)', 'KolPlatforms::getOne/$1');
+    $routes->get('kol-platforms/view/(:num)', 'KolPlatforms::view/$1');
+    $routes->post('kol-platforms/save', 'KolPlatforms::save');
+    $routes->match(['GET', 'POST'], 'kol-platforms/sync/(:num)', 'KolPlatforms::sync/$1');
+    $routes->match(['GET', 'POST'], 'kol-platforms/delete/(:num)', 'KolPlatforms::delete/$1');
+    $routes->post('kol-platforms/bulk-delete', 'KolPlatforms::bulkDelete');
+    $routes->get('kol-platforms/export', 'KolPlatforms::export');
+
+    // CI3 Parity Aliases for kol_platforms
+    $routes->get('kol_platforms', 'KolPlatforms::index');
+    $routes->post('kol_platforms/get-datatable', 'KolPlatforms::getDatatable');
+    $routes->get('kol_platforms/view/(:num)', 'KolPlatforms::view/$1');
+    $routes->match(['GET', 'POST'], 'kol_platforms/sync/(:num)', 'KolPlatforms::sync/$1');
+    $routes->match(['GET', 'POST'], 'kol_platforms/delete/(:num)', 'KolPlatforms::delete/$1');
+    $routes->get('kol_platforms/export', 'KolPlatforms::export');
+    $routes->get('administrator/kol_platforms', 'KolPlatforms::index');
+    $routes->get('administrator/kol_platforms/index', 'KolPlatforms::index');
+    $routes->get('administrator/kol_platforms/view/(:num)', 'KolPlatforms::view/$1');
+    $routes->get('administrator/kol_platforms/edit/(:num)', 'KolPlatforms::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_platforms/sync/(:num)', 'KolPlatforms::sync/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_platforms/delete/(:num)', 'KolPlatforms::delete/$1');
+    $routes->get('administrator/kol_platforms/export', 'KolPlatforms::export');
+
     // Leaderboard & Komparasi KOL
     $routes->get('rankings', 'Dashboard::rankings');
     $routes->post('dashboard/compare-kol', 'Dashboard::compareKol');
