@@ -104,11 +104,55 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/campaigns/accept_applicant/(:num)', 'Campaigns::acceptApplicant/$1');
     $routes->match(['GET', 'POST'], 'administrator/campaigns/reject_applicant/(:num)', 'Campaigns::rejectApplicant/$1');
 
-    $routes->post('campaign-kols/assign', 'CampaignKols::assign');
+    // Dealing KOL (Campaign KOLs) Engine - 100% Parity with CI3 modules/campaign_kols
+    $routes->get('campaign-kols', 'CampaignKols::index');
+    $routes->get('campaign_kols', 'CampaignKols::index');
+    $routes->post('campaign-kols/get-datatable', 'CampaignKols::getDatatable');
+    $routes->post('campaign_kols/get-datatable', 'CampaignKols::getDatatable');
+    $routes->get('campaign-kols/get-one/(:num)', 'CampaignKols::getOne/$1');
+    $routes->get('campaign_kols/get-one/(:num)', 'CampaignKols::getOne/$1');
     $routes->get('campaign-kols/tasks-json/(:num)', 'CampaignKols::getTasksJson/$1');
+    $routes->get('campaign_kols/tasks-json/(:num)', 'CampaignKols::getTasksJson/$1');
+    $routes->get('campaign-kols/generate-tracking-no', 'CampaignKols::generateTrackingNo');
+    $routes->get('campaign_kols/generate-tracking-no', 'CampaignKols::generateTrackingNo');
+    $routes->post('campaign-kols/quick-add-kol', 'CampaignKols::quickAddKol');
+    $routes->post('campaign_kols/quick-add-kol', 'CampaignKols::quickAddKol');
+    $routes->get('campaign-kols/assigned-kols/(:num)', 'CampaignKols::getCampaignAssignedKols/$1');
+    $routes->get('campaign_kols/assigned-kols/(:num)', 'CampaignKols::getCampaignAssignedKols/$1');
+    $routes->post('campaign-kols/save', 'CampaignKols::save');
+    $routes->post('campaign_kols/save', 'CampaignKols::save');
+    $routes->post('campaign-kols/update-status-tasks-ajax', 'CampaignKols::updateStatusTasksAjax');
+    $routes->post('campaign_kols/update-status-tasks-ajax', 'CampaignKols::updateStatusTasksAjax');
+    $routes->get('campaign-kols/view/(:num)', 'CampaignKols::view/$1');
+    $routes->get('campaign_kols/view/(:num)', 'CampaignKols::view/$1');
+    $routes->match(['GET', 'POST'], 'campaign-kols/delete/(:num)', 'CampaignKols::delete/$1');
+    $routes->match(['GET', 'POST'], 'campaign_kols/delete/(:num)', 'CampaignKols::delete/$1');
+    $routes->post('campaign-kols/bulk-delete', 'CampaignKols::bulkDelete');
+    $routes->post('campaign_kols/bulk-delete', 'CampaignKols::bulkDelete');
+    $routes->get('campaign-kols/export', 'CampaignKols::export');
+    $routes->get('campaign_kols/export', 'CampaignKols::export');
+    $routes->post('campaign-kols/assign', 'CampaignKols::assign');
     $routes->post('campaign-kols/remove/(:num)', 'CampaignKols::remove/$1');
     $routes->post('campaign-kols/submit-review', 'CampaignKols::submitReview');
     $routes->post('campaign-kols/review-application', 'CampaignKols::reviewApplication');
+
+    // CI3 Parity Aliases for campaign_kols
+    $routes->get('administrator/campaign_kols', 'CampaignKols::index');
+    $routes->get('administrator/campaign_kols/index', 'CampaignKols::index');
+    $routes->get('administrator/campaign_kols/add', 'CampaignKols::index');
+    $routes->post('administrator/campaign_kols/add_save', 'CampaignKols::save');
+    $routes->get('administrator/campaign_kols/edit/(:num)', 'CampaignKols::view/$1');
+    $routes->post('administrator/campaign_kols/edit_save/(:num)', 'CampaignKols::updateStatusTasksAjax');
+    $routes->get('administrator/campaign_kols/view/(:num)', 'CampaignKols::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kols/delete', 'CampaignKols::bulkDelete');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kols/delete/(:num)', 'CampaignKols::delete/$1');
+    $routes->get('administrator/campaign_kols/export', 'CampaignKols::export');
+    $routes->get('administrator/campaign_kols/export_pdf', 'CampaignKols::export');
+    $routes->get('administrator/campaign_kols/get_tasks_json/(:num)', 'CampaignKols::getTasksJson/$1');
+    $routes->get('administrator/campaign_kols/generate_tracking_no', 'CampaignKols::generateTrackingNo');
+    $routes->post('administrator/campaign_kols/quick_add_kol', 'CampaignKols::quickAddKol');
+    $routes->get('administrator/campaign_kols/get_campaign_assigned_kols/(:num)', 'CampaignKols::getCampaignAssignedKols/$1');
+    $routes->post('administrator/campaign_kols/update_status_tasks_ajax', 'CampaignKols::updateStatusTasksAjax');
 
     // Wave 3: Tasks Engine, Briefs, Drafts & Logistik Pengiriman Sampel
     $routes->get('tasks', 'Tasks::index');

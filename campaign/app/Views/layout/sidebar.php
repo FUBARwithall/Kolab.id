@@ -117,6 +117,12 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
+          <a href="<?= base_url('campaign-kols') ?>" class="nav-link <?= $isActive(['campaign-kols', 'campaign_kols']) ?>">
+            <i class="nav-icon fas fa-handshake text-info"></i>
+            <p>Dealing KOL</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="<?= base_url('briefs') ?>" class="nav-link <?= $isActive('briefs') ?>">
             <i class="nav-icon fas fa-file-alt text-info"></i>
             <p><?= ($isAdmin || $isLeader) ? 'Briefs & Approval' : 'Briefs & Guidelines' ?></p>

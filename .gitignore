@@ -95,6 +95,10 @@ _legacy_monorepo/
 *.sublime-project
 *.sublime-workspace
 
+# --- Scratch & Temporary Scripts ---
+scratch/
+test_cookie.txt
+
 # --- OS Specific Junk Files ---
 .DS_Store
 .AppleDouble
