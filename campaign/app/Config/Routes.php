@@ -351,6 +351,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/kol_approval_histories/export_pdf', 'KolApprovalHistories::export_pdf');
     $routes->get('administrator/kol_approval_histories/single_pdf/(:num)', 'KolApprovalHistories::single_pdf/$1');
 
+    // Wave 3: Draft Review Histories (Full Parity with CI3 modules/draft_review_histories)
+    $routes->get('draft-review-histories', 'DraftReviewHistories::index');
+    $routes->get('draft-review-histories/index', 'DraftReviewHistories::index');
+    $routes->get('draft_review_histories', 'DraftReviewHistories::index');
+    $routes->get('draft_review_histories/index', 'DraftReviewHistories::index');
+    $routes->post('draft-review-histories/get-datatable', 'DraftReviewHistories::getDatatable');
+    $routes->post('draft_review_histories/get-datatable', 'DraftReviewHistories::getDatatable');
+    $routes->get('draft-review-histories/get-one/(:num)', 'DraftReviewHistories::getOne/$1');
+    $routes->get('draft_review_histories/get-one/(:num)', 'DraftReviewHistories::getOne/$1');
+    $routes->get('draft-review-histories/view/(:num)', 'DraftReviewHistories::view/$1');
+    $routes->get('draft_review_histories/view/(:num)', 'DraftReviewHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'draft-review-histories/delete/(:num)', 'DraftReviewHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'draft_review_histories/delete/(:num)', 'DraftReviewHistories::delete/$1');
+    $routes->post('draft-review-histories/bulk-delete', 'DraftReviewHistories::bulkDelete');
+    $routes->post('draft_review_histories/bulk-delete', 'DraftReviewHistories::bulkDelete');
+    $routes->get('draft-review-histories/export', 'DraftReviewHistories::export');
+    $routes->get('draft_review_histories/export', 'DraftReviewHistories::export');
+    $routes->get('draft-review-histories/export-pdf', 'DraftReviewHistories::export_pdf');
+    $routes->get('draft_review_histories/export-pdf', 'DraftReviewHistories::export_pdf');
+    $routes->get('draft-review-histories/single-pdf/(:num)', 'DraftReviewHistories::single_pdf/$1');
+    $routes->get('draft_review_histories/single-pdf/(:num)', 'DraftReviewHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/draft_review_histories/*
+    $routes->get('administrator/draft_review_histories', 'DraftReviewHistories::index');
+    $routes->get('administrator/draft_review_histories/index', 'DraftReviewHistories::index');
+    $routes->get('administrator/draft_review_histories/index/(:num)', 'DraftReviewHistories::index/$1');
+    $routes->get('administrator/draft_review_histories/view/(:num)', 'DraftReviewHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/draft_review_histories/delete/(:num)', 'DraftReviewHistories::delete/$1');
+    $routes->get('administrator/draft_review_histories/delete', 'DraftReviewHistories::delete');
+    $routes->get('administrator/draft_review_histories/export', 'DraftReviewHistories::export');
+    $routes->get('administrator/draft_review_histories/export_pdf', 'DraftReviewHistories::export_pdf');
+    $routes->get('administrator/draft_review_histories/single_pdf/(:num)', 'DraftReviewHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
