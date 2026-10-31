@@ -306,9 +306,18 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/postings/delete/(:num)', 'Postings::delete/$1');
     $routes->get('administrator/postings/export', 'Postings::export');
 
+    // Wave 4: Kalender Posting & Timeline Visualizer (Full Parity with CI3 modules/kalender)
     $routes->get('kalender', 'Kalender::index');
+    $routes->get('kalender/index', 'Kalender::index');
     $routes->get('calendar', 'Kalender::index');
     $routes->get('kalender/get-events', 'Kalender::getEvents');
+    $routes->get('kalender/get_events', 'Kalender::get_events');
+
+    // CI3 Legacy Aliases: administrator/kalender/*
+    $routes->get('administrator/kalender', 'Kalender::index');
+    $routes->get('administrator/kalender/index', 'Kalender::index');
+    $routes->get('administrator/kalender/get_events', 'Kalender::get_events');
+    $routes->get('administrator/kalender/get-events', 'Kalender::getEvents');
 
     // Wave 7: Backoffice CMS Artikel Blog & Landing
     $routes->get('articles', 'Articles::index');
