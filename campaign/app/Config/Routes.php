@@ -306,6 +306,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/postings/delete/(:num)', 'Postings::delete/$1');
     $routes->get('administrator/postings/export', 'Postings::export');
 
+    // Wave 4: Posting Metrics & Scraping Performance Snapshots (Full Parity with CI3 modules/posting_metrics)
+    $routes->get('posting-metrics', 'PostingMetrics::index');
+    $routes->get('posting-metrics/index', 'PostingMetrics::index');
+    $routes->get('posting_metrics', 'PostingMetrics::index');
+    $routes->get('posting_metrics/index', 'PostingMetrics::index');
+    $routes->post('posting-metrics/get-datatable', 'PostingMetrics::getDatatable');
+    $routes->post('posting_metrics/get-datatable', 'PostingMetrics::getDatatable');
+    $routes->get('posting-metrics/get-one/(:num)', 'PostingMetrics::getOne/$1');
+    $routes->get('posting_metrics/get-one/(:num)', 'PostingMetrics::getOne/$1');
+    $routes->get('posting-metrics/view/(:num)', 'PostingMetrics::view/$1');
+    $routes->get('posting_metrics/view/(:num)', 'PostingMetrics::view/$1');
+    $routes->match(['GET', 'POST'], 'posting-metrics/delete/(:num)', 'PostingMetrics::delete/$1');
+    $routes->match(['GET', 'POST'], 'posting_metrics/delete/(:num)', 'PostingMetrics::delete/$1');
+    $routes->post('posting-metrics/bulk-delete', 'PostingMetrics::bulkDelete');
+    $routes->post('posting_metrics/bulk-delete', 'PostingMetrics::bulkDelete');
+    $routes->get('posting-metrics/export', 'PostingMetrics::export');
+    $routes->get('posting_metrics/export', 'PostingMetrics::export');
+    $routes->get('posting-metrics/export-pdf', 'PostingMetrics::export_pdf');
+    $routes->get('posting_metrics/export-pdf', 'PostingMetrics::export_pdf');
+    $routes->get('posting-metrics/single-pdf/(:num)', 'PostingMetrics::single_pdf/$1');
+    $routes->get('posting_metrics/single-pdf/(:num)', 'PostingMetrics::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/posting_metrics/*
+    $routes->get('administrator/posting_metrics', 'PostingMetrics::index');
+    $routes->get('administrator/posting_metrics/index', 'PostingMetrics::index');
+    $routes->get('administrator/posting_metrics/index/(:num)', 'PostingMetrics::index/$1');
+    $routes->get('administrator/posting_metrics/view/(:num)', 'PostingMetrics::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/posting_metrics/delete/(:num)', 'PostingMetrics::delete/$1');
+    $routes->get('administrator/posting_metrics/delete', 'PostingMetrics::delete');
+    $routes->get('administrator/posting_metrics/export', 'PostingMetrics::export');
+    $routes->get('administrator/posting_metrics/export_pdf', 'PostingMetrics::export_pdf');
+    $routes->get('administrator/posting_metrics/single_pdf/(:num)', 'PostingMetrics::single_pdf/$1');
+
     // Wave 4: Kalender Posting & Timeline Visualizer (Full Parity with CI3 modules/kalender)
     $routes->get('kalender', 'Kalender::index');
     $routes->get('kalender/index', 'Kalender::index');
