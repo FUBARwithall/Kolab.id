@@ -213,12 +213,44 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/tasks/set_status/(:num)/(:segment)', 'Tasks::setStatus/$1/$2');
     $routes->get('administrator/tasks/export', 'Tasks::export');
 
+    // Wave 3: Briefs & Guidelines (Full Parity with CI3 modules/briefs)
     $routes->get('briefs', 'Briefs::index');
+    $routes->get('briefs/index', 'Briefs::index');
+    $routes->get('briefs/index/(:num)', 'Briefs::index/$1');
     $routes->post('briefs/get-datatable', 'Briefs::getDatatable');
     $routes->get('briefs/get-one/(:num)', 'Briefs::getOne/$1');
+    $routes->get('briefs/view/(:num)', 'Briefs::view/$1');
+    $routes->get('briefs/add', 'Briefs::add');
+    $routes->post('briefs/add_save', 'Briefs::add_save');
+    $routes->get('briefs/edit/(:num)', 'Briefs::edit/$1');
+    $routes->post('briefs/edit_save/(:num)', 'Briefs::edit_save/$1');
     $routes->post('briefs/save', 'Briefs::save');
-    $routes->post('briefs/approve/(:num)', 'Briefs::approve/$1');
-    $routes->post('briefs/revision/(:num)', 'Briefs::revision/$1');
+    $routes->match(['GET', 'POST'], 'briefs/submit_review/(:num)', 'Briefs::submit_review/$1');
+    $routes->match(['GET', 'POST'], 'briefs/approve/(:num)', 'Briefs::approve/$1');
+    $routes->match(['GET', 'POST'], 'briefs/revision/(:num)', 'Briefs::revision/$1');
+    $routes->match(['GET', 'POST'], 'briefs/delete/(:num)', 'Briefs::delete/$1');
+    $routes->post('briefs/bulk-delete', 'Briefs::bulkDelete');
+    $routes->get('briefs/export', 'Briefs::export');
+    $routes->get('briefs/export-pdf', 'Briefs::export_pdf');
+    $routes->get('briefs/single-pdf/(:num)', 'Briefs::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/briefs/*
+    $routes->get('administrator/briefs', 'Briefs::index');
+    $routes->get('administrator/briefs/index', 'Briefs::index');
+    $routes->get('administrator/briefs/index/(:num)', 'Briefs::index/$1');
+    $routes->get('administrator/briefs/view/(:num)', 'Briefs::view/$1');
+    $routes->get('administrator/briefs/add', 'Briefs::add');
+    $routes->post('administrator/briefs/add_save', 'Briefs::add_save');
+    $routes->get('administrator/briefs/edit/(:num)', 'Briefs::edit/$1');
+    $routes->post('administrator/briefs/edit_save/(:num)', 'Briefs::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/briefs/submit_review/(:num)', 'Briefs::submit_review/$1');
+    $routes->match(['GET', 'POST'], 'administrator/briefs/approve/(:num)', 'Briefs::approve/$1');
+    $routes->match(['GET', 'POST'], 'administrator/briefs/revision/(:num)', 'Briefs::revision/$1');
+    $routes->match(['GET', 'POST'], 'administrator/briefs/delete/(:num)', 'Briefs::delete/$1');
+    $routes->get('administrator/briefs/delete', 'Briefs::delete');
+    $routes->get('administrator/briefs/export', 'Briefs::export');
+    $routes->get('administrator/briefs/export_pdf', 'Briefs::export_pdf');
+    $routes->get('administrator/briefs/single_pdf/(:num)', 'Briefs::single_pdf/$1');
 
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
