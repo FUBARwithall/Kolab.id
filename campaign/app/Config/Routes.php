@@ -318,6 +318,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/brief_approval_histories/export_pdf', 'BriefApprovalHistories::export_pdf');
     $routes->get('administrator/brief_approval_histories/single_pdf/(:num)', 'BriefApprovalHistories::single_pdf/$1');
 
+    // Wave 3: KOL Approval Histories (Full Parity with CI3 modules/kol_approval_histories)
+    $routes->get('kol-approval-histories', 'KolApprovalHistories::index');
+    $routes->get('kol-approval-histories/index', 'KolApprovalHistories::index');
+    $routes->get('kol_approval_histories', 'KolApprovalHistories::index');
+    $routes->get('kol_approval_histories/index', 'KolApprovalHistories::index');
+    $routes->post('kol-approval-histories/get-datatable', 'KolApprovalHistories::getDatatable');
+    $routes->post('kol_approval_histories/get-datatable', 'KolApprovalHistories::getDatatable');
+    $routes->get('kol-approval-histories/get-one/(:num)', 'KolApprovalHistories::getOne/$1');
+    $routes->get('kol_approval_histories/get-one/(:num)', 'KolApprovalHistories::getOne/$1');
+    $routes->get('kol-approval-histories/view/(:num)', 'KolApprovalHistories::view/$1');
+    $routes->get('kol_approval_histories/view/(:num)', 'KolApprovalHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'kol-approval-histories/delete/(:num)', 'KolApprovalHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'kol_approval_histories/delete/(:num)', 'KolApprovalHistories::delete/$1');
+    $routes->post('kol-approval-histories/bulk-delete', 'KolApprovalHistories::bulkDelete');
+    $routes->post('kol_approval_histories/bulk-delete', 'KolApprovalHistories::bulkDelete');
+    $routes->get('kol-approval-histories/export', 'KolApprovalHistories::export');
+    $routes->get('kol_approval_histories/export', 'KolApprovalHistories::export');
+    $routes->get('kol-approval-histories/export-pdf', 'KolApprovalHistories::export_pdf');
+    $routes->get('kol_approval_histories/export-pdf', 'KolApprovalHistories::export_pdf');
+    $routes->get('kol-approval-histories/single-pdf/(:num)', 'KolApprovalHistories::single_pdf/$1');
+    $routes->get('kol_approval_histories/single-pdf/(:num)', 'KolApprovalHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/kol_approval_histories/*
+    $routes->get('administrator/kol_approval_histories', 'KolApprovalHistories::index');
+    $routes->get('administrator/kol_approval_histories/index', 'KolApprovalHistories::index');
+    $routes->get('administrator/kol_approval_histories/index/(:num)', 'KolApprovalHistories::index/$1');
+    $routes->get('administrator/kol_approval_histories/view/(:num)', 'KolApprovalHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_approval_histories/delete/(:num)', 'KolApprovalHistories::delete/$1');
+    $routes->get('administrator/kol_approval_histories/delete', 'KolApprovalHistories::delete');
+    $routes->get('administrator/kol_approval_histories/export', 'KolApprovalHistories::export');
+    $routes->get('administrator/kol_approval_histories/export_pdf', 'KolApprovalHistories::export_pdf');
+    $routes->get('administrator/kol_approval_histories/single_pdf/(:num)', 'KolApprovalHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
