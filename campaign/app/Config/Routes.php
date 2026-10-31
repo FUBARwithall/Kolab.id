@@ -285,6 +285,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/brief_content_histories/export_pdf', 'BriefContentHistories::export_pdf');
     $routes->get('administrator/brief_content_histories/single_pdf/(:num)', 'BriefContentHistories::single_pdf/$1');
 
+    // Wave 3: Brief Approval Histories (Full Parity with CI3 modules/brief_approval_histories)
+    $routes->get('brief-approval-histories', 'BriefApprovalHistories::index');
+    $routes->get('brief-approval-histories/index', 'BriefApprovalHistories::index');
+    $routes->get('brief_approval_histories', 'BriefApprovalHistories::index');
+    $routes->get('brief_approval_histories/index', 'BriefApprovalHistories::index');
+    $routes->post('brief-approval-histories/get-datatable', 'BriefApprovalHistories::getDatatable');
+    $routes->post('brief_approval_histories/get-datatable', 'BriefApprovalHistories::getDatatable');
+    $routes->get('brief-approval-histories/get-one/(:num)', 'BriefApprovalHistories::getOne/$1');
+    $routes->get('brief_approval_histories/get-one/(:num)', 'BriefApprovalHistories::getOne/$1');
+    $routes->get('brief-approval-histories/view/(:num)', 'BriefApprovalHistories::view/$1');
+    $routes->get('brief_approval_histories/view/(:num)', 'BriefApprovalHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'brief-approval-histories/delete/(:num)', 'BriefApprovalHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'brief_approval_histories/delete/(:num)', 'BriefApprovalHistories::delete/$1');
+    $routes->post('brief-approval-histories/bulk-delete', 'BriefApprovalHistories::bulkDelete');
+    $routes->post('brief_approval_histories/bulk-delete', 'BriefApprovalHistories::bulkDelete');
+    $routes->get('brief-approval-histories/export', 'BriefApprovalHistories::export');
+    $routes->get('brief_approval_histories/export', 'BriefApprovalHistories::export');
+    $routes->get('brief-approval-histories/export-pdf', 'BriefApprovalHistories::export_pdf');
+    $routes->get('brief_approval_histories/export-pdf', 'BriefApprovalHistories::export_pdf');
+    $routes->get('brief-approval-histories/single-pdf/(:num)', 'BriefApprovalHistories::single_pdf/$1');
+    $routes->get('brief_approval_histories/single-pdf/(:num)', 'BriefApprovalHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/brief_approval_histories/*
+    $routes->get('administrator/brief_approval_histories', 'BriefApprovalHistories::index');
+    $routes->get('administrator/brief_approval_histories/index', 'BriefApprovalHistories::index');
+    $routes->get('administrator/brief_approval_histories/index/(:num)', 'BriefApprovalHistories::index/$1');
+    $routes->get('administrator/brief_approval_histories/view/(:num)', 'BriefApprovalHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/brief_approval_histories/delete/(:num)', 'BriefApprovalHistories::delete/$1');
+    $routes->get('administrator/brief_approval_histories/delete', 'BriefApprovalHistories::delete');
+    $routes->get('administrator/brief_approval_histories/export', 'BriefApprovalHistories::export');
+    $routes->get('administrator/brief_approval_histories/export_pdf', 'BriefApprovalHistories::export_pdf');
+    $routes->get('administrator/brief_approval_histories/single_pdf/(:num)', 'BriefApprovalHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
