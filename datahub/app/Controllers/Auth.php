@@ -98,7 +98,7 @@ class Auth extends BaseController
             'badgeText'      => 'DATAHUB PORTAL',
             'portalTitle'    => 'KOL Data Hub',
             'portalSubtitle' => 'Database Intelijen KOL, Scraper, Rate Card & Market Benchmark',
-            'formAction'     => '/datahub/login',
+            'formAction'     => base_url('login'),
             'currentUser'    => $currentUser,
             'demoEmail'      => 'admin@kolab.id',
             'demoPass'       => 'admin123',

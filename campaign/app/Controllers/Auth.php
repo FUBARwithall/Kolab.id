@@ -74,7 +74,7 @@ class Auth extends BaseController
             'badgeText'      => 'CAMPAIGN PORTAL',
             'portalTitle'    => 'Campaign Management',
             'portalSubtitle' => 'Kelola kampanye, brief, review video draft, logistik & invoice',
-            'formAction'     => '/campaign/login',
+            'formAction'     => base_url('login'),
             'currentUser'    => $currentUser,
             'demoEmail'      => 'leader@kolab.id',
             'demoPass'       => 'admin123',
