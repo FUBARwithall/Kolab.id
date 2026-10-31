@@ -49,7 +49,7 @@ class AuthFilter implements FilterInterface
             if (!$hasAccess) {
                 // If staff or leader attempts to enter Datahub, redirect to Campaign
                 if (in_array('staff', $userRoles, true) || in_array('leader', $userRoles, true)) {
-                    return redirect()->to('/campaign/dashboard')->with('error', 'Portal KOL Data Hub khusus untuk Talent KOL dan Superadmin. Silakan kelola operasional di Campaign Portal.');
+                    return redirect()->to(root_url('campaign/dashboard'))->with('error', 'Portal KOL Data Hub khusus untuk Talent KOL dan Superadmin. Silakan kelola operasional di Campaign Portal.');
                 }
                 return redirect()->to(base_url('dashboard'))->with('error', 'Akses dibatasi. Fitur ini memerlukan hak akses Superadmin.');
             }

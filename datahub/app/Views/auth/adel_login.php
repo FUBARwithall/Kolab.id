@@ -149,7 +149,7 @@
       <div>
         <i class="fas fa-user-check text-info me-1"></i> Terhubung: <strong><?= esc($currentUser['name']) ?></strong> (<?= esc($currentUser['role']) ?>)
       </div>
-      <a href="/datahub/dashboard" class="btn btn-sm btn-success py-0 px-2 fw-semibold" style="font-size: 11px;">Ke Dashboard &rarr;</a>
+      <a href="<?= base_url('dashboard') ?>" class="btn btn-sm btn-success py-0 px-2 fw-semibold" style="font-size: 11px;">Ke Dashboard &rarr;</a>
     </div>
   <?php endif; ?>
 
@@ -219,10 +219,10 @@
 
       <!-- Links to Hub and Landing -->
       <div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top text-xs">
-        <a href="/login" class="text-decoration-none text-muted hover-dark">
+        <a href="<?= root_url('login') ?>" class="text-decoration-none text-muted hover-dark">
           <i class="fas fa-th-large me-1"></i> Pilih Portal Lain
         </a>
-        <a href="/" class="text-decoration-none text-muted hover-dark">
+        <a href="<?= root_url('') ?>" class="text-decoration-none text-muted hover-dark">
           <i class="fas fa-globe me-1"></i> Ke Landing Page
         </a>
       </div>

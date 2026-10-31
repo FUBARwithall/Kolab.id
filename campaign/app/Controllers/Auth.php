@@ -112,7 +112,7 @@ class Auth extends BaseController
      */
     public function loginDatahub()
     {
-        return redirect()->to('/datahub/login');
+        return redirect()->to(root_url('datahub/login'));
     }
 
     /**
@@ -120,7 +120,7 @@ class Auth extends BaseController
      */
     public function loginKol()
     {
-        return redirect()->to('/datahub/login');
+        return redirect()->to(root_url('datahub/login'));
     }
 
     /**
@@ -194,12 +194,12 @@ class Auth extends BaseController
     protected function redirectBasedOnRole(array $roles)
     {
         if (in_array('kol', $roles, true) && !in_array('admin', $roles, true)) {
-            return redirect()->to('/datahub/dashboard');
+            return redirect()->to(root_url('datahub/dashboard'));
         }
 
         $portal = $this->request->getGet('portal') ?? $this->request->getPost('portal');
         if ($portal === 'datahub') {
-            return redirect()->to('/datahub/dashboard');
+            return redirect()->to(root_url('datahub/dashboard'));
         }
 
         return redirect()->to(base_url('dashboard'));

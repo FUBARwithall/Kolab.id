@@ -13,3 +13,13 @@
  *
  * @see: https://codeigniter.com/user_guide/extending/common.html
  */
+
+if (!function_exists('root_url')) {
+    /**
+     * Return base URL of the root monorepo (landing).
+     */
+    function root_url(string $path = ''): string
+    {
+        return base_url($path);
+    }
+}

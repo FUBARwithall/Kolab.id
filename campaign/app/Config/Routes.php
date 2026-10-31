@@ -27,12 +27,12 @@ $routes->get('logout', 'Auth::logout');
 $routes->get('campaign/logout', 'Auth::logout');
 
 // Redirect legacy /kol or /KOL requests directly to Datahub
-$routes->get('kol/login', static fn() => redirect()->to('/datahub/login'));
-$routes->get('KOL/login', static fn() => redirect()->to('/datahub/login'));
-$routes->get('kol', static fn() => redirect()->to('/datahub/dashboard'));
-$routes->get('KOL', static fn() => redirect()->to('/datahub/dashboard'));
-$routes->get('kol/(:any)', static fn() => redirect()->to('/datahub/dashboard'));
-$routes->get('KOL/(:any)', static fn() => redirect()->to('/datahub/dashboard'));
+$routes->get('kol/login', static fn() => redirect()->to(root_url('datahub/login')));
+$routes->get('KOL/login', static fn() => redirect()->to(root_url('datahub/login')));
+$routes->get('kol', static fn() => redirect()->to(root_url('datahub/dashboard')));
+$routes->get('KOL', static fn() => redirect()->to(root_url('datahub/dashboard')));
+$routes->get('kol/(:any)', static fn() => redirect()->to(root_url('datahub/dashboard')));
+$routes->get('KOL/(:any)', static fn() => redirect()->to(root_url('datahub/dashboard')));
 
 // --------------------------------------------------------------------
 // CAMPAIGN MANAGEMENT — AKSES OPERASIONAL (LEADER, STAFF & SUPERADMIN)
