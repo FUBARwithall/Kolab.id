@@ -252,6 +252,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/briefs/export_pdf', 'Briefs::export_pdf');
     $routes->get('administrator/briefs/single_pdf/(:num)', 'Briefs::single_pdf/$1');
 
+    // Wave 3: Brief Content Histories (Full Parity with CI3 modules/brief_content_histories)
+    $routes->get('brief-content-histories', 'BriefContentHistories::index');
+    $routes->get('brief-content-histories/index', 'BriefContentHistories::index');
+    $routes->get('brief_content_histories', 'BriefContentHistories::index');
+    $routes->get('brief_content_histories/index', 'BriefContentHistories::index');
+    $routes->post('brief-content-histories/get-datatable', 'BriefContentHistories::getDatatable');
+    $routes->post('brief_content_histories/get-datatable', 'BriefContentHistories::getDatatable');
+    $routes->get('brief-content-histories/get-one/(:num)', 'BriefContentHistories::getOne/$1');
+    $routes->get('brief_content_histories/get-one/(:num)', 'BriefContentHistories::getOne/$1');
+    $routes->get('brief-content-histories/view/(:num)', 'BriefContentHistories::view/$1');
+    $routes->get('brief_content_histories/view/(:num)', 'BriefContentHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'brief-content-histories/delete/(:num)', 'BriefContentHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'brief_content_histories/delete/(:num)', 'BriefContentHistories::delete/$1');
+    $routes->post('brief-content-histories/bulk-delete', 'BriefContentHistories::bulkDelete');
+    $routes->post('brief_content_histories/bulk-delete', 'BriefContentHistories::bulkDelete');
+    $routes->get('brief-content-histories/export', 'BriefContentHistories::export');
+    $routes->get('brief_content_histories/export', 'BriefContentHistories::export');
+    $routes->get('brief-content-histories/export-pdf', 'BriefContentHistories::export_pdf');
+    $routes->get('brief_content_histories/export-pdf', 'BriefContentHistories::export_pdf');
+    $routes->get('brief-content-histories/single-pdf/(:num)', 'BriefContentHistories::single_pdf/$1');
+    $routes->get('brief_content_histories/single-pdf/(:num)', 'BriefContentHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/brief_content_histories/*
+    $routes->get('administrator/brief_content_histories', 'BriefContentHistories::index');
+    $routes->get('administrator/brief_content_histories/index', 'BriefContentHistories::index');
+    $routes->get('administrator/brief_content_histories/index/(:num)', 'BriefContentHistories::index/$1');
+    $routes->get('administrator/brief_content_histories/view/(:num)', 'BriefContentHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/brief_content_histories/delete/(:num)', 'BriefContentHistories::delete/$1');
+    $routes->get('administrator/brief_content_histories/delete', 'BriefContentHistories::delete');
+    $routes->get('administrator/brief_content_histories/export', 'BriefContentHistories::export');
+    $routes->get('administrator/brief_content_histories/export_pdf', 'BriefContentHistories::export_pdf');
+    $routes->get('administrator/brief_content_histories/single_pdf/(:num)', 'BriefContentHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
