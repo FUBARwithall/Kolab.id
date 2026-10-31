@@ -134,6 +134,12 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
             <p>Varian Produk Sampel</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="<?= base_url('campaign-kol-variants') ?>" class="nav-link <?= $isActive(['campaign-kol-variants', 'campaign_kol_variants']) ?>">
+            <i class="nav-icon fas fa-layer-group text-primary"></i>
+            <p>Alokasi Varian KOL</p>
+          </a>
+        </li>
 
         <!-- Section: PRODUKSI & KONTEN (Cicool Legacy parent 105) -->
         <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">PRODUKSI &amp; KONTEN</li>

@@ -154,6 +154,37 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/campaign_kols/get_campaign_assigned_kols/(:num)', 'CampaignKols::getCampaignAssignedKols/$1');
     $routes->post('administrator/campaign_kols/update_status_tasks_ajax', 'CampaignKols::updateStatusTasksAjax');
 
+    // Campaign KOL Variants (Alokasi Varian KOL) - 100% Parity with CI3 modules/campaign_kol_variants
+    $routes->get('campaign-kol-variants', 'CampaignKolVariants::index');
+    $routes->get('campaign_kol_variants', 'CampaignKolVariants::index');
+    $routes->post('campaign-kol-variants/get-datatable', 'CampaignKolVariants::getDatatable');
+    $routes->post('campaign_kol_variants/get-datatable', 'CampaignKolVariants::getDatatable');
+    $routes->get('campaign-kol-variants/get-one/(:num)', 'CampaignKolVariants::getOne/$1');
+    $routes->get('campaign_kol_variants/get-one/(:num)', 'CampaignKolVariants::getOne/$1');
+    $routes->post('campaign-kol-variants/save', 'CampaignKolVariants::save');
+    $routes->post('campaign_kol_variants/save', 'CampaignKolVariants::save');
+    $routes->get('campaign-kol-variants/view/(:num)', 'CampaignKolVariants::view/$1');
+    $routes->get('campaign_kol_variants/view/(:num)', 'CampaignKolVariants::view/$1');
+    $routes->match(['GET', 'POST'], 'campaign-kol-variants/delete/(:num)', 'CampaignKolVariants::delete/$1');
+    $routes->match(['GET', 'POST'], 'campaign_kol_variants/delete/(:num)', 'CampaignKolVariants::delete/$1');
+    $routes->post('campaign-kol-variants/bulk-delete', 'CampaignKolVariants::bulkDelete');
+    $routes->post('campaign_kol_variants/bulk-delete', 'CampaignKolVariants::bulkDelete');
+    $routes->get('campaign-kol-variants/export', 'CampaignKolVariants::export');
+    $routes->get('campaign_kol_variants/export', 'CampaignKolVariants::export');
+
+    // CI3 Parity Aliases for campaign_kol_variants
+    $routes->get('administrator/campaign_kol_variants', 'CampaignKolVariants::index');
+    $routes->get('administrator/campaign_kol_variants/index', 'CampaignKolVariants::index');
+    $routes->get('administrator/campaign_kol_variants/add', 'CampaignKolVariants::index');
+    $routes->post('administrator/campaign_kol_variants/add_save', 'CampaignKolVariants::save');
+    $routes->get('administrator/campaign_kol_variants/edit/(:num)', 'CampaignKolVariants::view/$1');
+    $routes->post('administrator/campaign_kol_variants/edit_save/(:num)', 'CampaignKolVariants::save');
+    $routes->get('administrator/campaign_kol_variants/view/(:num)', 'CampaignKolVariants::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_variants/delete', 'CampaignKolVariants::bulkDelete');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_variants/delete/(:num)', 'CampaignKolVariants::delete/$1');
+    $routes->get('administrator/campaign_kol_variants/export', 'CampaignKolVariants::export');
+    $routes->get('administrator/campaign_kol_variants/export_pdf', 'CampaignKolVariants::export');
+
     // Wave 3: Tasks Engine, Briefs, Drafts & Logistik Pengiriman Sampel
     $routes->get('tasks', 'Tasks::index');
     $routes->post('tasks/get-datatable', 'Tasks::getDatatable');
