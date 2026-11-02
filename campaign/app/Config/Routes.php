@@ -942,14 +942,49 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
     $routes->get('internal-evaluation', 'InternalEvaluation::index');
     $routes->get('internal-evaluation/export-excel', 'InternalEvaluation::exportExcel');
-    // Wave 6: Executive Finance Hub
-    $routes->get('finance', 'FinanceHub::index');
-    $routes->get('finance-hub', 'FinanceHub::index');
-    $routes->post('finance/get-datatable', 'FinanceHub::getDatatable');
-    $routes->post('finance-hub/get-datatable', 'FinanceHub::getDatatable');
-    $routes->post('finance/reject-invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
-    $routes->post('finance/upload-bupot/(:num)', 'FinanceHub::uploadBupot/$1');
-    $routes->get('finance/invoice-print/(:num)', 'FinanceHub::printInvoice/$1');
+    // Wave 6: Executive Finance Hub (Full Parity with CI3 modules/finance_hub)
+    foreach (['finance', 'finance-hub', 'finance_hub'] as $prefix) {
+        $routes->get($prefix, 'FinanceHub::index');
+        $routes->get($prefix . '/index', 'FinanceHub::index');
+        $routes->match(['GET', 'POST'], $prefix . '/get-datatable', 'FinanceHub::getDatatable');
+        $routes->match(['GET', 'POST'], $prefix . '/getDatatable', 'FinanceHub::getDatatable');
+        $routes->post($prefix . '/approve-invoice', 'FinanceHub::approve_invoice');
+        $routes->post($prefix . '/approve_invoice', 'FinanceHub::approve_invoice');
+        $routes->post($prefix . '/approve-invoice/(:num)', 'FinanceHub::approveInvoice/$1');
+        $routes->post($prefix . '/approve_invoice/(:num)', 'FinanceHub::approveInvoice/$1');
+        $routes->post($prefix . '/reject-invoice', 'FinanceHub::reject_invoice');
+        $routes->post($prefix . '/reject_invoice', 'FinanceHub::reject_invoice');
+        $routes->post($prefix . '/reject-invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
+        $routes->post($prefix . '/reject_invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/upload-bupot', 'FinanceHub::upload_bupot');
+        $routes->match(['GET', 'POST'], $prefix . '/upload_bupot', 'FinanceHub::upload_bupot');
+        $routes->match(['GET', 'POST'], $prefix . '/upload-bupot/(:num)', 'FinanceHub::uploadBupot/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/upload_bupot/(:num)', 'FinanceHub::uploadBupot/$1');
+        $routes->post($prefix . '/save-payment', 'FinanceHub::save_payment');
+        $routes->post($prefix . '/save_payment', 'FinanceHub::save_payment');
+        $routes->get($prefix . '/get_invoice_history_ajax/(:num)', 'FinanceHub::get_invoice_history_ajax/$1');
+        $routes->get($prefix . '/view_invoice_file/(:num)', 'FinanceHub::view_invoice_file/$1');
+        $routes->get($prefix . '/invoice-print/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/invoice_print/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/print-invoice/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/print_invoice/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/export', 'FinanceHub::export');
+        $routes->get($prefix . '/export-pdf', 'FinanceHub::export_pdf');
+        $routes->get($prefix . '/export_pdf', 'FinanceHub::export_pdf');
+    }
+
+    // Legacy CI3 Routes: administrator/finance_hub/*
+    $routes->get('administrator/finance_hub', 'Finance_hub::index');
+    $routes->get('administrator/finance_hub/index', 'Finance_hub::index');
+    $routes->get('administrator/finance_hub/index/(:num)', 'Finance_hub::index/$1');
+    $routes->post('administrator/finance_hub/approve_invoice', 'Finance_hub::approve_invoice');
+    $routes->post('administrator/finance_hub/reject_invoice', 'Finance_hub::reject_invoice');
+    $routes->match(['GET', 'POST'], 'administrator/finance_hub/upload_bupot', 'Finance_hub::upload_bupot');
+    $routes->post('administrator/finance_hub/save_payment', 'Finance_hub::save_payment');
+    $routes->get('administrator/finance_hub/get_invoice_history_ajax/(:num)', 'Finance_hub::get_invoice_history_ajax/$1');
+    $routes->get('administrator/finance_hub/view_invoice_file/(:num)', 'Finance_hub::view_invoice_file/$1');
+    $routes->get('administrator/finance_hub/export', 'Finance_hub::export');
+    $routes->get('administrator/finance_hub/export_pdf', 'Finance_hub::export_pdf');
 
     // Wave 6: Invoices & Finansial
     $routes->get('invoices', 'Invoices::index');
