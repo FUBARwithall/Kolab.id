@@ -14,13 +14,71 @@ class ProductModel extends Model
     protected $protectFields    = true;
     protected $allowedFields    = [
         'name',
+        'category',
         'sku',
         'description',
         'stock_qty',
+        'stock',
         'unit_price',
+        'price',
         'image_url',
         'is_active',
     ];
+
+    protected $beforeInsert = ['syncStockAndPrice'];
+    protected $beforeUpdate = ['syncStockAndPrice'];
+
+    protected function syncStockAndPrice(array $data): array
+    {
+        if (isset($data['data']['stock']) && !isset($data['data']['stock_qty'])) {
+            $data['data']['stock_qty'] = (int)$data['data']['stock'];
+        } elseif (isset($data['data']['stock_qty']) && !isset($data['data']['stock'])) {
+            $data['data']['stock'] = (int)$data['data']['stock_qty'];
+        }
+
+        if (isset($data['data']['price']) && !isset($data['data']['unit_price'])) {
+            $data['data']['unit_price'] = (float)$data['data']['price'];
+        } elseif (isset($data['data']['unit_price']) && !isset($data['data']['price'])) {
+            $data['data']['price'] = (float)$data['data']['unit_price'];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Get single detail with variants count
+     */
+    public function getDetail(int $id): ?array
+    {
+        $db = \Config\Database::connect();
+        $product = $this->find($id);
+        if (!$product) {
+            return null;
+        }
+
+        $variants = $db->table('variants')->where('product_id', $id)->orderBy('id', 'ASC')->get()->getResultArray();
+        $stockHistory = $db->table('stock_history')->where('product_id', $id)->orderBy('id', 'DESC')->limit(10)->get()->getResultArray();
+
+        $product['variants'] = $variants;
+        $product['stock_history'] = $stockHistory;
+        $product['variants_count'] = count($variants);
+
+        return $product;
+    }
+
+    /**
+     * Get all products for export CSV & PDF
+     */
+    public function getAllForExport(?string $filterStatus = null): array
+    {
+        $builder = $this->builder();
+
+        if ($filterStatus !== null && $filterStatus !== '') {
+            $builder->where('is_active', (int)$filterStatus);
+        }
+
+        return $builder->orderBy('id', 'DESC')->get()->getResultArray();
+    }
 
     // Dates
     protected $useTimestamps = true;

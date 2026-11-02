@@ -42,18 +42,45 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('dashboard', 'Dashboard::index');
     $routes->get('campaign', 'Dashboard::index');
     $routes->get('campaign/dashboard', 'Dashboard::index');
-    // Wave 1: Master Produk & Mutasi Stok Sampel
+    // Wave 1: Master Produk & Mutasi Stok Sampel (Full Parity with CI3 modules/products)
     $routes->get('products', 'Products::index');
     $routes->post('products/get-datatable', 'Products::getDatatable');
     $routes->get('products/get-one/(:num)', 'Products::getOne/$1');
+    $routes->get('products/view/(:num)', 'Products::view/$1');
+    $routes->get('products/add', 'Products::add');
+    $routes->post('products/add_save', 'Products::add_save');
+    $routes->get('products/edit/(:num)', 'Products::edit/$1');
+    $routes->post('products/edit_save/(:num)', 'Products::edit_save/$1');
     $routes->post('products/save', 'Products::save');
     $routes->post('products/adjust-stock', 'Products::adjustStock');
-    $routes->post('products/delete/(:num)', 'Products::delete/$1');
+    $routes->match(['GET', 'POST'], 'products/delete/(:num)', 'Products::delete/$1');
+    $routes->match(['GET', 'POST'], 'products/delete', 'Products::delete');
+    $routes->post('products/bulk-delete', 'Products::bulkDelete');
+    $routes->get('products/export', 'Products::export');
+    $routes->get('products/export-pdf', 'Products::export_pdf');
+    $routes->get('products/export_pdf', 'Products::export_pdf');
+    $routes->get('products/single-pdf/(:num)', 'Products::single_pdf/$1');
+    $routes->get('products/single_pdf/(:num)', 'Products::single_pdf/$1');
     $routes->get('products/variants/(:num)', 'Products::getVariants/$1');
     $routes->post('products/variants/save', 'Products::saveVariant');
     $routes->post('products/variants/delete/(:num)', 'Products::deleteVariant/$1');
     $routes->get('stock-history', 'StockHistory::index');
     $routes->post('stock-history/get-datatable', 'StockHistory::getDatatable');
+
+    // CI3 Parity Aliases for Products
+    $routes->get('administrator/products', 'Products::index');
+    $routes->get('administrator/products/index', 'Products::index');
+    $routes->get('administrator/products/index/(:num)', 'Products::index');
+    $routes->get('administrator/products/add', 'Products::add');
+    $routes->post('administrator/products/add_save', 'Products::add_save');
+    $routes->get('administrator/products/edit/(:num)', 'Products::edit/$1');
+    $routes->post('administrator/products/edit_save/(:num)', 'Products::edit_save/$1');
+    $routes->get('administrator/products/view/(:num)', 'Products::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/products/delete/(:num)', 'Products::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/products/delete', 'Products::delete');
+    $routes->get('administrator/products/export', 'Products::export');
+    $routes->get('administrator/products/export_pdf', 'Products::export_pdf');
+    $routes->get('administrator/products/single_pdf/(:num)', 'Products::single_pdf/$1');
 
     // Wave 13: Variant Konsep Konten (Full Parity with CI3 modules/variants)
     $routes->get('variants', 'Variants::index');

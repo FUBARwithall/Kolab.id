@@ -84,6 +84,12 @@ class Products extends BaseController
 
             $actionBtns = '
                 <div class="d-flex gap-1 justify-content-center">
+                    <a href="' . base_url('products/view/' . $row['id']) . '" class="btn btn-outline-secondary btn-sm rounded-2 py-1 px-2" title="Detail Produk (CI3 Parity)">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="' . base_url('products/single-pdf/' . $row['id']) . '" target="_blank" class="btn btn-outline-secondary btn-sm rounded-2 py-1 px-2" title="Cetak Lembar Audit PDF">
+                        <i class="fas fa-print"></i>
+                    </a>
                     <button type="button" class="btn btn-outline-warning text-dark btn-sm rounded-2 py-1 px-2" title="Kelola Varian" onclick="openVariantsModal(' . $row['id'] . ', \'' . esc(addslashes($row['name'])) . '\')">
                         <i class="fas fa-tags"></i>
                     </button>
@@ -293,38 +299,397 @@ class Products extends BaseController
     }
 
     /**
-     * Hapus produk
+     * View dedicated product detail page (CI3 Parity)
      */
-    public function delete(int $id): ResponseInterface
+    public function view(int $id)
+    {
+        $product = $this->productModel->getDetail($id);
+        if (!$product) {
+            return redirect()->to(base_url('products'))->with('error', 'Produk #' . $id . ' tidak ditemukan');
+        }
+
+        $data = [
+            'title'      => 'Detail Produk: ' . $product['name'],
+            'controller' => 'Products',
+            'product'    => $product,
+            'products'   => $product, // CI3 backward compatibility
+        ];
+
+        return view('products/view', $data);
+    }
+
+    /**
+     * Standalone Add Product Page (CI3 Parity)
+     */
+    public function add()
+    {
+        $data = [
+            'title'      => 'Tambah Produk Baru',
+            'controller' => 'Products',
+        ];
+
+        return view('products/add', $data);
+    }
+
+    /**
+     * Standalone Add Save Product (CI3 Parity)
+     */
+    public function add_save()
+    {
+        $rules = [
+            'sku'       => 'required|min_length[2]|max_length[100]|is_unique[products.sku]',
+            'name'      => 'required|min_length[3]|max_length[150]',
+            'stock'     => 'permit_empty|integer',
+            'stock_qty' => 'permit_empty|integer',
+            'price'     => 'permit_empty|numeric',
+            'unit_price'=> 'permit_empty|numeric',
+            'is_active' => 'required|in_list[0,1]',
+        ];
+
+        if (!$this->validate($rules)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => implode(', ', $this->validator->getErrors()),
+                ]);
+            }
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $stock = (int)($this->request->getPost('stock') ?: ($this->request->getPost('stock_qty') ?: 0));
+        $price = (float)($this->request->getPost('price') ?: ($this->request->getPost('unit_price') ?: 0));
+
+        $payload = [
+            'sku'         => strtoupper(trim((string)$this->request->getPost('sku'))),
+            'name'        => trim((string)$this->request->getPost('name')),
+            'category'    => trim((string)$this->request->getPost('category') ?? ''),
+            'description' => trim((string)$this->request->getPost('description') ?? ''),
+            'stock'       => $stock,
+            'stock_qty'   => $stock,
+            'price'       => $price,
+            'unit_price'  => $price,
+            'is_active'   => (int)$this->request->getPost('is_active'),
+        ];
+
+        // Upload image if provided
+        $imageFile = $this->request->getFile('image_file');
+        if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
+            $uploadDir = FCPATH . '../../shared/uploads/campaign';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0775, true);
+            }
+            $newName = $imageFile->getRandomName();
+            $imageFile->move($uploadDir, $newName);
+            $payload['image_url'] = $newName;
+        }
+
+        $newId = $this->productModel->insert($payload, true);
+
+        if ($stock > 0) {
+            $this->stockHistoryModel->record(
+                $newId,
+                null,
+                'IN',
+                $stock,
+                $stock,
+                'INITIAL_STOCK',
+                $newId,
+                'Stok Awal Produk Baru'
+            );
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON([
+                'success'  => true,
+                'id'       => $newId,
+                'message'  => 'Produk baru berhasil ditambahkan.',
+                'redirect' => base_url('products'),
+            ]);
+        }
+
+        if ($this->request->getPost('save_type') === 'stay') {
+            return redirect()->to(base_url('products/edit/' . $newId))->with('success', 'Produk berhasil disimpan.');
+        }
+
+        return redirect()->to(base_url('products'))->with('success', 'Produk baru berhasil ditambahkan.');
+    }
+
+    /**
+     * Standalone Edit Product Page (CI3 Parity)
+     */
+    public function edit(int $id)
     {
         $product = $this->productModel->find($id);
         if (!$product) {
+            return redirect()->to(base_url('products'))->with('error', 'Produk #' . $id . ' tidak ditemukan');
+        }
+
+        $data = [
+            'title'      => 'Edit Produk: ' . $product['name'],
+            'controller' => 'Products',
+            'product'    => $product,
+            'products'   => $product, // CI3 backward compatibility
+        ];
+
+        return view('products/edit', $data);
+    }
+
+    /**
+     * Standalone Edit Save Product (CI3 Parity)
+     */
+    public function edit_save(int $id)
+    {
+        $product = $this->productModel->find($id);
+        if (!$product) {
+            return redirect()->to(base_url('products'))->with('error', 'Produk #' . $id . ' tidak ditemukan');
+        }
+
+        $rules = [
+            'sku'       => 'required|min_length[2]|max_length[100]|is_unique[products.sku,id,' . $id . ']',
+            'name'      => 'required|min_length[3]|max_length[150]',
+            'stock'     => 'permit_empty|integer',
+            'stock_qty' => 'permit_empty|integer',
+            'price'     => 'permit_empty|numeric',
+            'unit_price'=> 'permit_empty|numeric',
+            'is_active' => 'required|in_list[0,1]',
+        ];
+
+        if (!$this->validate($rules)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => implode(', ', $this->validator->getErrors()),
+                ]);
+            }
+            return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
+        }
+
+        $stock = (int)($this->request->getPost('stock') ?: ($this->request->getPost('stock_qty') ?: 0));
+        $price = (float)($this->request->getPost('price') ?: ($this->request->getPost('unit_price') ?: 0));
+
+        $payload = [
+            'sku'         => strtoupper(trim((string)$this->request->getPost('sku'))),
+            'name'        => trim((string)$this->request->getPost('name')),
+            'category'    => trim((string)$this->request->getPost('category') ?? ''),
+            'description' => trim((string)$this->request->getPost('description') ?? ''),
+            'stock'       => $stock,
+            'stock_qty'   => $stock,
+            'price'       => $price,
+            'unit_price'  => $price,
+            'is_active'   => (int)$this->request->getPost('is_active'),
+        ];
+
+        $imageFile = $this->request->getFile('image_file');
+        if ($imageFile && $imageFile->isValid() && !$imageFile->hasMoved()) {
+            $uploadDir = FCPATH . '../../shared/uploads/campaign';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0775, true);
+            }
+            $newName = $imageFile->getRandomName();
+            $imageFile->move($uploadDir, $newName);
+            $payload['image_url'] = $newName;
+        }
+
+        $oldStock = (int)($product['stock_qty'] ?? $product['stock'] ?? 0);
+        $this->productModel->update($id, $payload);
+
+        if ($oldStock != $stock) {
+            $diff = $stock - $oldStock;
+            $type = $diff > 0 ? 'IN' : 'OUT';
+            $this->stockHistoryModel->record(
+                $id,
+                null,
+                $type,
+                abs($diff),
+                $stock,
+                'PRODUCT_EDIT',
+                $id,
+                'Penyesuaian stok saat update data produk'
+            );
+        }
+
+        if ($this->request->isAJAX()) {
             return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Produk tidak ditemukan.',
+                'success'  => true,
+                'id'       => $id,
+                'message'  => 'Produk berhasil diperbarui.',
+                'redirect' => base_url('products'),
             ]);
         }
 
-        // Cek apakah produk sudah dipakai di kampanye
-        $db = \Config\Database::connect();
-        $isUsedInCampaign = $db->table('campaign_products')->where('product_id', $id)->countAllResults();
-
-        if ($isUsedInCampaign > 0) {
-            // Jika ada riwayat, ubah status jadi nonaktif agar integritas data terjaga
-            $this->productModel->update($id, ['is_active' => 0]);
-            return $this->response->setJSON([
-                'success' => true,
-                'message' => 'Produk sudah terkait dengan kampanye aktif. Status produk diubah menjadi Nonaktif (Arsip).',
-                'summary' => $this->productModel->getSummary(),
-            ]);
+        if ($this->request->getPost('save_type') === 'stay') {
+            return redirect()->to(base_url('products/edit/' . $id))->with('success', 'Produk berhasil diperbarui.');
         }
 
-        $this->productModel->delete($id);
+        return redirect()->to(base_url('products'))->with('success', 'Produk berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus produk tunggal atau banyak (CI3 & CI4 Parity)
+     */
+    public function delete($id = null)
+    {
+        $arrId = $this->request->getGet('id') ?: ($this->request->getPost('id') ?: null);
+        if (empty($id) && !empty($arrId) && !is_array($arrId)) {
+            $id = (int)$arrId;
+        }
+
+        if (!empty($id)) {
+            $product = $this->productModel->find((int)$id);
+            if (!$product) {
+                if ($this->request->isAJAX()) {
+                    return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Produk tidak ditemukan.']);
+                }
+                return redirect()->to(base_url('products'))->with('error', 'Produk tidak ditemukan.');
+            }
+
+            // Cek apakah produk sudah dipakai di kampanye
+            $db = \Config\Database::connect();
+            $isUsedInCampaign = $db->table('campaign_products')->where('product_id', (int)$id)->countAllResults();
+
+            if ($isUsedInCampaign > 0) {
+                $this->productModel->update((int)$id, ['is_active' => 0]);
+                if ($this->request->isAJAX()) {
+                    return $this->response->setJSON([
+                        'success' => true,
+                        'message' => 'Produk sudah terkait dengan kampanye. Status diubah menjadi Nonaktif.',
+                        'summary' => $this->productModel->getSummary(),
+                    ]);
+                }
+                return redirect()->to(base_url('products'))->with('success', 'Status produk diubah menjadi Nonaktif (Arsip).');
+            }
+
+            $this->productModel->delete((int)$id);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Produk berhasil dihapus.',
+                    'summary' => $this->productModel->getSummary(),
+                ]);
+            }
+            return redirect()->to(base_url('products'))->with('success', 'Produk berhasil dihapus.');
+        }
+
+        if (is_array($arrId) && count($arrId) > 0) {
+            foreach ($arrId as $singleId) {
+                $this->productModel->delete((int)$singleId);
+            }
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => count($arrId) . ' produk berhasil dihapus.',
+                    'summary' => $this->productModel->getSummary(),
+                ]);
+            }
+            return redirect()->to(base_url('products'))->with('success', count($arrId) . ' produk berhasil dihapus.');
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Tidak ada produk yang dipilih untuk dihapus.']);
+        }
+        return redirect()->to(base_url('products'))->with('error', 'Tidak ada produk yang dipilih untuk dihapus.');
+    }
+
+    /**
+     * Bulk delete produk
+     */
+    public function bulkDelete(): ResponseInterface
+    {
+        $ids = $this->request->getPost('ids');
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Pilih setidaknya satu produk untuk dihapus']);
+        }
+
+        $cleanIds = array_map('intval', $ids);
+        $this->productModel->whereIn('id', $cleanIds)->delete();
 
         return $this->response->setJSON([
             'success' => true,
-            'message' => 'Produk berhasil dihapus.',
+            'message' => count($cleanIds) . ' produk berhasil dihapus',
             'summary' => $this->productModel->getSummary(),
+        ]);
+    }
+
+    /**
+     * Export products to CSV (CI3 Parity with XLS/CSV)
+     */
+    public function export()
+    {
+        $filterStatus = $this->request->getGet('filter_status') ?? ($this->request->getGet('status') ?? null);
+        $items = $this->productModel->getAllForExport($filterStatus);
+
+        $filename = 'products_export_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        // UTF-8 BOM for Microsoft Excel compatibility
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, [
+            'ID',
+            'SKU',
+            'Nama Produk',
+            'Kategori',
+            'Harga Satuan',
+            'Stok',
+            'Status',
+            'Waktu Dibuat',
+        ]);
+
+        foreach ($items as $row) {
+            fputcsv($output, [
+                $row['id'],
+                $row['sku'],
+                $row['name'],
+                $row['category'] ?? '-',
+                (float)($row['unit_price'] ?: $row['price']),
+                (int)($row['stock_qty'] ?: $row['stock']),
+                $row['is_active'] ? 'Aktif' : 'Nonaktif',
+                $row['created_at'],
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Export PDF Rekapitulasi Katalog Produk
+     */
+    public function export_pdf()
+    {
+        $filterStatus = $this->request->getGet('filter_status') ?? ($this->request->getGet('status') ?? null);
+        $items = $this->productModel->getAllForExport($filterStatus);
+
+        return view('products/export_pdf', [
+            'items'     => $items,
+            'title'     => 'Katalog Master Produk & Sampel Kolaborasi',
+            'generated' => date('d F Y, H:i:s'),
+            'filters'   => ['filter_status' => $filterStatus],
+        ]);
+    }
+
+    /**
+     * Cetak Lembar Single PDF Bukti Produk
+     */
+    public function single_pdf($id = null)
+    {
+        $id = (int) $id;
+        $product = $this->productModel->getDetail($id);
+
+        if (!$product) {
+            return redirect()->to(base_url('products'))->with('error', 'Produk #' . $id . ' tidak ditemukan.');
+        }
+
+        return view('products/single_pdf', [
+            'product'   => $product,
+            'products'  => $product, // CI3 backward compatibility
+            'title'     => 'Lembar Spesifikasi Produk #' . $product['id'] . ' - ' . $product['name'],
+            'generated' => date('d F Y, H:i:s'),
         ]);
     }
 
