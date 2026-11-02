@@ -174,7 +174,7 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
-          <a href="<?= base_url('scraping-jobs') ?>" class="nav-link <?= ($isActive('scraping-jobs') || $isActive('apify-jobs') || $isActive('apify_jobs')) ? 'active' : '' ?>">
+          <a href="<?= base_url('apify-jobs') ?>" class="nav-link <?= ($isActive('apify-jobs') || $isActive('apify_jobs') || $isActive('scraping-jobs')) ? 'active' : '' ?>">
             <i class="nav-icon fas fa-spider text-danger"></i>
             <p>Apify &amp; Scraping Jobs</p>
           </a>

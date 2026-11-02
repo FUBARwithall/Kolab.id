@@ -570,31 +570,64 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('whatsapp/send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
 
     // Wave 9: Monitoring Scraping & Apify Jobs (Full Parity with CI3 modules/apify_jobs)
-    $routes->get('scraping-jobs', 'ScrapingJobs::index');
-    $routes->post('scraping-jobs/get-datatable', 'ScrapingJobs::getDatatable');
-    $routes->get('scraping-jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->get('scraping-jobs/get-one/(:num)', 'ScrapingJobs::getOne/$1');
-    $routes->post('scraping-jobs/retry/(:num)', 'ScrapingJobs::retry/$1');
-    $routes->post('scraping-jobs/trigger', 'ScrapingJobs::triggerNew');
-    $routes->match(['GET', 'POST'], 'scraping-jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->post('scraping-jobs/bulk-delete', 'ScrapingJobs::bulkDelete');
-    $routes->get('scraping-jobs/export', 'ScrapingJobs::export');
+    $routes->get('apify-jobs', 'ApifyJobs::index');
+    $routes->get('apify-jobs/index', 'ApifyJobs::index');
+    $routes->match(['GET', 'POST'], 'apify-jobs/get-datatable', 'ApifyJobs::getDatatable');
+    $routes->get('apify-jobs/get-one/(:num)', 'ApifyJobs::getOne/$1');
+    $routes->get('apify-jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/retry/(:num)', 'ApifyJobs::retry/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/trigger', 'ApifyJobs::triggerNew');
+    $routes->match(['GET', 'POST'], 'apify-jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/delete', 'ApifyJobs::delete');
+    $routes->post('apify-jobs/bulk-delete', 'ApifyJobs::bulkDelete');
+    $routes->get('apify-jobs/export', 'ApifyJobs::export');
+    $routes->get('apify-jobs/export-pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify-jobs/export_pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify-jobs/single-pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+    $routes->get('apify-jobs/single_pdf/(:num)', 'ApifyJobs::single_pdf/$1');
 
-    // CI3 Parity Aliases (apify-jobs & apify_jobs)
-    $routes->get('apify-jobs', 'ScrapingJobs::index');
-    $routes->get('apify_jobs', 'ScrapingJobs::index');
-    $routes->post('apify-jobs/get-datatable', 'ScrapingJobs::getDatatable');
-    $routes->post('apify_jobs/get-datatable', 'ScrapingJobs::getDatatable');
-    $routes->get('apify-jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->get('apify_jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->match(['GET', 'POST'], 'apify-jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->match(['GET', 'POST'], 'apify_jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->get('apify-jobs/export', 'ScrapingJobs::export');
-    $routes->get('apify_jobs/export', 'ScrapingJobs::export');
-    $routes->get('administrator/apify_jobs', 'ScrapingJobs::index');
-    $routes->get('administrator/apify_jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->get('administrator/apify_jobs/export', 'ScrapingJobs::export');
+    // Snake_case aliases (apify_jobs)
+    $routes->get('apify_jobs', 'ApifyJobs::index');
+    $routes->get('apify_jobs/index', 'ApifyJobs::index');
+    $routes->match(['GET', 'POST'], 'apify_jobs/get-datatable', 'ApifyJobs::getDatatable');
+    $routes->get('apify_jobs/get-one/(:num)', 'ApifyJobs::getOne/$1');
+    $routes->get('apify_jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/retry/(:num)', 'ApifyJobs::retry/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/trigger', 'ApifyJobs::triggerNew');
+    $routes->match(['GET', 'POST'], 'apify_jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/delete', 'ApifyJobs::delete');
+    $routes->post('apify_jobs/bulk-delete', 'ApifyJobs::bulkDelete');
+    $routes->get('apify_jobs/export', 'ApifyJobs::export');
+    $routes->get('apify_jobs/export-pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify_jobs/export_pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify_jobs/single-pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+    $routes->get('apify_jobs/single_pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+
+    // Scraping-jobs alias backwards-compatibility
+    $routes->get('scraping-jobs', 'ApifyJobs::index');
+    $routes->get('scraping-jobs/index', 'ApifyJobs::index');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/get-datatable', 'ApifyJobs::getDatatable');
+    $routes->get('scraping-jobs/get-one/(:num)', 'ApifyJobs::getOne/$1');
+    $routes->get('scraping-jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/retry/(:num)', 'ApifyJobs::retry/$1');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/trigger', 'ApifyJobs::triggerNew');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/delete', 'ApifyJobs::delete');
+    $routes->post('scraping-jobs/bulk-delete', 'ApifyJobs::bulkDelete');
+    $routes->get('scraping-jobs/export', 'ApifyJobs::export');
+    $routes->get('scraping-jobs/export-pdf', 'ApifyJobs::export_pdf');
+    $routes->get('scraping-jobs/single-pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+
+    // CI3 Legacy Aliases (administrator/apify_jobs)
+    $routes->get('administrator/apify_jobs', 'ApifyJobs::index');
+    $routes->get('administrator/apify_jobs/index', 'ApifyJobs::index');
+    $routes->get('administrator/apify_jobs/index/(:num)', 'ApifyJobs::index');
+    $routes->get('administrator/apify_jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete', 'ApifyJobs::delete');
+    $routes->get('administrator/apify_jobs/export', 'ApifyJobs::export');
+    $routes->get('administrator/apify_jobs/export_pdf', 'ApifyJobs::export_pdf');
+    $routes->get('administrator/apify_jobs/single_pdf/(:num)', 'ApifyJobs::single_pdf/$1');
 
     // Wave 12: Direktori & Performance KOL (View Only Intelligence)
     $routes->get('kols', 'Kols::index');

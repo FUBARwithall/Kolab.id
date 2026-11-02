@@ -55,6 +55,26 @@ class ApifyJobModel extends Model
             $builder->where('apify_jobs.actor_type', $filters['actor_type']);
         }
 
+        if (!empty($filters['posting_id'])) {
+            $builder->where('apify_jobs.posting_id', (int)$filters['posting_id']);
+        }
+
+        if (!empty($filters['campaign_id'])) {
+            $builder->where('campaigns.id', (int)$filters['campaign_id']);
+        }
+
+        if (!empty($filters['actor_type'])) {
+            $builder->where('apify_jobs.actor_type', $filters['actor_type']);
+        }
+
+        if (!empty($filters['posting_id'])) {
+            $builder->where('apify_jobs.posting_id', (int)$filters['posting_id']);
+        }
+
+        if (!empty($filters['campaign_id'])) {
+            $builder->where('campaigns.id', (int)$filters['campaign_id']);
+        }
+
         if (!empty($search)) {
             $builder->groupStart()
                 ->like('apify_jobs.target_url', $search)
@@ -141,6 +161,18 @@ class ApifyJobModel extends Model
 
         if (!empty($filters['status'])) {
             $builder->where('apify_jobs.status', $filters['status']);
+        }
+
+        if (!empty($filters['actor_type'])) {
+            $builder->where('apify_jobs.actor_type', $filters['actor_type']);
+        }
+
+        if (!empty($filters['posting_id'])) {
+            $builder->where('apify_jobs.posting_id', (int)$filters['posting_id']);
+        }
+
+        if (!empty($filters['campaign_id'])) {
+            $builder->where('campaigns.id', (int)$filters['campaign_id']);
         }
 
         return $builder->get()->getResultArray();
