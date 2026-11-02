@@ -1010,13 +1010,101 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->match(['GET', 'POST'], 'administrator/invoices/delete_invoice_file_file/(:segment)', 'Invoices::delete_invoice_file_file/$1');
     $routes->get('administrator/invoices/get_invoice_file_file/(:num)', 'Invoices::get_invoice_file_file/$1');
 
-    // Wave 6: Contracts & Komisi
+    // Wave 6: Contracts & MoU (Full Parity with CI3 modules/campaign_kol_contracts)
     $routes->get('contracts', 'Contracts::index');
-    $routes->post('contracts/get-datatable', 'Contracts::getDatatable');
+    $routes->get('contracts/index', 'Contracts::index');
+    $routes->match(['GET', 'POST'], 'contracts/get-datatable', 'Contracts::getDatatable');
+    $routes->match(['GET', 'POST'], 'contracts/getDatatable', 'Contracts::getDatatable');
     $routes->get('contracts/get-one/(:num)', 'Contracts::getOne/$1');
+    $routes->get('contracts/getOne/(:num)', 'Contracts::getOne/$1');
+    $routes->get('contracts/view/(:num)', 'Contracts::view/$1');
+    $routes->get('contracts/add', 'Contracts::add');
+    $routes->post('contracts/add_save', 'Contracts::add_save');
+    $routes->post('contracts/add-save', 'Contracts::add_save');
     $routes->post('contracts/generate', 'Contracts::generate');
-    $routes->get('contracts/print/(:num)', 'Contracts::printContract/$1');
+    $routes->post('contracts/create_draft_ajax', 'Contracts::create_draft_ajax');
+    $routes->post('contracts/create-draft-ajax', 'Contracts::create_draft_ajax');
+    $routes->get('contracts/edit/(:num)', 'Contracts::edit/$1');
+    $routes->post('contracts/edit_save/(:num)', 'Contracts::edit_save/$1');
+    $routes->post('contracts/edit-save/(:num)', 'Contracts::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'contracts/delete/(:num)', 'Contracts::delete/$1');
+    $routes->match(['GET', 'POST'], 'contracts/delete', 'Contracts::delete');
+    $routes->post('contracts/bulk-delete', 'Contracts::bulkDelete');
+    $routes->post('contracts/bulkDelete', 'Contracts::bulkDelete');
+    $routes->get('contracts/my-contracts', 'Contracts::my_contracts');
+    $routes->get('contracts/my_contracts', 'Contracts::my_contracts');
+    $routes->get('contracts/get_contract_html_ajax/(:num)', 'Contracts::get_contract_html_ajax/$1');
+    $routes->post('contracts/save_contract_snk_ajax', 'Contracts::save_contract_snk_ajax');
+    $routes->post('contracts/admin_counter_sign_action', 'Contracts::admin_counter_sign_action');
+    $routes->post('contracts/kol_sign_action', 'Contracts::kol_sign_action');
+    $routes->post('contracts/sign_contract_action', 'Contracts::sign_contract_action');
     $routes->post('contracts/sign/(:num)', 'Contracts::signContract/$1');
+    $routes->post('contracts/kol_issue_invoice_ajax', 'Contracts::kol_issue_invoice_ajax');
+    $routes->post('contracts/generate_initial_invoice_ajax', 'Contracts::generate_initial_invoice_ajax');
+    $routes->get('contracts/print/(:num)', 'Contracts::printContract/$1');
+    $routes->get('contracts/print-pdf/(:num)', 'Contracts::print_pdf/$1');
+    $routes->get('contracts/print_pdf/(:num)', 'Contracts::print_pdf/$1');
+    $routes->get('contracts/download-pdf/(:num)', 'Contracts::download_pdf/$1');
+    $routes->get('contracts/download_pdf/(:num)', 'Contracts::download_pdf/$1');
+    $routes->get('contracts/single-pdf/(:num)', 'Contracts::single_pdf/$1');
+    $routes->get('contracts/single_pdf/(:num)', 'Contracts::single_pdf/$1');
+    $routes->get('contracts/export', 'Contracts::export');
+    $routes->get('contracts/export-pdf', 'Contracts::export_pdf');
+    $routes->get('contracts/export_pdf', 'Contracts::export_pdf');
+    $routes->match(['GET', 'POST'], 'contracts/upload_contract_file_file', 'Contracts::upload_contract_file_file');
+    $routes->match(['GET', 'POST'], 'contracts/delete_contract_file_file/(:segment)', 'Contracts::delete_contract_file_file/$1');
+    $routes->match(['GET', 'POST'], 'contracts/delete_contract_file_file', 'Contracts::delete_contract_file_file');
+    $routes->get('contracts/get_contract_file_file/(:num)', 'Contracts::get_contract_file_file/$1');
+
+    // Snake_case & kebab-case aliases: campaign_kol_contracts & campaign-kol-contracts
+    foreach (['campaign_kol_contracts', 'campaign-kol-contracts'] as $prefix) {
+        $routes->get($prefix, 'CampaignKolContracts::index');
+        $routes->get($prefix . '/index', 'CampaignKolContracts::index');
+        $routes->match(['GET', 'POST'], $prefix . '/get-datatable', 'CampaignKolContracts::getDatatable');
+        $routes->match(['GET', 'POST'], $prefix . '/getDatatable', 'CampaignKolContracts::getDatatable');
+        $routes->get($prefix . '/view/(:num)', 'CampaignKolContracts::view/$1');
+        $routes->get($prefix . '/add', 'CampaignKolContracts::add');
+        $routes->post($prefix . '/add_save', 'CampaignKolContracts::add_save');
+        $routes->get($prefix . '/edit/(:num)', 'CampaignKolContracts::edit/$1');
+        $routes->post($prefix . '/edit_save/(:num)', 'CampaignKolContracts::edit_save/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/delete/(:num)', 'CampaignKolContracts::delete/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/delete', 'CampaignKolContracts::delete');
+        $routes->get($prefix . '/my_contracts', 'CampaignKolContracts::my_contracts');
+        $routes->get($prefix . '/my-contracts', 'CampaignKolContracts::my_contracts');
+        $routes->get($prefix . '/print/(:num)', 'CampaignKolContracts::printContract/$1');
+        $routes->get($prefix . '/export', 'CampaignKolContracts::export');
+        $routes->get($prefix . '/export_pdf', 'CampaignKolContracts::export_pdf');
+        $routes->get($prefix . '/export-pdf', 'CampaignKolContracts::export_pdf');
+    }
+
+    // Legacy CI3 Routes: administrator/campaign_kol_contracts/*
+    $routes->get('administrator/campaign_kol_contracts', 'CampaignKolContracts::index');
+    $routes->get('administrator/campaign_kol_contracts/index', 'CampaignKolContracts::index');
+    $routes->get('administrator/campaign_kol_contracts/index/(:num)', 'CampaignKolContracts::index');
+    $routes->get('administrator/campaign_kol_contracts/add', 'CampaignKolContracts::add');
+    $routes->post('administrator/campaign_kol_contracts/add_save', 'CampaignKolContracts::add_save');
+    $routes->post('administrator/campaign_kol_contracts/create_draft_ajax', 'CampaignKolContracts::create_draft_ajax');
+    $routes->get('administrator/campaign_kol_contracts/edit/(:num)', 'CampaignKolContracts::edit/$1');
+    $routes->post('administrator/campaign_kol_contracts/edit_save/(:num)', 'CampaignKolContracts::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete/(:num)', 'CampaignKolContracts::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete', 'CampaignKolContracts::delete');
+    $routes->get('administrator/campaign_kol_contracts/view/(:num)', 'CampaignKolContracts::view/$1');
+    $routes->get('administrator/campaign_kol_contracts/my_contracts', 'CampaignKolContracts::my_contracts');
+    $routes->post('administrator/campaign_kol_contracts/sign_contract_action', 'CampaignKolContracts::sign_contract_action');
+    $routes->post('administrator/campaign_kol_contracts/admin_counter_sign_action', 'CampaignKolContracts::admin_counter_sign_action');
+    $routes->get('administrator/campaign_kol_contracts/get_contract_html_ajax/(:num)', 'CampaignKolContracts::get_contract_html_ajax/$1');
+    $routes->post('administrator/campaign_kol_contracts/save_contract_snk_ajax', 'CampaignKolContracts::save_contract_snk_ajax');
+    $routes->post('administrator/campaign_kol_contracts/kol_sign_action', 'CampaignKolContracts::kol_sign_action');
+    $routes->post('administrator/campaign_kol_contracts/kol_issue_invoice_ajax', 'CampaignKolContracts::kol_issue_invoice_ajax');
+    $routes->post('administrator/campaign_kol_contracts/generate_initial_invoice_ajax', 'CampaignKolContracts::generate_initial_invoice_ajax');
+    $routes->get('administrator/campaign_kol_contracts/download_pdf/(:num)', 'CampaignKolContracts::download_pdf/$1');
+    $routes->get('administrator/campaign_kol_contracts/single_pdf/(:num)', 'CampaignKolContracts::single_pdf/$1');
+    $routes->get('administrator/campaign_kol_contracts/export', 'CampaignKolContracts::export');
+    $routes->get('administrator/campaign_kol_contracts/export_pdf', 'CampaignKolContracts::export_pdf');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/upload_contract_file_file', 'CampaignKolContracts::upload_contract_file_file');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete_contract_file_file/(:segment)', 'CampaignKolContracts::delete_contract_file_file/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete_contract_file_file', 'CampaignKolContracts::delete_contract_file_file');
+    $routes->get('administrator/campaign_kol_contracts/get_contract_file_file/(:num)', 'CampaignKolContracts::get_contract_file_file/$1');
 
     // Wave 6: Master Contract Templates
     $routes->get('contract-templates', 'ContractTemplates::index');
