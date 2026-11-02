@@ -199,7 +199,7 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 let scoreHistoriesTable = null;
 

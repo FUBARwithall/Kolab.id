@@ -96,7 +96,7 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 function deleteSingle(id) {
   Swal.fire({

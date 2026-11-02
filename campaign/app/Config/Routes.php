@@ -391,8 +391,8 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('task-status-histories/index', 'TaskStatusHistories::index');
     $routes->get('task_status_histories', 'TaskStatusHistories::index');
     $routes->get('task_status_histories/index', 'TaskStatusHistories::index');
-    $routes->post('task-status-histories/get-datatable', 'TaskStatusHistories::getDatatable');
-    $routes->post('task_status_histories/get-datatable', 'TaskStatusHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'task-status-histories/get-datatable', 'TaskStatusHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'task_status_histories/get-datatable', 'TaskStatusHistories::getDatatable');
     $routes->get('task-status-histories/get-one/(:num)', 'TaskStatusHistories::getOne/$1');
     $routes->get('task_status_histories/get-one/(:num)', 'TaskStatusHistories::getOne/$1');
     $routes->get('task-status-histories/view/(:num)', 'TaskStatusHistories::view/$1');

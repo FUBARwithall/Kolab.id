@@ -204,7 +204,7 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 let taskStatusTable = null;
 
@@ -213,7 +213,7 @@ $(document).ready(function() {
     processing: true,
     serverSide: true,
     responsive: true,
-    order: [[0, 'desc']],
+    order: [[6, 'desc']],
     ajax: {
       url: '<?= base_url('task-status-histories/get-datatable') ?>',
       type: 'POST',
@@ -222,7 +222,9 @@ $(document).ready(function() {
         d.campaign_id = $('#filterCampaign').val();
         d.task_id     = $('#filterTask').val();
         d.changed_by  = $('#filterChangedBy').val();
-        d['<?= csrf_token() ?>'] = '<?= csrf_hash() ?>';
+      },
+      error: function(xhr, err, code) {
+        console.error('DataTables load error:', err, code, xhr.responseText);
       }
     },
     columns: [

@@ -236,7 +236,7 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 function confirmDeleteScore() {
   Swal.fire({

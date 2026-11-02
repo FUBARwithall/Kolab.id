@@ -92,13 +92,13 @@ class TaskStatusHistories extends BaseController
      */
     public function getDatatable()
     {
-        $draw   = (int) ($this->request->getPost('draw') ?? 1);
-        $start  = (int) ($this->request->getPost('start') ?? 0);
-        $length = (int) ($this->request->getPost('length') ?? 10);
-        $search = (string) ($this->request->getPost('search')['value'] ?? '');
+        $draw   = (int) ($this->request->getVar('draw') ?? 1);
+        $start  = (int) ($this->request->getVar('start') ?? 0);
+        $length = (int) ($this->request->getVar('length') ?? 10);
+        $search = (string) ($this->request->getVar('search')['value'] ?? '');
 
-        $orderColIdx = (int) ($this->request->getPost('order')[0]['column'] ?? 0);
-        $orderDir    = strtoupper((string) ($this->request->getPost('order')[0]['dir'] ?? 'DESC'));
+        $orderColIdx = (int) ($this->request->getVar('order')[0]['column'] ?? 6);
+        $orderDir    = strtoupper((string) ($this->request->getVar('order')[0]['dir'] ?? 'DESC'));
 
         $columns = [
             0 => 'task_status_histories.id',
@@ -113,12 +113,12 @@ class TaskStatusHistories extends BaseController
         $orderCol = $columns[$orderColIdx] ?? 'task_status_histories.id';
 
         $filters = [
-            'task_id'     => $this->request->getPost('task_id') ?: ($this->request->getGet('task_id') ?: null),
-            'campaign_id' => $this->request->getPost('campaign_id') ?: ($this->request->getGet('campaign_id') ?: null),
-            'status'      => $this->request->getPost('status') ?: ($this->request->getGet('status') ?: null),
-            'changed_by'  => $this->request->getPost('changed_by') ?: ($this->request->getGet('changed_by') ?: null),
-            'date_start'  => $this->request->getPost('date_start') ?: ($this->request->getGet('date_start') ?: null),
-            'date_end'    => $this->request->getPost('date_end') ?: ($this->request->getGet('date_end') ?: null),
+            'task_id'     => $this->request->getVar('task_id') ?: null,
+            'campaign_id' => $this->request->getVar('campaign_id') ?: null,
+            'status'      => $this->request->getVar('status') ?: null,
+            'changed_by'  => $this->request->getVar('changed_by') ?: null,
+            'date_start'  => $this->request->getVar('date_start') ?: null,
+            'date_end'    => $this->request->getVar('date_end') ?: null,
         ];
 
         $result = $this->historyModel->getDatatables($filters, $start, $length, $search, $orderCol, $orderDir);

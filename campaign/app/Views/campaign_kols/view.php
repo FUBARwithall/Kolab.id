@@ -496,7 +496,7 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 function openEvaluateScoreModal() {
   const modal = new bootstrap.Modal(document.getElementById('modalEvaluateScore'));

@@ -215,7 +215,7 @@
 </div>
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 function confirmDelete(id) {
   Swal.fire({
