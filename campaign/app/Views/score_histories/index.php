@@ -208,7 +208,7 @@ $(document).ready(function() {
     processing: true,
     serverSide: true,
     responsive: true,
-    order: [[0, 'desc']],
+    order: [[5, 'desc']],
     ajax: {
       url: '<?= base_url('score-histories/get-datatable') ?>',
       type: 'POST',
@@ -216,7 +216,9 @@ $(document).ready(function() {
         d.score_type  = $('#filterScoreType').val();
         d.kol_id      = $('#filterKol').val();
         d.campaign_id = $('#filterCampaign').val();
-        d['<?= csrf_token() ?>'] = '<?= csrf_hash() ?>';
+      },
+      error: function(xhr, err, code) {
+        console.error('DataTables load error:', err, code, xhr.responseText);
       }
     },
     columns: [

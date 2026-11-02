@@ -69,13 +69,13 @@ class ScoreHistories extends BaseController
      */
     public function getDatatable()
     {
-        $draw   = (int) ($this->request->getPost('draw') ?? 1);
-        $start  = (int) ($this->request->getPost('start') ?? 0);
-        $length = (int) ($this->request->getPost('length') ?? 10);
-        $search = (string) ($this->request->getPost('search')['value'] ?? '');
+        $draw   = (int) ($this->request->getVar('draw') ?? 1);
+        $start  = (int) ($this->request->getVar('start') ?? 0);
+        $length = (int) ($this->request->getVar('length') ?? 10);
+        $search = (string) ($this->request->getVar('search')['value'] ?? '');
 
-        $orderColIdx = (int) ($this->request->getPost('order')[0]['column'] ?? 0);
-        $orderDir    = strtoupper((string) ($this->request->getPost('order')[0]['dir'] ?? 'DESC'));
+        $orderColIdx = (int) ($this->request->getVar('order')[0]['column'] ?? 0);
+        $orderDir    = strtoupper((string) ($this->request->getVar('order')[0]['dir'] ?? 'DESC'));
 
         $columns = [
             0 => 'score_histories.id',
@@ -89,11 +89,11 @@ class ScoreHistories extends BaseController
         $orderCol = $columns[$orderColIdx] ?? 'score_histories.id';
 
         $filters = [
-            'kol_id'      => $this->request->getPost('kol_id') ?: ($this->request->getGet('kol_id') ?: null),
-            'campaign_id' => $this->request->getPost('campaign_id') ?: ($this->request->getGet('campaign_id') ?: null),
-            'score_type'  => $this->request->getPost('score_type') ?: ($this->request->getGet('score_type') ?: null),
-            'date_start'  => $this->request->getPost('date_start') ?: ($this->request->getGet('date_start') ?: null),
-            'date_end'    => $this->request->getPost('date_end') ?: ($this->request->getGet('date_end') ?: null),
+            'kol_id'      => $this->request->getVar('kol_id') ?: null,
+            'campaign_id' => $this->request->getVar('campaign_id') ?: null,
+            'score_type'  => $this->request->getVar('score_type') ?: null,
+            'date_start'  => $this->request->getVar('date_start') ?: null,
+            'date_end'    => $this->request->getVar('date_end') ?: null,
         ];
 
         $result = $this->historyModel->getDatatables($filters, $start, $length, $search, $orderCol, $orderDir);

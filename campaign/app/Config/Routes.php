@@ -125,6 +125,8 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('campaign_kols/update-status-tasks-ajax', 'CampaignKols::updateStatusTasksAjax');
     $routes->get('campaign-kols/view/(:num)', 'CampaignKols::view/$1');
     $routes->get('campaign_kols/view/(:num)', 'CampaignKols::view/$1');
+    $routes->post('campaign-kols/save-score/(:num)', 'CampaignKols::saveScore/$1');
+    $routes->post('campaign_kols/save-score/(:num)', 'CampaignKols::saveScore/$1');
     $routes->match(['GET', 'POST'], 'campaign-kols/delete/(:num)', 'CampaignKols::delete/$1');
     $routes->match(['GET', 'POST'], 'campaign_kols/delete/(:num)', 'CampaignKols::delete/$1');
     $routes->post('campaign-kols/bulk-delete', 'CampaignKols::bulkDelete');
@@ -422,8 +424,8 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('score-histories/index', 'ScoreHistories::index');
     $routes->get('score_histories', 'ScoreHistories::index');
     $routes->get('score_histories/index', 'ScoreHistories::index');
-    $routes->post('score-histories/get-datatable', 'ScoreHistories::getDatatable');
-    $routes->post('score_histories/get-datatable', 'ScoreHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'score-histories/get-datatable', 'ScoreHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'score_histories/get-datatable', 'ScoreHistories::getDatatable');
     $routes->get('score-histories/get-one/(:num)', 'ScoreHistories::getOne/$1');
     $routes->get('score_histories/get-one/(:num)', 'ScoreHistories::getOne/$1');
     $routes->get('score-histories/view/(:num)', 'ScoreHistories::view/$1');

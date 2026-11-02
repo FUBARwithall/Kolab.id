@@ -263,6 +263,33 @@ class CampaignKolModel extends Model
             ->get()
             ->getResultArray();
 
+        // Attach Score Histories
+        $row['score_histories'] = $db->table('score_histories')
+            ->select('score_histories.*, campaigns.title as campaign_title')
+            ->join('campaign_kols', 'campaign_kols.id = score_histories.campaign_kol_id', 'left')
+            ->join('campaigns', 'campaigns.id = campaign_kols.campaign_id', 'left')
+            ->groupStart()
+                ->where('score_histories.campaign_kol_id', $id)
+                ->orGroupStart()
+                    ->where('score_histories.kol_id', (int)$row['kol_id'])
+                    ->where('score_histories.score_type', 'LIFETIME')
+                ->groupEnd()
+            ->groupEnd()
+            ->orderBy('score_histories.id', 'DESC')
+            ->get()
+            ->getResultArray();
+
+        // If collaboration_score is empty, sync from score_histories
+        if (empty($row['collaboration_score'])) {
+            foreach ($row['score_histories'] as $sh) {
+                if ($sh['score_type'] === 'COLLABORATION' && (int)($sh['campaign_kol_id'] ?? 0) === $id) {
+                    $row['collaboration_score'] = $sh['score'];
+                    $db->table('campaign_kols')->where('id', $id)->update(['collaboration_score' => $sh['score']]);
+                    break;
+                }
+            }
+        }
+
         return $row;
     }
 

@@ -84,11 +84,26 @@
               </div>
 
               <div class="col-sm-4">
-                <div class="text-muted small text-uppercase fw-semibold">Skor Kerjasama</div>
-                <div class="fw-bold fs-5 text-dark mt-1">
-                  <?= $campaign_kol['collaboration_score'] ? number_format((float)$campaign_kol['collaboration_score'], 2) : '-' ?>
+                <div class="d-flex justify-content-between align-items-center">
+                  <div class="text-muted small text-uppercase fw-semibold">Skor Kerjasama</div>
+                  <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none text-primary fw-semibold" onclick="openEvaluateScoreModal()">
+                    <i class="fas fa-edit me-1"></i><?= !empty($campaign_kol['collaboration_score']) ? 'Edit' : 'Input' ?>
+                  </button>
                 </div>
-                <div class="text-muted small">Evaluasi Leader</div>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  <?php if (!empty($campaign_kol['collaboration_score'])): ?>
+                    <?php 
+                      $sc = (float)$campaign_kol['collaboration_score'];
+                      $scBg = $sc >= 85 ? 'success' : ($sc >= 70 ? 'primary' : ($sc >= 55 ? 'warning text-dark' : 'danger'));
+                      $scGrade = $sc >= 85 ? 'A' : ($sc >= 70 ? 'B' : ($sc >= 55 ? 'C' : 'D'));
+                    ?>
+                    <span class="badge bg-<?= $scBg ?> fs-6 px-2 py-1 fw-bold"><?= number_format($sc, 2) ?></span>
+                    <span class="badge bg-light text-dark border">Grade <?= $scGrade ?></span>
+                  <?php else: ?>
+                    <span class="text-muted fst-italic">Belum dinilai</span>
+                  <?php endif; ?>
+                </div>
+                <div class="text-muted small mt-1">Evaluasi performa dealing</div>
               </div>
 
               <div class="col-sm-6">
@@ -186,6 +201,100 @@
                         </td>
                         <td class="text-muted small">
                           <?= $t['estimated_posting_date'] ? date('d M Y', strtotime($t['estimated_posting_date'])) : '-' ?>
+                        </td>
+                      </tr>
+                    <?php endforeach; ?>
+                  <?php endif; ?>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Score Histories Card -->
+        <div class="card border-0 shadow-sm rounded-3 mb-4">
+          <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <div>
+              <h6 class="fw-bold mb-0 text-dark"><i class="fas fa-star-half-alt text-warning me-2"></i>Riwayat Skor &amp; Evaluasi Performa KOL</h6>
+              <small class="text-muted">Audit trail riwayat penilaian kerjasama kampanye dan histori lifetime score talent</small>
+            </div>
+            <button type="button" class="btn btn-outline-primary btn-sm rounded-2 px-3" onclick="openEvaluateScoreModal()">
+              <i class="fas fa-plus-circle me-1"></i> Beri Penilaian
+            </button>
+          </div>
+
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light text-uppercase text-secondary small">
+                  <tr>
+                    <th width="40" class="text-center">#</th>
+                    <th>Tipe Evaluasi</th>
+                    <th>Konteks Kampanye</th>
+                    <th>Nilai Skor</th>
+                    <th>Waktu Perhitungan</th>
+                    <th width="120" class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyScoreHistories">
+                  <?php if (empty($campaign_kol['score_histories'])): ?>
+                    <tr>
+                      <td colspan="6" class="text-center py-4 text-muted">
+                        <i class="fas fa-clipboard-list fa-2x text-secondary opacity-50 mb-2 d-block"></i>
+                        Belum ada riwayat skor untuk dealing ini.
+                        <div class="mt-2">
+                          <button type="button" class="btn btn-sm btn-outline-primary" onclick="openEvaluateScoreModal()">
+                            <i class="fas fa-star me-1"></i> Input Nilai Sekarang
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  <?php else: ?>
+                    <?php foreach ($campaign_kol['score_histories'] as $idx => $sh): ?>
+                      <?php
+                        $scVal = (float)$sh['score'];
+                        $isCollab = ($sh['score_type'] === 'COLLABORATION');
+                        $scBg = $scVal >= 85 ? 'success' : ($scVal >= 70 ? 'primary' : ($scVal >= 55 ? 'warning text-dark' : 'danger'));
+                        $grade = $scVal >= 85 ? 'Grade A' : ($scVal >= 70 ? 'Grade B' : ($scVal >= 55 ? 'Grade C' : 'Grade D'));
+                      ?>
+                      <tr>
+                        <td class="text-center fw-bold text-muted"><?= $idx + 1 ?></td>
+                        <td>
+                          <?php if ($isCollab): ?>
+                            <span class="badge bg-info text-white font-monospace"><i class="fas fa-handshake me-1"></i>COLLABORATION</span>
+                          <?php else: ?>
+                            <span class="badge text-white font-monospace" style="background-color: #6f42c1;"><i class="fas fa-chart-line me-1"></i>LIFETIME</span>
+                          <?php endif; ?>
+                        </td>
+                        <td>
+                          <?php if ($isCollab && !empty($sh['campaign_title'])): ?>
+                            <div class="fw-semibold text-dark small"><i class="fas fa-bullhorn text-primary me-1"></i><?= esc($sh['campaign_title']) ?></div>
+                            <small class="text-muted">Dealing ID #<?= $campaign_kol['id'] ?></small>
+                          <?php else: ?>
+                            <span class="badge bg-light text-secondary border"><i class="fas fa-globe me-1"></i>Overall / Lifetime Rating</span>
+                          <?php endif; ?>
+                        </td>
+                        <td>
+                          <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-<?= $scBg ?> fs-6 px-2 py-1 fw-bold"><?= number_format($scVal, 2) ?></span>
+                            <span class="badge bg-light text-dark border"><?= $grade ?></span>
+                          </div>
+                          <div class="progress mt-1" style="height: 4px; width: 110px;">
+                            <div class="progress-bar bg-<?= str_contains($scBg, 'warning') ? 'warning' : ($scBg === 'danger' ? 'danger' : ($scBg === 'primary' ? 'primary' : 'success')) ?>" role="progressbar" style="width: <?= min(100, max(0, $scVal)) ?>%;"></div>
+                          </div>
+                        </td>
+                        <td class="text-muted small">
+                          <?= date('d M Y, H:i', strtotime($sh['calculated_at'])) ?> WIB
+                        </td>
+                        <td class="text-center">
+                          <div class="btn-group btn-group-sm">
+                            <a href="<?= base_url('score-histories/view/' . $sh['id']) ?>" class="btn btn-outline-primary" title="Lihat Detail Riwayat">
+                              <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="<?= base_url('score-histories/single-pdf/' . $sh['id']) ?>" target="_blank" class="btn btn-outline-secondary" title="Cetak PDF">
+                              <i class="fas fa-file-pdf"></i>
+                            </a>
+                          </div>
                         </td>
                       </tr>
                     <?php endforeach; ?>
@@ -327,4 +436,111 @@
 
   </div>
 </div>
+
+<!-- Modal Evaluasi Skor KOL -->
+<div class="modal fade" id="modalEvaluateScore" tabindex="-1" aria-labelledby="modalEvaluateScoreLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light border-bottom">
+        <h5 class="modal-title fw-bold" id="modalEvaluateScoreLabel">
+          <i class="fas fa-star text-warning me-2"></i>Evaluasi Skor Performa KOL
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="formEvaluateScore" onsubmit="submitScoreEvaluation(event)">
+        <div class="modal-body p-4">
+          <div class="p-3 bg-light rounded-3 border mb-3">
+            <div class="d-flex align-items-center gap-3">
+              <div class="avatar-sm bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                <?= strtoupper(substr(esc($campaign_kol['kol_name'] ?? 'K'), 0, 1)) ?>
+              </div>
+              <div>
+                <div class="fw-bold text-dark"><?= esc($campaign_kol['kol_name'] ?? '-') ?></div>
+                <small class="text-muted"><i class="fas fa-bullhorn text-primary me-1"></i><?= esc($campaign_kol['campaign_title'] ?? '-') ?></small>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label text-xs fw-bold text-uppercase text-muted">Tipe Evaluasi:</label>
+            <select class="form-select" name="score_type" id="inputScoreType" required>
+              <option value="COLLABORATION" selected>COLLABORATION (Skor Evaluasi Kerjasama Kampanye Ini)</option>
+              <option value="LIFETIME">LIFETIME (Akumulasi Rating Keseluruhan KOL)</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label text-xs fw-bold text-uppercase text-muted">Nilai Skor (0.00 - 100.00):</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white"><i class="fas fa-award text-warning"></i></span>
+              <input type="number" class="form-control form-control-lg fw-bold" name="score" id="inputScoreVal" min="0" max="100" step="0.01" placeholder="85.00" value="<?= !empty($campaign_kol['collaboration_score']) ? number_format((float)$campaign_kol['collaboration_score'], 2, '.', '') : '85.00' ?>" required>
+              <span class="input-group-text bg-light text-muted">/ 100</span>
+            </div>
+            <div class="d-flex gap-2 mt-2">
+              <button type="button" class="btn btn-outline-success btn-xs px-2 py-1 rounded" onclick="$('#inputScoreVal').val('95.00')">95 (A)</button>
+              <button type="button" class="btn btn-outline-primary btn-xs px-2 py-1 rounded" onclick="$('#inputScoreVal').val('85.00')">85 (B)</button>
+              <button type="button" class="btn btn-outline-warning btn-xs px-2 py-1 rounded text-dark" onclick="$('#inputScoreVal').val('70.00')">70 (C)</button>
+              <button type="button" class="btn btn-outline-danger btn-xs px-2 py-1 rounded" onclick="$('#inputScoreVal').val('50.00')">50 (D)</button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top py-2">
+          <button type="button" class="btn btn-secondary btn-sm rounded-2 px-3" data-bs-dismiss="modal">Batal</button>
+          <button type="submit" class="btn btn-primary btn-sm rounded-2 px-3" id="btnSubmitScore">
+            <i class="fas fa-check me-1"></i> Simpan Skor
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<?= $this->endSection() ?>
+
+<?= $this->section('scripts') ?>
+<script>
+function openEvaluateScoreModal() {
+  const modal = new bootstrap.Modal(document.getElementById('modalEvaluateScore'));
+  modal.show();
+}
+
+function submitScoreEvaluation(e) {
+  e.preventDefault();
+  const btn = $('#btnSubmitScore');
+  btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Menyimpan...');
+
+  const scoreVal = $('#inputScoreVal').val();
+  const scoreType = $('#inputScoreType').val();
+
+  $.ajax({
+    url: '<?= base_url('campaign-kols/save-score/' . $campaign_kol['id']) ?>',
+    type: 'POST',
+    data: {
+      score: scoreVal,
+      score_type: scoreType,
+      '<?= csrf_token() ?>': '<?= csrf_hash() ?>'
+    },
+    dataType: 'json',
+    success: function(res) {
+      if (res.success) {
+        Swal.fire({
+          title: 'Berhasil!',
+          text: res.message,
+          icon: 'success',
+          confirmButtonText: 'OK'
+        }).then(() => {
+          location.reload();
+        });
+      } else {
+        Swal.fire('Gagal!', res.message || 'Terjadi kesalahan.', 'error');
+        btn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> Simpan Skor');
+      }
+    },
+    error: function(xhr) {
+      const err = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan server.';
+      Swal.fire('Error!', err, 'error');
+      btn.prop('disabled', false).html('<i class="fas fa-check me-1"></i> Simpan Skor');
+    }
+  });
+}
+</script>
 <?= $this->endSection() ?>
