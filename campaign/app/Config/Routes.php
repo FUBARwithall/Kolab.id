@@ -936,12 +936,23 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
 // CAMPAIGN MANAGEMENT — AKSES STRATEGIS, EVALUASI & KEUANGAN (LEADER & SUPERADMIN)
 // --------------------------------------------------------------------
 $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) {
-    // Wave 5: Evaluasi Kinerja Internal Tim Operasional
-    $routes->get('evaluations', 'InternalEvaluation::index');
-    $routes->get('evaluations/staff', 'InternalEvaluation::staff');
-    $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
-    $routes->get('internal-evaluation', 'InternalEvaluation::index');
-    $routes->get('internal-evaluation/export-excel', 'InternalEvaluation::exportExcel');
+    // Wave 5: Evaluasi Kinerja Internal Tim Operasional & Leader (Full CI4 & CI3 Parity)
+    foreach (['evaluations', 'internal-evaluation', 'internal_evaluation', 'administrator/internal_evaluation'] as $prefix) {
+        $routes->get($prefix, 'InternalEvaluation::index');
+        $routes->get($prefix . '/index', 'InternalEvaluation::index');
+        $routes->get($prefix . '/staff', 'InternalEvaluation::staff');
+        $routes->get($prefix . '/leader', 'InternalEvaluation::leader');
+        $routes->get($prefix . '/export-excel', 'InternalEvaluation::exportExcel');
+        $routes->get($prefix . '/export_excel', 'InternalEvaluation::export_excel');
+        $routes->get($prefix . '/staff-export-excel', 'InternalEvaluation::staff_export_excel');
+        $routes->get($prefix . '/staff_export_excel', 'InternalEvaluation::staff_export_excel');
+        $routes->get($prefix . '/leader-export-excel', 'InternalEvaluation::leader_export_excel');
+        $routes->get($prefix . '/leader_export_excel', 'InternalEvaluation::leader_export_excel');
+        $routes->match(['GET', 'POST'], $prefix . '/get-staff-kpis', 'InternalEvaluation::getStaffKpisJson');
+        $routes->match(['GET', 'POST'], $prefix . '/get_staff_kpis', 'InternalEvaluation::getStaffKpisJson');
+        $routes->match(['GET', 'POST'], $prefix . '/get-leader-kpis', 'InternalEvaluation::getLeaderKpisJson');
+        $routes->match(['GET', 'POST'], $prefix . '/get_leader_kpis', 'InternalEvaluation::getLeaderKpisJson');
+    }
     // Wave 6: Executive Finance Hub (Full Parity with CI3 modules/finance_hub)
     foreach (['finance', 'finance-hub', 'finance_hub'] as $prefix) {
         $routes->get($prefix, 'FinanceHub::index');

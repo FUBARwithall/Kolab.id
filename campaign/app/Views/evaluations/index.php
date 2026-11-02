@@ -25,12 +25,12 @@
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
       <ul class="nav nav-pills" id="pills-tab" role="tablist">
         <li class="nav-item" role="presentation">
-          <button class="nav-link active rounded-pill px-4 fw-semibold" id="tab-staff-btn" data-bs-toggle="pill" data-bs-target="#tab-staff" type="button" role="tab">
+          <button class="nav-link <?= (!isset($tab) || $tab !== 'leader') ? 'active' : '' ?> rounded-pill px-4 fw-semibold" id="tab-staff-btn" data-bs-toggle="pill" data-bs-target="#tab-staff" type="button" role="tab">
             <i class="fas fa-user-cog me-1"></i> Tim Operasional (Staff)
           </button>
         </li>
         <li class="nav-item" role="presentation">
-          <button class="nav-link rounded-pill px-4 fw-semibold ms-2" id="tab-leader-btn" data-bs-toggle="pill" data-bs-target="#tab-leader" type="button" role="tab">
+          <button class="nav-link <?= (isset($tab) && $tab === 'leader') ? 'active' : '' ?> rounded-pill px-4 fw-semibold ms-2" id="tab-leader-btn" data-bs-toggle="pill" data-bs-target="#tab-leader" type="button" role="tab">
             <i class="fas fa-user-tie me-1"></i> Leader KOL &amp; Strategist
           </button>
         </li>
@@ -41,7 +41,11 @@
           <select class="form-select form-select-sm rounded-2 shadow-sm" name="campaign_id" style="min-width: 220px;" onchange="this.form.submit()">
             <option value="">Semua Kampanye (Akumulasi)</option>
             <?php foreach ($allCampaigns as $c): ?>
-              <option value="<?= $c['id'] ?>" <?= ($campaignId == $c['id']) ? 'selected' : '' ?>><?= esc($c['title']) ?></option>
+              <?php 
+                $cId = is_array($c) || $c instanceof \ArrayAccess ? $c['id'] : $c->id; 
+                $cTitle = is_array($c) || $c instanceof \ArrayAccess ? ($c['title'] ?? $c['name']) : ($c->title ?? $c->name); 
+              ?>
+              <option value="<?= $cId ?>" <?= ($campaignId == $cId) ? 'selected' : '' ?>><?= esc($cTitle) ?></option>
             <?php endforeach; ?>
           </select>
         </form>
@@ -55,7 +59,7 @@
     <div class="tab-content" id="pills-tabContent">
 
       <!-- ==================== TAB 1: STAFF OPERASIONAL ==================== -->
-      <div class="tab-pane fade show active" id="tab-staff" role="tabpanel">
+      <div class="tab-pane fade <?= (!isset($tab) || $tab !== 'leader') ? 'show active' : '' ?>" id="tab-staff" role="tabpanel">
         
         <!-- KPI Team Aggregates -->
         <div class="row g-3 mb-4">
@@ -231,7 +235,7 @@
       </div>
 
       <!-- ==================== TAB 2: LEADER KOL & STRATEGIST ==================== -->
-      <div class="tab-pane fade" id="tab-leader" role="tabpanel">
+      <div class="tab-pane fade <?= (isset($tab) && $tab === 'leader') ? 'show active' : '' ?>" id="tab-leader" role="tabpanel">
         
         <!-- KPI Leader Aggregates -->
         <div class="row g-3 mb-4">
