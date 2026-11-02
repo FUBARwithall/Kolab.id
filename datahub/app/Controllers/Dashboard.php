@@ -40,7 +40,7 @@ class Dashboard extends BaseController
 
         // If user is KOL, fetch their linked KOL profile
         $myKol = null;
-        if ($isKol) {
+        if ($isKol && $userId > 0) {
             $myKol = $this->db->table('kols')
                 ->where('user_id', $userId)
                 ->get()
@@ -192,123 +192,7 @@ class Dashboard extends BaseController
     }
 
     /**
-     * Profil & Performance Card Saya (Khusus Akun KOL / Creator)
-     */
-    public function myProfile()
-    {
-        $session = session();
-        $userId  = (int) ($session->get('user_id') ?? 0);
-
-        // Find linked KOL row
-        $kol = $this->db->table('kols')
-            ->where('user_id', $userId)
-            ->get()
-            ->getRowArray();
-
-        if (!$kol) {
-            // Fallback to first KOL for demo
-            $kol = $this->db->table('kols')->orderBy('id', 'ASC')->get()->getRowArray();
-        }
-
-        $platforms = [];
-        $rates = [];
-        if ($kol) {
-            $platforms = $this->db->table('kol_platforms kp')
-                ->select('kp.*, p.name as platform_name, p.icon as platform_icon')
-                ->join('platforms p', 'p.id = kp.platform_id', 'left')
-                ->where('kp.kol_id', $kol['id'])
-                ->get()
-                ->getResultArray();
-            $rates = $this->db->table('kol_rate_cards rc')
-                ->select('rc.*, p.name as platform_name')
-                ->join('platforms p', 'p.id = rc.platform_id', 'left')
-                ->where('rc.kol_id', $kol['id'])
-                ->get()
-                ->getResultArray();
-        }
-
-        $data = [
-            'title'      => 'Profil & Performance Card Saya',
-            'controller' => 'Datahub',
-            'kol'        => $kol,
-            'platforms'  => $platforms,
-            'rates'      => $rates,
-        ];
-
-        return view('dashboard/my_profile', $data);
-    }
-
-    /**
-     * Apify Scraper Engine (SUPERADMIN ONLY)
-     */
-    public function scraper()
-    {
-        $jobs = $this->db->table('apify_jobs')
-            ->orderBy('id', 'DESC')
-            ->limit(20)
-            ->get()
-            ->getResultArray();
-
-        foreach ($jobs as &$j) {
-            $url = $j['target_url'] ?? '';
-            $platform = 'other';
-            if (stripos($url, 'tiktok') !== false) $platform = 'tiktok';
-            elseif (stripos($url, 'instagram') !== false) $platform = 'instagram';
-            elseif (stripos($url, 'youtube') !== false || stripos($url, 'youtu.be') !== false) $platform = 'youtube';
-            
-            $j['platform'] = $platform;
-            $j['target_username'] = basename(parse_url($url, PHP_URL_PATH) ?? $url);
-        }
-
-        $data = [
-            'title'      => 'Apify Scraper Engine (Superadmin Only)',
-            'controller' => 'Datahub',
-            'jobs'       => $jobs,
-        ];
-
-        return view('dashboard/scraper', $data);
-    }
-
-    /**
-     * Eksekusi Batch Apify Scraper Baru
-     */
-    public function runScraper()
-    {
-        $platform = $this->request->getPost('platform') ?? 'all';
-        $batchLimit = (int) ($this->request->getPost('batch_limit') ?? 10);
-
-        $builder = $this->db->table('kol_platforms kp')
-            ->select('kp.id, kp.kol_id, kp.platform_id, kp.account_handle, p.name as platform_name')
-            ->join('platforms p', 'p.id = kp.platform_id', 'inner');
-
-        if ($platform === 'tiktok') {
-            $builder->like('p.name', 'tiktok');
-        } elseif ($platform === 'instagram') {
-            $builder->like('p.name', 'instagram');
-        }
-
-        $targets = $builder->limit($batchLimit)->get()->getResultArray();
-        $queuedCount = 0;
-
-        foreach ($targets as $t) {
-            $targetUrl = 'https://www.' . strtolower($t['platform_name']) . '.com/' . ltrim($t['account_handle'], '@');
-            $this->db->table('apify_jobs')->insert([
-                'actor_type'    => 'profile',
-                'target_url'    => $targetUrl,
-                'status'        => 'QUEUED',
-                'response_data' => null,
-                'started_at'    => null,
-                'finished_at'   => null,
-                'created_at'    => date('Y-m-d H:i:s'),
-            ]);
-            $queuedCount++;
-        }
-
-        return redirect()->to(base_url('scraper'))->with('success', "Berhasil menjadwalkan {$queuedCount} akun ke dalam antrean Apify Scraper!");
-    }
-
-    /**
-     * Konfigurasi Sistem & API Keys
+     * Settings / Konfigurasi Sistem
      */
     public function settings()
     {
@@ -320,237 +204,47 @@ class Dashboard extends BaseController
         return view('dashboard/settings', $data);
     }
 
-    /**
-     * Helper: Mendapatkan KOL ID user yang login
-     */
-    private function getMyKolId(): ?int
+    // ====================================================================
+    // DELEGATION FORWARDERS TO TALENT CONTROLLER (BACKWARDS-COMPATIBLE)
+    // ====================================================================
+
+    public function myProfile()
     {
-        $userId = (int) (session()->get('user_id') ?? 0);
-        $kol = $this->db->table('kols')->where('user_id', $userId)->get()->getRowArray();
-        if ($kol) {
-            return (int) $kol['id'];
-        }
-        // Fallback ke profil pertama untuk demo jika belum di-link
-        $first = $this->db->table('kols')->orderBy('id', 'ASC')->get()->getRowArray();
-        return $first ? (int) $first['id'] : null;
+        return (new Talent())->myProfile();
     }
 
-    /**
-     * Kampanye Terbuka (KOL Creator Space)
-     */
     public function openCampaigns()
     {
-        $campaigns = $this->db->table('campaigns')
-            ->select('campaigns.*, (SELECT COUNT(*) FROM campaign_applications WHERE campaign_id = campaigns.id) as total_applicants')
-            ->where('status', 'ACTIVE')
-            ->orderBy('id', 'DESC')
-            ->get()
-            ->getResultArray();
-
-        $data = [
-            'title'      => 'Kampanye Terbuka & Peluang Kolaborasi',
-            'controller' => 'Datahub',
-            'campaigns'  => $campaigns,
-        ];
-
-        return view('talent/open_campaigns', $data);
+        return (new Talent())->openCampaigns();
     }
 
-    /**
-     * Ajukan Lamaran Kolaborasi (KOL Creator Space)
-     */
     public function applyCampaign()
     {
-        $kolId = $this->getMyKolId();
-        if (!$kolId) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Anda harus terdaftar sebagai profil Talent KOL terlebih dahulu.',
-            ]);
-        }
-
-        $campaignId   = (int)$this->request->getPost('campaign_id');
-        $proposedRate = (float)$this->request->getPost('proposed_rate');
-        $pitchNotes   = trim($this->request->getPost('pitch_notes') ?? '');
-
-        if (!$campaignId || $proposedRate <= 0) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Silakan masukkan nominal tarif penawaran yang valid.',
-            ]);
-        }
-
-        $campaign = $this->db->table('campaigns')->where('id', $campaignId)->where('status', 'ACTIVE')->get()->getRowArray();
-        if (!$campaign) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Kampanye tidak ditemukan atau status sudah tidak aktif menerima kreator.',
-            ]);
-        }
-
-        $existing = $this->db->table('campaign_applications')
-            ->where('campaign_id', $campaignId)
-            ->where('kol_id', $kolId)
-            ->get()
-            ->getRowArray();
-
-        if ($existing) {
-            return $this->response->setJSON([
-                'success' => false,
-                'message' => 'Anda sudah mengajukan lamaran untuk kampanye ini.',
-            ]);
-        }
-
-        $this->db->table('campaign_applications')->insert([
-            'campaign_id'   => $campaignId,
-            'kol_id'        => $kolId,
-            'proposed_rate' => $proposedRate,
-            'pitch_notes'   => $pitchNotes,
-            'status'        => 'APPLIED',
-            'created_at'    => date('Y-m-d H:i:s'),
-        ]);
-
-        return $this->response->setJSON([
-            'success' => true,
-            'message' => 'Lamaran kolaborasi berhasil diajukan! Tim brand akan meninjau penawaran Anda.',
-        ]);
+        return (new Talent())->applyCampaign();
     }
 
-    /**
-     * Lamaran Saya (KOL Creator Space)
-     */
     public function myApplications()
     {
-        $kolId = $this->getMyKolId();
-        $applications = [];
-
-        if ($kolId) {
-            $applications = $this->db->table('campaign_applications ca')
-                ->select('ca.*, c.title as campaign_title, c.start_date, c.end_date, c.budget_total')
-                ->join('campaigns c', 'c.id = ca.campaign_id', 'left')
-                ->where('ca.kol_id', $kolId)
-                ->orderBy('ca.id', 'DESC')
-                ->get()
-                ->getResultArray();
-        }
-
-        $data = [
-            'title'        => 'Status Lamaran Kampanye Saya',
-            'controller'   => 'Datahub',
-            'applications' => $applications,
-        ];
-
-        return view('talent/my_applications', $data);
+        return (new Talent())->myApplications();
     }
 
-    /**
-     * Tugas Saya (KOL Creator Space)
-     */
     public function myTasks()
     {
-        $kolId = $this->getMyKolId();
-        $tasks = [];
-
-        if ($kolId) {
-            $tasks = $this->db->table('tasks t')
-                ->select('t.*, c.title as campaign_title')
-                ->join('campaign_kols ck', 'ck.id = t.campaign_kol_id', 'left')
-                ->join('campaigns c', 'c.id = ck.campaign_id', 'left')
-                ->where('ck.kol_id', $kolId)
-                ->orderBy('t.id', 'DESC')
-                ->get()
-                ->getResultArray();
-        }
-
-        $data = [
-            'title'      => 'Daftar Tugas & Deadline Konten Saya',
-            'controller' => 'Datahub',
-            'tasks'      => $tasks,
-        ];
-
-        return view('talent/my_tasks', $data);
+        return (new Talent())->myTasks();
     }
 
-    /**
-     * Kontrak Saya (KOL Creator Space)
-     */
     public function myContracts()
     {
-        $kolId = $this->getMyKolId();
-        $contracts = [];
-
-        if ($kolId) {
-            $contracts = $this->db->table('campaign_kol_contracts ckc')
-                ->select('ckc.*, c.title as campaign_title')
-                ->join('campaign_kols ck', 'ck.id = ckc.campaign_kol_id', 'left')
-                ->join('campaigns c', 'c.id = ck.campaign_id', 'left')
-                ->where('ck.kol_id', $kolId)
-                ->orderBy('ckc.id', 'DESC')
-                ->get()
-                ->getResultArray();
-        }
-
-        $data = [
-            'title'      => 'Kontrak Kerja Sama Saya',
-            'controller' => 'Datahub',
-            'contracts'  => $contracts,
-        ];
-
-        return view('talent/my_contracts', $data);
+        return (new Talent())->myContracts();
     }
 
-    /**
-     * Rate Card Saya (KOL Creator Space)
-     */
     public function myRates()
     {
-        $kolId = $this->getMyKolId();
-        $rates = [];
-
-        if ($kolId) {
-            $rates = $this->db->table('kol_rate_cards rc')
-                ->select('rc.*, p.name as platform_name')
-                ->join('platforms p', 'p.id = rc.platform_id', 'left')
-                ->where('rc.kol_id', $kolId)
-                ->orderBy('rc.id', 'ASC')
-                ->get()
-                ->getResultArray();
-        }
-
-        $data = [
-            'title'      => 'Rate Card & Portofolio Tarif Saya',
-            'controller' => 'Datahub',
-            'rates'      => $rates,
-        ];
-
-        return view('talent/my_rates', $data);
+        return (new Talent())->myRates();
     }
 
-    /**
-     * Tagihan / Invoices Saya (KOL Creator Space)
-     */
     public function myInvoices()
     {
-        $kolId = $this->getMyKolId();
-        $invoices = [];
-
-        if ($kolId) {
-            $invoices = $this->db->table('invoices inv')
-                ->select('inv.*, c.title as campaign_title')
-                ->join('campaign_kols ck', 'ck.id = inv.campaign_kol_id', 'left')
-                ->join('campaigns c', 'c.id = ck.campaign_id', 'left')
-                ->where('ck.kol_id', $kolId)
-                ->orderBy('inv.id', 'DESC')
-                ->get()
-                ->getResultArray();
-        }
-
-        $data = [
-            'title'      => 'Tagihan & Riwayat Pembayaran Saya',
-            'controller' => 'Datahub',
-            'invoices'   => $invoices,
-        ];
-
-        return view('talent/my_invoices', $data);
+        return (new Talent())->myInvoices();
     }
 }

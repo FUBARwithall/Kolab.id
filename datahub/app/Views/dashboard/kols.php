@@ -32,7 +32,7 @@
             <th>Akun Platform</th>
             <th>Kontak WhatsApp</th>
             <th>Status Akun</th>
-            <th class="text-end pe-3" style="width: 140px;">Aksi</th>
+            <th class="text-end pe-3" style="width: 180px;">Aksi</th>
           </tr>
         </thead>
         <tbody>
@@ -88,6 +88,9 @@
                 </td>
                 <td class="text-end pe-3">
                   <div class="btn-group btn-group-sm">
+                    <a href="<?= base_url('performance-card/view/' . $k['id']) ?>" class="btn btn-outline-primary rounded-pill px-2.5 py-1 text-xs me-1" title="Buka Performance Card">
+                      <i class="fas fa-id-card"></i> Card
+                    </a>
                     <button type="button" class="btn btn-outline-info rounded-pill px-2.5 py-1 text-xs" title="Lihat Detail Profil" onclick='showKolDetail(<?= json_encode($k) ?>)'>
                       <i class="fas fa-eye"></i> Detail
                     </button>

@@ -92,6 +92,12 @@ $isActive = function(string $route) use ($currentPath): string {
             </a>
           </li>
           <li class="nav-item">
+            <a href="<?= base_url('performance-card') ?>" class="nav-link <?= $isActive('performance-card') ?>">
+              <i class="nav-icon fas fa-id-card text-success"></i>
+              <p>Performance Card</p>
+            </a>
+          </li>
+          <li class="nav-item">
             <a href="<?= base_url('platforms') ?>" class="nav-link <?= $isActive('platforms') ?>">
               <i class="nav-icon fas fa-hashtag text-info"></i>
               <p>Akun Media Sosial</p>
@@ -156,6 +162,12 @@ $isActive = function(string $route) use ($currentPath): string {
             <a href="<?= base_url('my-profile') ?>" class="nav-link <?= $isActive('my-profile') ?>">
               <i class="nav-icon fas fa-id-card text-info"></i>
               <p>Profil &amp; Performa Saya</p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="<?= base_url('performance-card/my-card') ?>" class="nav-link <?= $isActive('performance-card') ?>">
+              <i class="nav-icon fas fa-chart-line text-success"></i>
+              <p>Performance Card Saya</p>
             </a>
           </li>
           <li class="nav-item">
