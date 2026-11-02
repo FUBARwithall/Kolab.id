@@ -581,6 +581,41 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/kol_shipments/export_pdf', 'Shipments::export_pdf');
     $routes->get('administrator/kol_shipments/single_pdf/(:num)', 'Shipments::single_pdf/$1');
 
+    // Wave 3.1: Logistik & Rincian Item Sampel Pengiriman (Full Parity with CI3 modules/kol_shipment_items)
+    $routes->get('shipment-items', 'ShipmentItems::index');
+    $routes->get('kol-shipment-items', 'ShipmentItems::index');
+    $routes->post('shipment-items/get-datatable', 'ShipmentItems::getDatatable');
+    $routes->post('kol-shipment-items/get-datatable', 'ShipmentItems::getDatatable');
+    $routes->get('shipment-items/get-one/(:num)', 'ShipmentItems::getOne/$1');
+    $routes->get('shipment-items/view/(:num)', 'ShipmentItems::view/$1');
+    $routes->get('shipment-items/add', 'ShipmentItems::add');
+    $routes->post('shipment-items/add_save', 'ShipmentItems::add_save');
+    $routes->get('shipment-items/edit/(:num)', 'ShipmentItems::edit/$1');
+    $routes->post('shipment-items/edit_save/(:num)', 'ShipmentItems::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'shipment-items/delete/(:num)', 'ShipmentItems::delete/$1');
+    $routes->match(['GET', 'POST'], 'shipment-items/delete', 'ShipmentItems::delete');
+    $routes->post('shipment-items/bulk-delete', 'ShipmentItems::bulkDelete');
+    $routes->get('shipment-items/export', 'ShipmentItems::export');
+    $routes->get('shipment-items/export-pdf', 'ShipmentItems::export_pdf');
+    $routes->get('shipment-items/export_pdf', 'ShipmentItems::export_pdf');
+    $routes->get('shipment-items/single-pdf/(:num)', 'ShipmentItems::single_pdf/$1');
+    $routes->get('shipment-items/single_pdf/(:num)', 'ShipmentItems::single_pdf/$1');
+
+    // CI3 Parity Aliases for Kol Shipment Items (modules/kol_shipment_items)
+    $routes->get('administrator/kol_shipment_items', 'ShipmentItems::index');
+    $routes->get('administrator/kol_shipment_items/index', 'ShipmentItems::index');
+    $routes->get('administrator/kol_shipment_items/index/(:num)', 'ShipmentItems::index');
+    $routes->get('administrator/kol_shipment_items/add', 'ShipmentItems::add');
+    $routes->post('administrator/kol_shipment_items/add_save', 'ShipmentItems::add_save');
+    $routes->get('administrator/kol_shipment_items/edit/(:num)', 'ShipmentItems::edit/$1');
+    $routes->post('administrator/kol_shipment_items/edit_save/(:num)', 'ShipmentItems::edit_save/$1');
+    $routes->get('administrator/kol_shipment_items/view/(:num)', 'ShipmentItems::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_shipment_items/delete/(:num)', 'ShipmentItems::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_shipment_items/delete', 'ShipmentItems::delete');
+    $routes->get('administrator/kol_shipment_items/export', 'ShipmentItems::export');
+    $routes->get('administrator/kol_shipment_items/export_pdf', 'ShipmentItems::export_pdf');
+    $routes->get('administrator/kol_shipment_items/single_pdf/(:num)', 'ShipmentItems::single_pdf/$1');
+
     // Wave 4: Postings, Metrics, Sentiment & Kalender (Full Parity with CI3 modules/postings)
     $routes->get('postings', 'Postings::index');
     $routes->post('postings/get-datatable', 'Postings::getDatatable');
