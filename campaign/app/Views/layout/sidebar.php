@@ -224,6 +224,12 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
             <p>Master Rate Card KOL</p>
           </a>
         </li>
+        <li class="nav-item">
+          <a href="<?= base_url('score-histories') ?>" class="nav-link <?= ($isActive('score-histories') || $isActive('score_histories')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-star-half-alt text-warning"></i>
+            <p>Riwayat Skor KOL</p>
+          </a>
+        </li>
 
         <!-- Section: KATALOG & LOGISTIK -->
         <li class="nav-header text-uppercase text-xs text-muted px-3 mt-2">KATALOG &amp; LOGISTIK</li>

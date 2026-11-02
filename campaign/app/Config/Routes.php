@@ -417,6 +417,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/task_status_histories/export_pdf', 'TaskStatusHistories::export_pdf');
     $routes->get('administrator/task_status_histories/single_pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
 
+    // Wave 3: Score Histories (Full Parity with CI3 modules/score_histories)
+    $routes->get('score-histories', 'ScoreHistories::index');
+    $routes->get('score-histories/index', 'ScoreHistories::index');
+    $routes->get('score_histories', 'ScoreHistories::index');
+    $routes->get('score_histories/index', 'ScoreHistories::index');
+    $routes->post('score-histories/get-datatable', 'ScoreHistories::getDatatable');
+    $routes->post('score_histories/get-datatable', 'ScoreHistories::getDatatable');
+    $routes->get('score-histories/get-one/(:num)', 'ScoreHistories::getOne/$1');
+    $routes->get('score_histories/get-one/(:num)', 'ScoreHistories::getOne/$1');
+    $routes->get('score-histories/view/(:num)', 'ScoreHistories::view/$1');
+    $routes->get('score_histories/view/(:num)', 'ScoreHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'score-histories/delete/(:num)', 'ScoreHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'score_histories/delete/(:num)', 'ScoreHistories::delete/$1');
+    $routes->post('score-histories/bulk-delete', 'ScoreHistories::bulkDelete');
+    $routes->post('score_histories/bulk-delete', 'ScoreHistories::bulkDelete');
+    $routes->get('score-histories/export', 'ScoreHistories::export');
+    $routes->get('score_histories/export', 'ScoreHistories::export');
+    $routes->get('score-histories/export-pdf', 'ScoreHistories::export_pdf');
+    $routes->get('score_histories/export-pdf', 'ScoreHistories::export_pdf');
+    $routes->get('score-histories/single-pdf/(:num)', 'ScoreHistories::single_pdf/$1');
+    $routes->get('score_histories/single-pdf/(:num)', 'ScoreHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/score_histories/*
+    $routes->get('administrator/score_histories', 'ScoreHistories::index');
+    $routes->get('administrator/score_histories/index', 'ScoreHistories::index');
+    $routes->get('administrator/score_histories/index/(:num)', 'ScoreHistories::index/$1');
+    $routes->get('administrator/score_histories/view/(:num)', 'ScoreHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/score_histories/delete/(:num)', 'ScoreHistories::delete/$1');
+    $routes->get('administrator/score_histories/delete', 'ScoreHistories::delete');
+    $routes->get('administrator/score_histories/export', 'ScoreHistories::export');
+    $routes->get('administrator/score_histories/export_pdf', 'ScoreHistories::export_pdf');
+    $routes->get('administrator/score_histories/single_pdf/(:num)', 'ScoreHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
