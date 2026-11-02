@@ -64,8 +64,27 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('products/variants/(:num)', 'Products::getVariants/$1');
     $routes->post('products/variants/save', 'Products::saveVariant');
     $routes->post('products/variants/delete/(:num)', 'Products::deleteVariant/$1');
+    // Wave 1.1: Riwayat Audit Mutasi Stok (Full Parity with CI3 modules/stock_history)
     $routes->get('stock-history', 'StockHistory::index');
+    $routes->get('stock-history/index', 'StockHistory::index');
+    $routes->get('stock-history/index/(:num)', 'StockHistory::index/$1');
     $routes->post('stock-history/get-datatable', 'StockHistory::getDatatable');
+    $routes->get('stock-history/get-one/(:num)', 'StockHistory::getOne/$1');
+    $routes->get('stock-history/view/(:num)', 'StockHistory::view/$1');
+    $routes->get('stock-history/export', 'StockHistory::export');
+    $routes->get('stock-history/export-pdf', 'StockHistory::export_pdf');
+    $routes->get('stock-history/export_pdf', 'StockHistory::export_pdf');
+    $routes->get('stock-history/single-pdf/(:num)', 'StockHistory::single_pdf/$1');
+    $routes->get('stock-history/single_pdf/(:num)', 'StockHistory::single_pdf/$1');
+
+    // CI3 Parity Aliases for Stock History (modules/stock_history)
+    $routes->get('administrator/stock_history', 'StockHistory::index');
+    $routes->get('administrator/stock_history/index', 'StockHistory::index');
+    $routes->get('administrator/stock_history/index/(:num)', 'StockHistory::index/$1');
+    $routes->get('administrator/stock_history/view/(:num)', 'StockHistory::view/$1');
+    $routes->get('administrator/stock_history/export', 'StockHistory::export');
+    $routes->get('administrator/stock_history/export_pdf', 'StockHistory::export_pdf');
+    $routes->get('administrator/stock_history/single_pdf/(:num)', 'StockHistory::single_pdf/$1');
 
     // CI3 Parity Aliases for Products
     $routes->get('administrator/products', 'Products::index');
