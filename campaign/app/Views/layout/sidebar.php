@@ -156,6 +156,12 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
+          <a href="<?= base_url('task-status-histories') ?>" class="nav-link <?= ($isActive('task-status-histories') || $isActive('task_status_histories')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-history text-secondary"></i>
+            <p>Riwayat Status Task</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="<?= base_url('variants') ?>" class="nav-link <?= $isActive('variants') ?>">
             <i class="nav-icon fas fa-layer-group text-info"></i>
             <p>Variant Konsep Konten</p>

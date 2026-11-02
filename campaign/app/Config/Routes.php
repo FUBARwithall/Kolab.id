@@ -384,6 +384,39 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/draft_review_histories/export_pdf', 'DraftReviewHistories::export_pdf');
     $routes->get('administrator/draft_review_histories/single_pdf/(:num)', 'DraftReviewHistories::single_pdf/$1');
 
+    // Wave 3: Task Status Histories (Full Parity with CI3 modules/task_status_histories)
+    $routes->get('task-status-histories', 'TaskStatusHistories::index');
+    $routes->get('task-status-histories/index', 'TaskStatusHistories::index');
+    $routes->get('task_status_histories', 'TaskStatusHistories::index');
+    $routes->get('task_status_histories/index', 'TaskStatusHistories::index');
+    $routes->post('task-status-histories/get-datatable', 'TaskStatusHistories::getDatatable');
+    $routes->post('task_status_histories/get-datatable', 'TaskStatusHistories::getDatatable');
+    $routes->get('task-status-histories/get-one/(:num)', 'TaskStatusHistories::getOne/$1');
+    $routes->get('task_status_histories/get-one/(:num)', 'TaskStatusHistories::getOne/$1');
+    $routes->get('task-status-histories/view/(:num)', 'TaskStatusHistories::view/$1');
+    $routes->get('task_status_histories/view/(:num)', 'TaskStatusHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'task-status-histories/delete/(:num)', 'TaskStatusHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'task_status_histories/delete/(:num)', 'TaskStatusHistories::delete/$1');
+    $routes->post('task-status-histories/bulk-delete', 'TaskStatusHistories::bulkDelete');
+    $routes->post('task_status_histories/bulk-delete', 'TaskStatusHistories::bulkDelete');
+    $routes->get('task-status-histories/export', 'TaskStatusHistories::export');
+    $routes->get('task_status_histories/export', 'TaskStatusHistories::export');
+    $routes->get('task-status-histories/export-pdf', 'TaskStatusHistories::export_pdf');
+    $routes->get('task_status_histories/export-pdf', 'TaskStatusHistories::export_pdf');
+    $routes->get('task-status-histories/single-pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
+    $routes->get('task_status_histories/single-pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/task_status_histories/*
+    $routes->get('administrator/task_status_histories', 'TaskStatusHistories::index');
+    $routes->get('administrator/task_status_histories/index', 'TaskStatusHistories::index');
+    $routes->get('administrator/task_status_histories/index/(:num)', 'TaskStatusHistories::index/$1');
+    $routes->get('administrator/task_status_histories/view/(:num)', 'TaskStatusHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/task_status_histories/delete/(:num)', 'TaskStatusHistories::delete/$1');
+    $routes->get('administrator/task_status_histories/delete', 'TaskStatusHistories::delete');
+    $routes->get('administrator/task_status_histories/export', 'TaskStatusHistories::export');
+    $routes->get('administrator/task_status_histories/export_pdf', 'TaskStatusHistories::export_pdf');
+    $routes->get('administrator/task_status_histories/single_pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
