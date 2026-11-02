@@ -320,7 +320,7 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
         <?php if ($isAdmin || $isLeader): ?>
           <li class="nav-header text-uppercase text-xs text-muted px-3 mt-3">SISTEM &amp; KEAMANAN</li>
           <li class="nav-item">
-            <a href="<?= base_url('audit-logs') ?>" class="nav-link <?= $isActive('audit-logs') ?>">
+            <a href="<?= base_url('audit-logs') ?>" class="nav-link <?= ($isActive('audit-logs') || $isActive('audit_logs')) ? 'active' : '' ?>">
               <i class="nav-icon fas fa-history text-secondary"></i>
               <p>Audit Trail &amp; Log</p>
             </a>

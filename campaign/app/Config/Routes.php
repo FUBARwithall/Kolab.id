@@ -778,10 +778,46 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->post('contract-templates/save', 'ContractTemplates::save');
     $routes->post('contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
 
-    // Wave 10: Audit Trail & Activity Logs
+    // Wave 10: Audit Trail & Activity Logs (Full Parity with CI3 modules/audit_logs)
     $routes->get('audit-logs', 'AuditLogs::index');
-    $routes->post('audit-logs/get-datatable', 'AuditLogs::getDatatable');
+    $routes->get('audit-logs/index', 'AuditLogs::index');
+    $routes->match(['GET', 'POST'], 'audit-logs/get-datatable', 'AuditLogs::getDatatable');
     $routes->get('audit-logs/get-one/(:num)', 'AuditLogs::getOne/$1');
+    $routes->get('audit-logs/view/(:num)', 'AuditLogs::view/$1');
+    $routes->match(['GET', 'POST'], 'audit-logs/delete/(:num)', 'AuditLogs::delete/$1');
+    $routes->match(['GET', 'POST'], 'audit-logs/delete', 'AuditLogs::delete');
+    $routes->post('audit-logs/bulk-delete', 'AuditLogs::bulkDelete');
+    $routes->get('audit-logs/export', 'AuditLogs::export');
+    $routes->get('audit-logs/export-pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit-logs/export_pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit-logs/single-pdf/(:num)', 'AuditLogs::single_pdf/$1');
+    $routes->get('audit-logs/single_pdf/(:num)', 'AuditLogs::single_pdf/$1');
+
+    // Snake_case aliases (audit_logs)
+    $routes->get('audit_logs', 'AuditLogs::index');
+    $routes->get('audit_logs/index', 'AuditLogs::index');
+    $routes->match(['GET', 'POST'], 'audit_logs/get-datatable', 'AuditLogs::getDatatable');
+    $routes->get('audit_logs/get-one/(:num)', 'AuditLogs::getOne/$1');
+    $routes->get('audit_logs/view/(:num)', 'AuditLogs::view/$1');
+    $routes->match(['GET', 'POST'], 'audit_logs/delete/(:num)', 'AuditLogs::delete/$1');
+    $routes->match(['GET', 'POST'], 'audit_logs/delete', 'AuditLogs::delete');
+    $routes->post('audit_logs/bulk-delete', 'AuditLogs::bulkDelete');
+    $routes->get('audit_logs/export', 'AuditLogs::export');
+    $routes->get('audit_logs/export-pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit_logs/export_pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit_logs/single-pdf/(:num)', 'AuditLogs::single_pdf/$1');
+    $routes->get('audit_logs/single_pdf/(:num)', 'AuditLogs::single_pdf/$1');
+
+    // CI3 Legacy Aliases (administrator/audit_logs)
+    $routes->get('administrator/audit_logs', 'AuditLogs::index');
+    $routes->get('administrator/audit_logs/index', 'AuditLogs::index');
+    $routes->get('administrator/audit_logs/index/(:num)', 'AuditLogs::index');
+    $routes->get('administrator/audit_logs/view/(:num)', 'AuditLogs::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/audit_logs/delete/(:num)', 'AuditLogs::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/audit_logs/delete', 'AuditLogs::delete');
+    $routes->get('administrator/audit_logs/export', 'AuditLogs::export');
+    $routes->get('administrator/audit_logs/export_pdf', 'AuditLogs::export_pdf');
+    $routes->get('administrator/audit_logs/single_pdf/(:num)', 'AuditLogs::single_pdf/$1');
 
     // Wave 11: Team & User Management
     $routes->get('users', 'Users::index');
