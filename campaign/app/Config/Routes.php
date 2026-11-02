@@ -953,11 +953,62 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
 
     // Wave 6: Invoices & Finansial
     $routes->get('invoices', 'Invoices::index');
-    $routes->post('invoices/get-datatable', 'Invoices::getDatatable');
+    $routes->get('invoices/index', 'Invoices::index');
+    $routes->match(['GET', 'POST'], 'invoices/get-datatable', 'Invoices::getDatatable');
+    $routes->match(['GET', 'POST'], 'invoices/getDatatable', 'Invoices::getDatatable');
     $routes->get('invoices/get-one/(:num)', 'Invoices::getOne/$1');
-    $routes->post('invoices/create-from-deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->get('invoices/getOne/(:num)', 'Invoices::getOne/$1');
+    $routes->get('invoices/view/(:num)', 'Invoices::view/$1');
+    $routes->get('invoices/add', 'Invoices::add');
+    $routes->post('invoices/add_save', 'Invoices::add_save');
+    $routes->post('invoices/add-save', 'Invoices::add_save');
+    $routes->match(['GET', 'POST'], 'invoices/create-from-deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->match(['GET', 'POST'], 'invoices/create_from_deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->match(['GET', 'POST'], 'invoices/createFromDeal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->get('invoices/edit/(:num)', 'Invoices::edit/$1');
+    $routes->post('invoices/edit_save/(:num)', 'Invoices::edit_save/$1');
+    $routes->post('invoices/edit-save/(:num)', 'Invoices::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'invoices/delete/(:num)', 'Invoices::delete/$1');
+    $routes->match(['GET', 'POST'], 'invoices/delete', 'Invoices::delete');
+    $routes->post('invoices/bulk-delete', 'Invoices::bulkDelete');
+    $routes->post('invoices/bulkDelete', 'Invoices::bulkDelete');
+    $routes->get('invoices/export', 'Invoices::export');
+    $routes->get('invoices/export-pdf', 'Invoices::export_pdf');
+    $routes->get('invoices/export_pdf', 'Invoices::export_pdf');
+    $routes->get('invoices/single-pdf/(:num)', 'Invoices::single_pdf/$1');
+    $routes->get('invoices/single_pdf/(:num)', 'Invoices::single_pdf/$1');
+    $routes->get('invoices/print-pdf/(:num)', 'Invoices::print_pdf/$1');
+    $routes->get('invoices/print_pdf/(:num)', 'Invoices::print_pdf/$1');
+    $routes->get('invoices/my-invoices', 'Invoices::my_invoices');
+    $routes->get('invoices/my_invoices', 'Invoices::my_invoices');
+    $routes->match(['GET', 'POST'], 'invoices/upload_invoice_file_file', 'Invoices::upload_invoice_file_file');
+    $routes->match(['GET', 'POST'], 'invoices/delete_invoice_file_file/(:segment)', 'Invoices::delete_invoice_file_file/$1');
+    $routes->match(['GET', 'POST'], 'invoices/delete_invoice_file_file', 'Invoices::delete_invoice_file_file');
+    $routes->get('invoices/get_invoice_file_file/(:num)', 'Invoices::get_invoice_file_file/$1');
     $routes->post('invoices/verify/(:num)', 'Invoices::verify/$1');
     $routes->post('invoices/save-payment/(:num)', 'Invoices::savePayment/$1');
+
+    // CI3 Legacy Aliases (administrator/invoices & administrator/my_invoices)
+    $routes->get('administrator/invoices', 'Invoices::index');
+    $routes->get('administrator/invoices/index', 'Invoices::index');
+    $routes->get('administrator/invoices/index/(:num)', 'Invoices::index');
+    $routes->get('administrator/invoices/add', 'Invoices::add');
+    $routes->post('administrator/invoices/add_save', 'Invoices::add_save');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/create_from_deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->get('administrator/invoices/edit/(:num)', 'Invoices::edit/$1');
+    $routes->post('administrator/invoices/edit_save/(:num)', 'Invoices::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/delete/(:num)', 'Invoices::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/delete', 'Invoices::delete');
+    $routes->get('administrator/invoices/view/(:num)', 'Invoices::view/$1');
+    $routes->get('administrator/invoices/export', 'Invoices::export');
+    $routes->get('administrator/invoices/export_pdf', 'Invoices::export_pdf');
+    $routes->get('administrator/invoices/single_pdf/(:num)', 'Invoices::single_pdf/$1');
+    $routes->get('administrator/invoices/print_pdf/(:num)', 'Invoices::print_pdf/$1');
+    $routes->get('administrator/invoices/my_invoices', 'Invoices::my_invoices');
+    $routes->get('administrator/my_invoices', 'Invoices::my_invoices');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/upload_invoice_file_file', 'Invoices::upload_invoice_file_file');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/delete_invoice_file_file/(:segment)', 'Invoices::delete_invoice_file_file/$1');
+    $routes->get('administrator/invoices/get_invoice_file_file/(:num)', 'Invoices::get_invoice_file_file/$1');
 
     // Wave 6: Contracts & Komisi
     $routes->get('contracts', 'Contracts::index');

@@ -82,25 +82,38 @@
       <div class="card-header bg-white border-bottom py-3">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
           
-          <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm rounded-2" id="filterCampaignInv" style="min-width: 220px;" onchange="reloadInvoiceTable()">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <select class="form-select form-select-sm rounded-2" id="filterCampaignInv" style="min-width: 200px;" onchange="reloadInvoiceTable()">
               <option value="">Semua Kampanye</option>
               <?php foreach ($allCampaigns as $c): ?>
-                <option value="<?= $c['id'] ?>"><?= esc($c['title']) ?></option>
+                <option value="<?= $c['id'] ?>"><?= esc($c['title'] ?: ($c['name'] ?? 'Kampanye')) ?></option>
               <?php endforeach; ?>
             </select>
-            <select class="form-select form-select-sm rounded-2" id="filterStatusInv" style="min-width: 170px;" onchange="reloadInvoiceTable()">
+            <select class="form-select form-select-sm rounded-2" id="filterStatusInv" style="min-width: 160px;" onchange="reloadInvoiceTable()">
               <option value="">Semua Status Invoice</option>
               <option value="SUBMITTED">Submitted (Menunggu Verifikasi)</option>
               <option value="VERIFIED">Verified (Siap Cair)</option>
+              <option value="PARTIAL">Partial (Dibayar Sebagian)</option>
               <option value="PAID">Paid (Sudah Ditransfer)</option>
               <option value="REJECTED">Rejected</option>
             </select>
           </div>
 
-          <div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="<?= base_url('invoices/export') ?>" class="btn btn-outline-success btn-sm rounded-2" title="Export Excel / CSV">
+              <i class="fas fa-file-excel me-1"></i> Export XLS
+            </a>
+            <a href="<?= base_url('invoices/export-pdf') ?>" target="_blank" class="btn btn-outline-danger btn-sm rounded-2" title="Cetak Rekap PDF">
+              <i class="fas fa-file-pdf me-1"></i> Export PDF
+            </a>
+            <a href="<?= base_url('invoices/my-invoices') ?>" class="btn btn-outline-info btn-sm rounded-2" title="Portal Tagihan KOL">
+              <i class="fas fa-user-tag me-1"></i> Portal KOL
+            </a>
+            <a href="<?= base_url('invoices/add') ?>" class="btn btn-outline-primary btn-sm rounded-2" title="Form Manual Invoice">
+              <i class="fas fa-edit me-1"></i> Manual
+            </a>
             <button type="button" class="btn btn-primary rounded-2 btn-sm px-3 shadow-sm" onclick="createInvoiceModal()">
-              <i class="fas fa-plus me-1"></i> Terbitkan Invoice Baru
+              <i class="fas fa-magic me-1"></i> Terbitkan dari Deal
             </button>
           </div>
 
@@ -369,6 +382,32 @@ function viewInvoice(id) {
                 <h6 class="fw-bold mb-2"><i class="fas fa-history text-secondary me-2"></i>Riwayat Pembayaran &amp; Pencairan</h6>
                 ${paymentsHtml}
             `);
+        }
+    });
+}
+
+function deleteInvoice(id) {
+    Swal.fire({
+        title: 'Hapus Invoice?',
+        text: 'Data tagihan invoice dan file dokumen terkait akan dihapus permanen.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('<?= base_url('invoices/delete/') ?>' + id, function(res) {
+                if (res.success) {
+                    dtInvoices.ajax.reload(null, false);
+                    Swal.fire({ icon: 'success', title: 'Terhapus', text: res.message, timer: 1500, showConfirmButton: false });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: res.message });
+                }
+            }).fail(function() {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menghapus invoice' });
+            });
         }
     });
 }
