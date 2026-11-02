@@ -452,6 +452,43 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/score_histories/export_pdf', 'ScoreHistories::export_pdf');
     $routes->get('administrator/score_histories/single_pdf/(:num)', 'ScoreHistories::single_pdf/$1');
 
+    // Wave 3: Task Budget Histories (Full Parity with CI3 modules/task_budget_histories)
+    $routes->get('task-budget-histories', 'TaskBudgetHistories::index');
+    $routes->get('task-budget-histories/index', 'TaskBudgetHistories::index');
+    $routes->get('task_budget_histories', 'TaskBudgetHistories::index');
+    $routes->get('task_budget_histories/index', 'TaskBudgetHistories::index');
+    $routes->match(['GET', 'POST'], 'task-budget-histories/get-datatable', 'TaskBudgetHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'task_budget_histories/get-datatable', 'TaskBudgetHistories::getDatatable');
+    $routes->get('task-budget-histories/get-one/(:num)', 'TaskBudgetHistories::getOne/$1');
+    $routes->get('task_budget_histories/get-one/(:num)', 'TaskBudgetHistories::getOne/$1');
+    $routes->get('task-budget-histories/view/(:num)', 'TaskBudgetHistories::view/$1');
+    $routes->get('task_budget_histories/view/(:num)', 'TaskBudgetHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'task-budget-histories/delete/(:num)', 'TaskBudgetHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'task_budget_histories/delete/(:num)', 'TaskBudgetHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'task-budget-histories/delete', 'TaskBudgetHistories::delete');
+    $routes->match(['GET', 'POST'], 'task_budget_histories/delete', 'TaskBudgetHistories::delete');
+    $routes->post('task-budget-histories/bulk-delete', 'TaskBudgetHistories::bulkDelete');
+    $routes->post('task_budget_histories/bulk-delete', 'TaskBudgetHistories::bulkDelete');
+    $routes->get('task-budget-histories/export', 'TaskBudgetHistories::export');
+    $routes->get('task_budget_histories/export', 'TaskBudgetHistories::export');
+    $routes->get('task-budget-histories/export-pdf', 'TaskBudgetHistories::export_pdf');
+    $routes->get('task_budget_histories/export-pdf', 'TaskBudgetHistories::export_pdf');
+    $routes->get('task-budget-histories/single-pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+    $routes->get('task_budget_histories/single-pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+    $routes->get('task-budget-histories/single_pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+    $routes->get('task_budget_histories/single_pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/task_budget_histories/*
+    $routes->get('administrator/task_budget_histories', 'TaskBudgetHistories::index');
+    $routes->get('administrator/task_budget_histories/index', 'TaskBudgetHistories::index');
+    $routes->get('administrator/task_budget_histories/index/(:num)', 'TaskBudgetHistories::index/$1');
+    $routes->get('administrator/task_budget_histories/view/(:num)', 'TaskBudgetHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/task_budget_histories/delete/(:num)', 'TaskBudgetHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/task_budget_histories/delete', 'TaskBudgetHistories::delete');
+    $routes->get('administrator/task_budget_histories/export', 'TaskBudgetHistories::export');
+    $routes->get('administrator/task_budget_histories/export_pdf', 'TaskBudgetHistories::export_pdf');
+    $routes->get('administrator/task_budget_histories/single_pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
