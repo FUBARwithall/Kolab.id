@@ -1141,12 +1141,77 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete_contract_file_file', 'CampaignKolContracts::delete_contract_file_file');
     $routes->get('administrator/campaign_kol_contracts/get_contract_file_file/(:num)', 'CampaignKolContracts::get_contract_file_file/$1');
 
-    // Wave 6: Master Contract Templates
+    // Wave 6: Master Contract Templates (Full CI4 & CI3 Parity)
     $routes->get('contract-templates', 'ContractTemplates::index');
-    $routes->post('contract-templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->get('contract-templates/index', 'ContractTemplates::index');
+    $routes->get('contract-templates/index/(:num)', 'ContractTemplates::index/$1');
+    $routes->match(['GET', 'POST'], 'contract-templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->match(['GET', 'POST'], 'contract-templates/get_datatable', 'ContractTemplates::getDatatable');
     $routes->get('contract-templates/get-one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->get('contract-templates/get_one/(:num)', 'ContractTemplates::getOne/$1');
     $routes->post('contract-templates/save', 'ContractTemplates::save');
-    $routes->post('contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->get('contract-templates/add', 'ContractTemplates::add');
+    $routes->post('contract-templates/add-save', 'ContractTemplates::add_save');
+    $routes->post('contract-templates/add_save', 'ContractTemplates::add_save');
+    $routes->get('contract-templates/edit/(:num)', 'ContractTemplates::edit/$1');
+    $routes->post('contract-templates/edit-save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract-templates/edit_save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract-templates/edit-save', 'ContractTemplates::edit_save');
+    $routes->post('contract-templates/edit_save', 'ContractTemplates::edit_save');
+    $routes->match(['GET', 'POST'], 'contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->match(['GET', 'POST'], 'contract-templates/delete', 'ContractTemplates::delete');
+    $routes->get('contract-templates/view/(:num)', 'ContractTemplates::view/$1');
+    $routes->get('contract-templates/export', 'ContractTemplates::export');
+    $routes->get('contract-templates/export-pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract-templates/export_pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract-templates/single-pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract-templates/single_pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract-templates/preview-rendered/(:num)', 'ContractTemplates::preview_rendered/$1');
+
+    // Underscore aliases: contract_templates
+    $routes->get('contract_templates', 'ContractTemplates::index');
+    $routes->get('contract_templates/index', 'ContractTemplates::index');
+    $routes->get('contract_templates/index/(:num)', 'ContractTemplates::index/$1');
+    $routes->match(['GET', 'POST'], 'contract_templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->match(['GET', 'POST'], 'contract_templates/get_datatable', 'ContractTemplates::getDatatable');
+    $routes->get('contract_templates/get-one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->get('contract_templates/get_one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->post('contract_templates/save', 'ContractTemplates::save');
+    $routes->get('contract_templates/add', 'ContractTemplates::add');
+    $routes->post('contract_templates/add-save', 'ContractTemplates::add_save');
+    $routes->post('contract_templates/add_save', 'ContractTemplates::add_save');
+    $routes->get('contract_templates/edit/(:num)', 'ContractTemplates::edit/$1');
+    $routes->post('contract_templates/edit-save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract_templates/edit_save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract_templates/edit-save', 'ContractTemplates::edit_save');
+    $routes->post('contract_templates/edit_save', 'ContractTemplates::edit_save');
+    $routes->match(['GET', 'POST'], 'contract_templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->match(['GET', 'POST'], 'contract_templates/delete', 'ContractTemplates::delete');
+    $routes->get('contract_templates/view/(:num)', 'ContractTemplates::view/$1');
+    $routes->get('contract_templates/export', 'ContractTemplates::export');
+    $routes->get('contract_templates/export-pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract_templates/export_pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract_templates/single-pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract_templates/single_pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract_templates/preview-rendered/(:num)', 'ContractTemplates::preview_rendered/$1');
+
+    // Legacy CI3 Administrator Aliases: administrator/contract_templates
+    $routes->get('administrator/contract_templates', 'ContractTemplates::index');
+    $routes->get('administrator/contract_templates/index', 'ContractTemplates::index');
+    $routes->get('administrator/contract_templates/index/(:num)', 'ContractTemplates::index/$1');
+    $routes->get('administrator/contract_templates/add', 'ContractTemplates::add');
+    $routes->post('administrator/contract_templates/add_save', 'ContractTemplates::add_save');
+    $routes->post('administrator/contract_templates/add-save', 'ContractTemplates::add_save');
+    $routes->get('administrator/contract_templates/edit/(:num)', 'ContractTemplates::edit/$1');
+    $routes->post('administrator/contract_templates/edit_save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('administrator/contract_templates/edit-save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('administrator/contract_templates/edit_save', 'ContractTemplates::edit_save');
+    $routes->match(['GET', 'POST'], 'administrator/contract_templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/contract_templates/delete', 'ContractTemplates::delete');
+    $routes->get('administrator/contract_templates/view/(:num)', 'ContractTemplates::view/$1');
+    $routes->get('administrator/contract_templates/export', 'ContractTemplates::export');
+    $routes->get('administrator/contract_templates/export_pdf', 'ContractTemplates::export_pdf');
+    $routes->get('administrator/contract_templates/single_pdf/(:num)', 'ContractTemplates::single_pdf/$1');
 
     // Wave 10: Audit Trail & Activity Logs (Full Parity with CI3 modules/audit_logs)
     $routes->get('audit-logs', 'AuditLogs::index');
