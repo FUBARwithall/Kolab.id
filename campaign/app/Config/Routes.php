@@ -9,6 +9,7 @@ use CodeIgniter\Router\RouteCollection;
 // --------------------------------------------------------------------
 $routes->get('articles/feed', 'ArticlesApi::feed');
 $routes->get('articles/feed/(:segment)', 'ArticlesApi::feed/$1');
+$routes->get('artikel/(:segment)', 'Articles::read/$1');
 
 // --------------------------------------------------------------------
 // PUBLIC REST API: WhatsApp Webhook Receiver (WAHA & Baileys)
@@ -706,12 +707,62 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/kalender/get_events', 'Kalender::get_events');
     $routes->get('administrator/kalender/get-events', 'Kalender::getEvents');
 
-    // Wave 7: Backoffice CMS Artikel Blog & Landing
+    // Wave 7: Backoffice CMS Artikel Blog & Landing (Full Parity with CI3 modules/articles)
     $routes->get('articles', 'Articles::index');
+    $routes->get('articles/index', 'Articles::index');
+    $routes->get('articles/index/(:num)', 'Articles::index/$1');
     $routes->post('articles/get-datatable', 'Articles::getDatatable');
+    $routes->post('articles/get_datatable', 'Articles::getDatatable');
     $routes->get('articles/get-one/(:num)', 'Articles::getOne/$1');
-    $routes->post('articles/save', 'Articles::save');
-    $routes->post('articles/delete/(:num)', 'Articles::delete/$1');
+    $routes->get('articles/get_one/(:num)', 'Articles::getOne/$1');
+    $routes->get('articles/add', 'Articles::add');
+    $routes->post('articles/add_save', 'Articles::add_save');
+    $routes->post('articles/add-save', 'Articles::add_save');
+    $routes->get('articles/edit/(:num)', 'Articles::edit/$1');
+    $routes->post('articles/edit_save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('articles/edit-save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('articles/edit_save', 'Articles::edit_save');
+    $routes->get('articles/view/(:num)', 'Articles::view/$1');
+    $routes->match(['GET', 'POST'], 'articles/delete/(:num)', 'Articles::delete/$1');
+    $routes->match(['GET', 'POST'], 'articles/delete', 'Articles::delete');
+    $routes->post('articles/publish/(:num)', 'Articles::publish/$1');
+    $routes->post('articles/unpublish/(:num)', 'Articles::unpublish/$1');
+    $routes->post('articles/archive/(:num)', 'Articles::archive/$1');
+    $routes->match(['GET', 'POST'], 'articles/upload_cover_file', 'Articles::upload_cover_file');
+    $routes->match(['GET', 'POST'], 'articles/delete_cover_file/(:segment)', 'Articles::delete_cover_file/$1');
+    $routes->match(['GET', 'POST'], 'articles/delete_cover_file', 'Articles::delete_cover_file');
+    $routes->get('articles/get_cover_file/(:num)', 'Articles::get_cover_file/$1');
+    $routes->get('articles/export', 'Articles::export');
+    $routes->get('articles/export_pdf', 'Articles::export_pdf');
+    $routes->get('articles/single_pdf/(:num)', 'Articles::single_pdf/$1');
+    $routes->get('articles/read/(:segment)', 'Articles::read/$1');
+
+    // CI3 Legacy Aliases (administrator/articles/*)
+    $routes->get('administrator/articles', 'Articles::index');
+    $routes->get('administrator/articles/index', 'Articles::index');
+    $routes->get('administrator/articles/index/(:num)', 'Articles::index/$1');
+    $routes->post('administrator/articles/get-datatable', 'Articles::getDatatable');
+    $routes->post('administrator/articles/get_datatable', 'Articles::getDatatable');
+    $routes->get('administrator/articles/add', 'Articles::add');
+    $routes->post('administrator/articles/add_save', 'Articles::add_save');
+    $routes->post('administrator/articles/add-save', 'Articles::add_save');
+    $routes->get('administrator/articles/edit/(:num)', 'Articles::edit/$1');
+    $routes->post('administrator/articles/edit_save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('administrator/articles/edit-save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('administrator/articles/edit_save', 'Articles::edit_save');
+    $routes->get('administrator/articles/view/(:num)', 'Articles::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete/(:num)', 'Articles::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete', 'Articles::delete');
+    $routes->post('administrator/articles/publish/(:num)', 'Articles::publish/$1');
+    $routes->post('administrator/articles/unpublish/(:num)', 'Articles::unpublish/$1');
+    $routes->post('administrator/articles/archive/(:num)', 'Articles::archive/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/upload_cover_file', 'Articles::upload_cover_file');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete_cover_file/(:segment)', 'Articles::delete_cover_file/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete_cover_file', 'Articles::delete_cover_file');
+    $routes->get('administrator/articles/get_cover_file/(:num)', 'Articles::get_cover_file/$1');
+    $routes->get('administrator/articles/export', 'Articles::export');
+    $routes->get('administrator/articles/export_pdf', 'Articles::export_pdf');
+    $routes->get('administrator/articles/single_pdf/(:num)', 'Articles::single_pdf/$1');
 
     // Wave 8: WhatsApp Communication Console & Broadcast (Full Parity with CI3 modules/whatsapp)
     $routes->get('whatsapp', 'Whatsapp::index');
