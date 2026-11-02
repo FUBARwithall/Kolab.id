@@ -1073,7 +1073,57 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->post('users/save', 'Users::save');
     $routes->post('users/toggle-status/(:num)', 'Users::toggleStatus/$1');
 
-    $routes->get('payments', 'Invoices::index');
+    // Wave 12: Financial Disbursements & Payments (Full Parity with CI3 modules/payments)
+    $routes->get('payments', 'Payments::index');
+    $routes->get('payments/index', 'Payments::index');
+    $routes->match(['GET', 'POST'], 'payments/get-datatable', 'Payments::getDatatable');
+    $routes->match(['GET', 'POST'], 'payments/getDatatable', 'Payments::getDatatable');
+    $routes->get('payments/get-one/(:num)', 'Payments::getOne/$1');
+    $routes->get('payments/getOne/(:num)', 'Payments::getOne/$1');
+    $routes->get('payments/view/(:num)', 'Payments::view/$1');
+    $routes->get('payments/add', 'Payments::add');
+    $routes->post('payments/add_save', 'Payments::add_save');
+    $routes->post('payments/add-save', 'Payments::add_save');
+    $routes->get('payments/edit/(:num)', 'Payments::edit/$1');
+    $routes->post('payments/edit_save/(:num)', 'Payments::edit_save/$1');
+    $routes->post('payments/edit-save/(:num)', 'Payments::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'payments/delete/(:num)', 'Payments::delete/$1');
+    $routes->match(['GET', 'POST'], 'payments/delete', 'Payments::delete');
+    $routes->post('payments/bulk-delete', 'Payments::bulkDelete');
+    $routes->post('payments/bulkDelete', 'Payments::bulkDelete');
+    $routes->get('payments/get_invoice_balance/(:num)', 'Payments::get_invoice_balance/$1');
+    $routes->get('payments/get-invoice-balance/(:num)', 'Payments::get_invoice_balance/$1');
+    $routes->get('payments/export', 'Payments::export');
+    $routes->get('payments/export-pdf', 'Payments::export_pdf');
+    $routes->get('payments/export_pdf', 'Payments::export_pdf');
+    $routes->get('payments/single-pdf/(:num)', 'Payments::single_pdf/$1');
+    $routes->get('payments/single_pdf/(:num)', 'Payments::single_pdf/$1');
+    $routes->get('payments/receipt-pdf/(:num)', 'Payments::receipt_pdf/$1');
+    $routes->get('payments/receipt_pdf/(:num)', 'Payments::receipt_pdf/$1');
+    $routes->match(['GET', 'POST'], 'payments/upload_payment_proof_file_file', 'Payments::upload_payment_proof_file_file');
+    $routes->match(['GET', 'POST'], 'payments/delete_payment_proof_file_file/(:segment)', 'Payments::delete_payment_proof_file_file/$1');
+    $routes->match(['GET', 'POST'], 'payments/delete_payment_proof_file_file', 'Payments::delete_payment_proof_file_file');
+    $routes->get('payments/get_payment_proof_file_file/(:num)', 'Payments::get_payment_proof_file_file/$1');
+
+    // Legacy CI3 Payments Aliases (administrator/payments/*)
+    $routes->get('administrator/payments', 'Payments::index');
+    $routes->get('administrator/payments/index', 'Payments::index');
+    $routes->get('administrator/payments/index/(:num)', 'Payments::index');
+    $routes->get('administrator/payments/add', 'Payments::add');
+    $routes->post('administrator/payments/add_save', 'Payments::add_save');
+    $routes->get('administrator/payments/edit/(:num)', 'Payments::edit/$1');
+    $routes->post('administrator/payments/edit_save/(:num)', 'Payments::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete/(:num)', 'Payments::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete', 'Payments::delete');
+    $routes->get('administrator/payments/view/(:num)', 'Payments::view/$1');
+    $routes->get('administrator/payments/export', 'Payments::export');
+    $routes->get('administrator/payments/export_pdf', 'Payments::export_pdf');
+    $routes->get('administrator/payments/single_pdf/(:num)', 'Payments::single_pdf/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/upload_payment_proof_file_file', 'Payments::upload_payment_proof_file_file');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete_payment_proof_file_file/(:segment)', 'Payments::delete_payment_proof_file_file/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete_payment_proof_file_file', 'Payments::delete_payment_proof_file_file');
+    $routes->get('administrator/payments/get_payment_proof_file_file/(:num)', 'Payments::get_payment_proof_file_file/$1');
+
     $routes->get('budget', 'Invoices::index');
     $routes->get('approvals', 'Invoices::index');
 });
