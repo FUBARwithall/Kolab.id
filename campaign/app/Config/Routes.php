@@ -13,6 +13,8 @@ $routes->get('articles/feed/(:segment)', 'ArticlesApi::feed/$1');
 // --------------------------------------------------------------------
 // PUBLIC REST API: WhatsApp Webhook Receiver (WAHA & Baileys)
 // --------------------------------------------------------------------
+$routes->get('api/whatsapp', 'Whatsapp::ping');
+$routes->get('api/whatsapp/ping', 'Whatsapp::ping');
 $routes->match(['get', 'post'], 'api/whatsapp/webhook', 'Whatsapp::webhook');
 $routes->match(['get', 'post'], 'whatsapp/webhook', 'Whatsapp::webhook');
 
@@ -711,15 +713,57 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('articles/save', 'Articles::save');
     $routes->post('articles/delete/(:num)', 'Articles::delete/$1');
 
-    // Wave 8: WhatsApp Communication Console & Broadcast
+    // Wave 8: WhatsApp Communication Console & Broadcast (Full Parity with CI3 modules/whatsapp)
     $routes->get('whatsapp', 'Whatsapp::index');
+    $routes->get('whatsapp/index', 'Whatsapp::index');
+    $routes->get('whatsapp/index/(:num)', 'Whatsapp::index/$1');
+    $routes->get('whatsapp/chat', 'Whatsapp::chat');
     $routes->get('whatsapp/chat/(:num)', 'Whatsapp::chat/$1');
-    $routes->post('whatsapp/send', 'Whatsapp::ajaxSendMessage');
-    $routes->get('whatsapp/poll/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->match(['GET', 'POST'], 'whatsapp/send', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-send-message', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_send_message', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'whatsapp/send-media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-send-media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_send_media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'whatsapp/poll/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->match(['GET', 'POST'], 'whatsapp/poll', 'Whatsapp::ajaxPollMessages');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-poll-messages', 'Whatsapp::ajaxPollMessages');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_poll_messages', 'Whatsapp::ajaxPollMessages');
+    $routes->get('whatsapp/unread-counts', 'Whatsapp::ajaxUnreadCounts');
+    $routes->get('whatsapp/ajax-unread-counts', 'Whatsapp::ajaxUnreadCounts');
+    $routes->get('whatsapp/ajax_unread_counts', 'Whatsapp::ajaxUnreadCounts');
     $routes->get('whatsapp/session-status', 'Whatsapp::ajaxSessionStatus');
-    $routes->post('whatsapp/start-session', 'Whatsapp::ajaxStartSession');
+    $routes->get('whatsapp/ajax-session-status', 'Whatsapp::ajaxSessionStatus');
+    $routes->get('whatsapp/ajax_session_status', 'Whatsapp::ajaxSessionStatus');
+    $routes->match(['GET', 'POST'], 'whatsapp/start-session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-start-session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_start_session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'whatsapp/logout-waha', 'Whatsapp::ajaxLogoutWaha');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-logout-waha', 'Whatsapp::ajaxLogoutWaha');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_logout_waha', 'Whatsapp::ajaxLogoutWaha');
     $routes->get('whatsapp/broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->get('whatsapp/ajax-get-broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->get('whatsapp/ajax_get_broadcast_kols', 'Whatsapp::ajaxGetBroadcastKols');
     $routes->post('whatsapp/send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
+    $routes->post('whatsapp/ajax-send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
+    $routes->post('whatsapp/ajax_send_broadcast_item', 'Whatsapp::ajaxSendBroadcastItem');
+
+    // CI3 Parity Aliases for WhatsApp (modules/whatsapp)
+    $routes->get('administrator/whatsapp', 'Whatsapp::index');
+    $routes->get('administrator/whatsapp/index', 'Whatsapp::index');
+    $routes->get('administrator/whatsapp/index/(:num)', 'Whatsapp::index/$1');
+    $routes->get('administrator/whatsapp/chat', 'Whatsapp::chat');
+    $routes->get('administrator/whatsapp/chat/(:num)', 'Whatsapp::chat/$1');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_send_message', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_send_media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_poll_messages', 'Whatsapp::ajaxPollMessages');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_poll_messages/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->get('administrator/whatsapp/ajax_unread_counts', 'Whatsapp::ajaxUnreadCounts');
+    $routes->get('administrator/whatsapp/ajax_session_status', 'Whatsapp::ajaxSessionStatus');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_start_session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_logout_waha', 'Whatsapp::ajaxLogoutWaha');
+    $routes->get('administrator/whatsapp/ajax_get_broadcast_kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->post('administrator/whatsapp/ajax_send_broadcast_item', 'Whatsapp::ajaxSendBroadcastItem');
 
     // Wave 9: Monitoring Scraping & Apify Jobs (Full Parity with CI3 modules/apify_jobs)
     $routes->get('apify-jobs', 'ApifyJobs::index');

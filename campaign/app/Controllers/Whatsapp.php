@@ -5,6 +5,7 @@ namespace App\Controllers;
 use App\Models\WhatsappModel;
 use App\Models\CampaignModel;
 use App\Libraries\WahaClient;
+use CodeIgniter\HTTP\ResponseInterface;
 
 class Whatsapp extends BaseController
 {
@@ -20,64 +21,77 @@ class Whatsapp extends BaseController
     }
 
     /**
-     * Main WhatsApp Communication Console
+     * Main WhatsApp Communication Console (CI3 & CI4 Parity)
      */
     public function index(?int $kolId = null)
     {
-        $search = $this->request->getGet('q');
+        $kolIdParam = $this->request->getGet('kol_id') ? (int)$this->request->getGet('kol_id') : $kolId;
+        $search     = $this->request->getGet('q');
+
         $conversations = $this->whatsappModel->getKolConversations($search);
 
         // Pick selected KOL
         $selectedKol = null;
-        if (!empty($kolId)) {
+        if (!empty($kolIdParam)) {
             foreach ($conversations as $c) {
-                if ((int)$c['id'] === $kolId) {
+                if ((int)$c['id'] === $kolIdParam) {
                     $selectedKol = $c;
                     break;
                 }
             }
         }
 
-        // Default to first conversation if not selected
+        // Default to first conversation if not explicitly selected
         if (!$selectedKol && !empty($conversations)) {
             $selectedKol = $conversations[0];
-            $kolId = (int)$selectedKol['id'];
+            $kolIdParam  = (int)$selectedKol['id'];
         }
-
-        $messages = $kolId ? $this->whatsappModel->getMessagesByKol($kolId) : [];
-        $templates = $this->whatsappModel->getTemplates();
-        $sessionStatus = $this->wahaClient->getSessionStatus();
 
         // Context info for selected KOL
         $db = \Config\Database::connect();
-        $kolContext = null;
-        if ($kolId) {
+        $kolContext       = null;
+        $campaignContext  = null;
+        $tasksContext     = [];
+        $shipmentContext  = null;
+
+        if ($kolIdParam) {
+            // Mark incoming messages as read for active chat
+            $this->whatsappModel->markAsRead($kolIdParam);
+
             $activeDeals = $db->table('campaign_kols')
-                ->select('campaign_kols.*, campaigns.title as campaign_title')
+                ->select('campaign_kols.*, campaigns.title as campaign_title, campaigns.start_date, campaigns.end_date, campaigns.budget as campaign_budget')
                 ->join('campaigns', 'campaigns.id = campaign_kols.campaign_id', 'inner')
-                ->where('campaign_kols.kol_id', $kolId)
+                ->where('campaign_kols.kol_id', $kolIdParam)
                 ->orderBy('campaign_kols.id', 'DESC')
                 ->get()
                 ->getResultArray();
 
+            $campaignContext = !empty($activeDeals) ? $activeDeals[0] : null;
+
             $pendingTasks = $db->table('tasks')
-                ->select('tasks.*, campaigns.title as campaign_title')
+                ->select('tasks.*, campaigns.title as campaign_title, platforms.name as platform_name, briefs.title as brief_title, briefs.content as brief_content, briefs.guidelines as brief_guidelines')
                 ->join('campaign_kols', 'campaign_kols.id = tasks.campaign_kol_id', 'inner')
                 ->join('campaigns', 'campaigns.id = campaign_kols.campaign_id', 'inner')
-                ->where('campaign_kols.kol_id', $kolId)
-                ->whereNotIn('tasks.status', ['COMPLETED', 'CANCELLED'])
+                ->join('platforms', 'platforms.id = tasks.platform_id', 'left')
+                ->join('briefs', 'briefs.task_id = tasks.id', 'left')
+                ->where('campaign_kols.kol_id', $kolIdParam)
+                ->whereNotIn('tasks.status', ['COMPLETED', 'CANCELLED', 'DONE'])
                 ->orderBy('tasks.id', 'ASC')
                 ->get()
                 ->getResultArray();
+
+            $tasksContext = $pendingTasks;
 
             $latestShipment = $db->table('kol_shipments')
                 ->select('kol_shipments.*, campaigns.title as campaign_title')
                 ->join('campaign_kols', 'campaign_kols.id = kol_shipments.campaign_kol_id', 'inner')
                 ->join('campaigns', 'campaigns.id = campaign_kols.campaign_id', 'inner')
-                ->where('campaign_kols.kol_id', $kolId)
+                ->where('campaign_kols.kol_id', $kolIdParam)
                 ->orderBy('kol_shipments.id', 'DESC')
                 ->get()
                 ->getRowArray();
+
+            $shipmentContext = $latestShipment;
 
             $kolContext = [
                 'deals'    => $activeDeals,
@@ -86,27 +100,41 @@ class Whatsapp extends BaseController
             ];
         }
 
-        $allCampaigns = $this->campaignModel->select('id, title')->orderBy('id', 'DESC')->findAll();
+        $messages      = $kolIdParam ? $this->whatsappModel->getMessagesByKol($kolIdParam) : [];
+        $templates     = $this->_generateTemplates($selectedKol, $campaignContext, $tasksContext, $shipmentContext);
+        $sessionStatus = $this->wahaClient->getSessionStatus();
+        $allCampaigns  = $this->campaignModel->select('id, title')->orderBy('id', 'DESC')->findAll();
+
+        $unreadByKol = $this->whatsappModel->getUnreadCountsByKol();
+        $totalUnread  = $this->whatsappModel->getTotalUnreadCount();
 
         $data = [
-            'title'          => 'WhatsApp Console & Broadcast Gateway',
-            'controller'     => 'Whatsapp',
-            'conversations'  => $conversations,
-            'selectedKol'    => $selectedKol,
-            'kolId'          => $kolId,
-            'messages'       => $messages,
-            'templates'      => $templates,
-            'sessionStatus'  => $sessionStatus,
-            'kolContext'     => $kolContext,
-            'allCampaigns'   => $allCampaigns,
-            'searchQuery'    => $search,
+            'title'            => 'WhatsApp Communication Console',
+            'controller'       => 'Whatsapp',
+            'conversations'    => $conversations,
+            'kols'             => $conversations, // CI3 alias
+            'selectedKol'      => $selectedKol,
+            'selected_kol'     => (object)($selectedKol ?: []), // CI3 alias
+            'kolId'            => $kolIdParam,
+            'messages'         => $messages,
+            'templates'        => $templates,
+            'sessionStatus'    => $sessionStatus,
+            'waha_status'      => $sessionStatus['status'] ?? 'CONNECTED',
+            'kolContext'       => $kolContext,
+            'campaign_context' => (object)($campaignContext ?: []),
+            'tasks_context'    => $tasksContext,
+            'shipment_context' => (object)($shipmentContext ?: []),
+            'allCampaigns'     => $allCampaigns,
+            'unread_by_kol'    => $unreadByKol,
+            'total_unread'     => $totalUnread,
+            'searchQuery'      => $search,
         ];
 
         return view('whatsapp/index', $data);
     }
 
     /**
-     * Dedicated chat entry
+     * Dedicated Chat entry (CI3 Parity)
      */
     public function chat(?int $kolId = null)
     {
@@ -114,105 +142,264 @@ class Whatsapp extends BaseController
     }
 
     /**
-     * AJAX: Send WhatsApp Text Message
+     * AJAX: Send WhatsApp Text Message (CI3 & CI4 Parity)
      */
     public function ajaxSendMessage()
     {
-        if (!$this->request->isAJAX()) {
-            return $this->response->setStatusCode(400)->setJSON(['error' => 'Direct access not allowed']);
-        }
-
-        $kolId   = (int)$this->request->getPost('kol_id');
-        $message = trim((string)$this->request->getPost('message'));
+        $kolId          = (int)($this->request->getPost('kol_id') ?: $this->request->getGet('kol_id'));
+        $message         = trim((string)$this->request->getPost('message'));
+        $campaignKolId  = $this->request->getPost('campaign_kol_id') ? (int)$this->request->getPost('campaign_kol_id') : null;
 
         if (empty($kolId) || empty($message)) {
-            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'KOL dan isi pesan wajib diisi.']);
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'KOL dan isi pesan wajib diisi.',
+            ]);
         }
 
         $db = \Config\Database::connect();
         $kol = $db->table('kols')->where('id', $kolId)->get()->getRowArray();
         if (!$kol || empty($kol['whatsapp'])) {
-            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'KOL tidak ditemukan atau belum memiliki nomor WhatsApp.']);
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => 'Data KOL tidak ditemukan atau belum memiliki nomor WhatsApp.',
+            ]);
         }
 
         $cleanPhone = preg_replace('/[^0-9]/', '', (string)$kol['whatsapp']);
         $session = session();
-        $senderName = $session->get('name') ?: 'Staff Kolab.id';
+        $senderName = $session->get('name') ?: ($session->get('user')['name'] ?? 'Staff Kolab.id');
+        $userId = $session->get('user_id') ?: ($session->get('user')['id'] ?? 1);
 
         // Dispatch via WAHA Client
         $wahaRes = $this->wahaClient->sendMessage($cleanPhone, $message);
+        $wahaMsgId = $wahaRes['waha_message_id'] ?? ('msg_' . time() . '_' . mt_rand(100, 999));
+        $now = date('Y-m-d H:i:s');
 
         // Record in Database
         $msgId = $this->whatsappModel->recordMessage([
+            'waha_message_id' => $wahaMsgId,
             'kol_id'          => $kolId,
+            'campaign_kol_id' => $campaignKolId,
             'recipient_phone' => $cleanPhone,
             'direction'       => 'OUTBOUND',
             'sender_name'     => $senderName,
             'message_text'    => $message,
             'status'          => $wahaRes['success'] ? 'SENT' : 'PENDING',
             'error_message'   => $wahaRes['error'] ?? null,
-            'sent_at'         => date('Y-m-d H:i:s'),
-            'created_at'      => date('Y-m-d H:i:s'),
+            'sent_at'         => $now,
+            'created_at'      => $now,
         ]);
 
+        $formattedMsg = [
+            'id'              => $msgId,
+            'waha_message_id' => $wahaMsgId,
+            'direction'       => 'OUTBOUND',
+            'sender_name'     => $senderName,
+            'text'            => $message,
+            'time'            => date('H:i', strtotime($now)),
+            'date'            => date('d M Y', strtotime($now)),
+            'status'          => 'SENT',
+            'created_at'      => $now,
+        ];
+
         return $this->response->setJSON([
-            'success'     => true,
-            'message_id'  => $msgId,
-            'sent_at'     => date('H:i'),
-            'sender_name' => $senderName,
-            'waha_result' => $wahaRes,
+            'success'      => true,
+            'message_id'   => $msgId,
+            'message_data' => $formattedMsg,
+            'sent_at'      => date('H:i'),
+            'sender_name'  => $senderName,
+            'waha_result'  => $wahaRes,
         ]);
     }
 
     /**
-     * AJAX: Polling Messages for Live Updates
+     * CI3 Parity Alias for ajax_send_message
      */
-    public function ajaxPollMessages(int $kolId)
+    public function ajax_send_message()
     {
-        $messages = $this->whatsappModel->getMessagesByKol($kolId, 50);
+        return $this->ajaxSendMessage();
+    }
 
-        $formatted = [];
-        foreach ($messages as $m) {
-            $formatted[] = [
-                'id'           => $m['id'],
-                'direction'    => $m['direction'] ?? 'OUTBOUND',
-                'sender_name'  => $m['sender_name'] ?? 'System',
-                'message_text' => esc($m['message_text']),
-                'media_url'    => $m['media_url'] ?? null,
-                'status'       => $m['status'],
-                'time'         => date('H:i', strtotime($m['created_at'])),
-                'date'         => date('d M Y', strtotime($m['created_at'])),
-            ];
+    /**
+     * AJAX: Send Media / File to KOL (CI3 & CI4 Parity)
+     */
+    public function ajaxSendMedia()
+    {
+        $kolId          = (int)($this->request->getPost('kol_id') ?: $this->request->getGet('kol_id'));
+        $caption        = trim((string)$this->request->getPost('caption'));
+        $campaignKolId  = $this->request->getPost('campaign_kol_id') ? (int)$this->request->getPost('campaign_kol_id') : null;
+        $mediaUrlParam  = trim((string)$this->request->getPost('media_url'));
+
+        if (empty($kolId)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'KOL tujuan tidak boleh kosong.']);
         }
+
+        $db = \Config\Database::connect();
+        $kol = $db->table('kols')->where('id', $kolId)->get()->getRowArray();
+        if (!$kol || empty($kol['whatsapp'])) {
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Data KOL tidak ditemukan atau tidak memiliki nomor WhatsApp.']);
+        }
+
+        $cleanPhone = preg_replace('/[^0-9]/', '', (string)$kol['whatsapp']);
+        $file = $this->request->getFile('media_file') ?: $this->request->getFile('file');
+
+        $finalUrl = $mediaUrlParam;
+        $mime = 'application/octet-stream';
+
+        if ($file && $file->isValid() && !$file->hasMoved()) {
+            $uploadDir = FCPATH . 'uploads/whatsapp/';
+            if (!is_dir($uploadDir)) {
+                @mkdir($uploadDir, 0755, true);
+            }
+            $newName = $file->getRandomName();
+            $file->move($uploadDir, $newName);
+            $finalUrl = base_url('uploads/whatsapp/' . $newName);
+            $mime = $file->getClientMimeType();
+        }
+
+        if (empty($finalUrl)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Pilih file media atau masukkan URL media yang valid.']);
+        }
+
+        $session = session();
+        $senderName = $session->get('name') ?: ($session->get('user')['name'] ?? 'Staff Kolab.id');
+
+        $wahaRes = $this->wahaClient->sendMedia($cleanPhone, $finalUrl, $caption);
+        $wahaMsgId = $wahaRes['waha_message_id'] ?? ('msg_media_' . time() . '_' . mt_rand(100, 999));
+        $now = date('Y-m-d H:i:s');
+
+        $msgId = $this->whatsappModel->recordMessage([
+            'waha_message_id' => $wahaMsgId,
+            'kol_id'          => $kolId,
+            'campaign_kol_id' => $campaignKolId,
+            'recipient_phone' => $cleanPhone,
+            'direction'       => 'OUTBOUND',
+            'sender_name'     => $senderName,
+            'message_text'    => $caption ?: '[Lampiran Media]',
+            'media_url'       => $finalUrl,
+            'media_mime'      => $mime,
+            'status'          => $wahaRes['success'] ? 'SENT' : 'PENDING',
+            'error_message'   => $wahaRes['error'] ?? null,
+            'sent_at'         => $now,
+            'created_at'      => $now,
+        ]);
+
+        $formattedMsg = [
+            'id'              => $msgId,
+            'waha_message_id' => $wahaMsgId,
+            'direction'       => 'OUTBOUND',
+            'sender_name'     => $senderName,
+            'text'            => $caption ?: '[Lampiran Media]',
+            'media_url'       => $finalUrl,
+            'media_mime'      => $mime,
+            'time'            => date('H:i', strtotime($now)),
+            'date'            => date('d M Y', strtotime($now)),
+            'status'          => 'SENT',
+            'created_at'      => $now,
+        ];
+
+        return $this->response->setJSON([
+            'success'      => true,
+            'message_id'   => $msgId,
+            'message_data' => $formattedMsg,
+            'media_url'    => $finalUrl,
+        ]);
+    }
+
+    /**
+     * CI3 Parity Alias for ajax_send_media
+     */
+    public function ajax_send_media()
+    {
+        return $this->ajaxSendMedia();
+    }
+
+    /**
+     * AJAX: Polling Messages for Live Updates (CI3 & CI4 Parity)
+     */
+    public function ajaxPollMessages(?int $kolId = null)
+    {
+        $targetKolId = $kolId ?: (int)($this->request->getPost('kol_id') ?: $this->request->getGet('kol_id'));
+        $lastId      = (int)($this->request->getPost('last_id') ?: ($this->request->getGet('last_id') ?: 0));
+
+        if (empty($targetKolId)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'KOL ID diperlukan.']);
+        }
+
+        if ($lastId > 0) {
+            $messages = $this->whatsappModel->getNewMessages($targetKolId, $lastId);
+        } else {
+            $messages = $this->whatsappModel->getMessagesByKol($targetKolId, 50);
+        }
+
+        // Auto mark as read on polling
+        $this->whatsappModel->markAsRead($targetKolId);
 
         return $this->response->setJSON([
             'success'  => true,
-            'count'    => count($formatted),
-            'messages' => $formatted,
+            'count'    => count($messages),
+            'messages' => $messages,
         ]);
     }
 
     /**
-     * AJAX: Get WAHA Session Status
+     * CI3 Parity Alias for ajax_poll_messages
+     */
+    public function ajax_poll_messages()
+    {
+        return $this->ajaxPollMessages();
+    }
+
+    /**
+     * AJAX: Unread Counts (CI3 & CI4 Parity)
+     */
+    public function ajaxUnreadCounts()
+    {
+        return $this->response->setJSON([
+            'success'       => true,
+            'unread_by_kol' => $this->whatsappModel->getUnreadCountsByKol(),
+            'total_unread'  => $this->whatsappModel->getTotalUnreadCount(),
+        ]);
+    }
+
+    /**
+     * CI3 Parity Alias for ajax_unread_counts
+     */
+    public function ajax_unread_counts()
+    {
+        return $this->ajaxUnreadCounts();
+    }
+
+    /**
+     * AJAX: Get WAHA Session Status (CI3 & CI4 Parity)
      */
     public function ajaxSessionStatus()
     {
         $status = $this->wahaClient->getSessionStatus();
-        return $this->response->setJSON(['success' => true, 'data' => $status]);
+        return $this->response->setJSON([
+            'success' => true,
+            'data'    => $status,
+            'status'  => $status['status'] ?? 'CONNECTED',
+        ]);
     }
 
     /**
-     * AJAX: Start / Reconnect WAHA Session
+     * CI3 Parity Alias for ajax_session_status
+     */
+    public function ajax_session_status()
+    {
+        return $this->ajaxSessionStatus();
+    }
+
+    /**
+     * AJAX: Start / Reconnect WAHA Session (CI3 & CI4 Parity)
      */
     public function ajaxStartSession()
     {
-        $db = \Config\Database::connect();
-        $db->table('whatsapp_sessions')->upsert([
-            'session_name'   => 'default',
+        $this->whatsappModel->updateSession('default', [
             'status'         => 'CONNECTED',
             'last_active_at' => date('Y-m-d H:i:s'),
-            'created_at'     => date('Y-m-d H:i:s'),
-            'updated_at'     => date('Y-m-d H:i:s'),
         ]);
 
         return $this->response->setJSON([
@@ -222,7 +409,39 @@ class Whatsapp extends BaseController
     }
 
     /**
-     * AJAX: Get KOLs eligible for broadcast
+     * CI3 Parity Alias for ajax_start_session
+     */
+    public function ajax_start_session()
+    {
+        return $this->ajaxStartSession();
+    }
+
+    /**
+     * AJAX: Logout WAHA Session (CI3 & CI4 Parity)
+     */
+    public function ajaxLogoutWaha()
+    {
+        $this->whatsappModel->updateSession('default', [
+            'status'         => 'DISCONNECTED',
+            'last_active_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Sesi WhatsApp gateway berhasil diputuskan / logout.',
+        ]);
+    }
+
+    /**
+     * CI3 Parity Alias for ajax_logout_waha
+     */
+    public function ajax_logout_waha()
+    {
+        return $this->ajaxLogoutWaha();
+    }
+
+    /**
+     * AJAX: Get KOLs eligible for broadcast (CI3 & CI4 Parity)
      */
     public function ajaxGetBroadcastKols()
     {
@@ -246,7 +465,15 @@ class Whatsapp extends BaseController
     }
 
     /**
-     * AJAX: Send Single Item in Broadcast Loop
+     * CI3 Parity Alias for ajax_get_broadcast_kols
+     */
+    public function ajax_get_broadcast_kols()
+    {
+        return $this->ajaxGetBroadcastKols();
+    }
+
+    /**
+     * AJAX: Send Single Item in Broadcast Loop (CI3 & CI4 Parity)
      */
     public function ajaxSendBroadcastItem()
     {
@@ -283,7 +510,8 @@ class Whatsapp extends BaseController
         );
 
         $cleanPhone = preg_replace('/[^0-9]/', '', (string)$kol['whatsapp']);
-        $senderName = session('name') ?: 'Staff Kolab.id';
+        $session = session();
+        $senderName = $session->get('name') ?: ($session->get('user')['name'] ?? 'Staff Kolab.id');
 
         $wahaRes = $this->wahaClient->sendMessage($cleanPhone, $msgBody);
 
@@ -306,22 +534,43 @@ class Whatsapp extends BaseController
     }
 
     /**
+     * CI3 Parity Alias for ajax_send_broadcast_item
+     */
+    public function ajax_send_broadcast_item()
+    {
+        return $this->ajaxSendBroadcastItem();
+    }
+
+    /**
+     * Health check / ping endpoint (GET /api/whatsapp/ping)
+     */
+    public function ping()
+    {
+        return $this->response->setJSON([
+            'status'  => 'OK',
+            'service' => 'KOLAB.ID WhatsApp Webhook Gateway',
+            'time'    => date('Y-m-d H:i:s'),
+            'waha'    => $this->wahaClient->getSessionStatus(),
+        ]);
+    }
+
+    /**
      * Webhook Endpoint for Incoming WhatsApp Messages (WAHA & Baileys)
      */
     public function webhook()
     {
-        if ($this->request->getMethod() === 'GET') {
+        $input = $this->request->getJSON(true) ?: $this->request->getPost();
+        if (empty($input)) {
+            $raw = file_get_contents('php://input');
+            $input = json_decode($raw, true) ?: [];
+        }
+
+        if (strtolower($this->request->getMethod()) === 'get' && empty($input)) {
             return $this->response->setJSON([
                 'status'  => 'OK',
                 'service' => 'KOLAB.ID WhatsApp Webhook Receiver',
                 'time'    => date('Y-m-d H:i:s'),
             ]);
-        }
-
-        $input = $this->request->getJSON(true) ?: $this->request->getPost();
-        if (empty($input)) {
-            $raw = file_get_contents('php://input');
-            $input = json_decode($raw, true) ?: [];
         }
 
         $event   = $input['event'] ?? 'message';
@@ -330,44 +579,55 @@ class Whatsapp extends BaseController
         // Session status updates
         if ($event === 'session.status') {
             $sessStatus = $payload['status'] ?? 'CONNECTED';
-            $db = \Config\Database::connect();
-            $db->table('whatsapp_sessions')->upsert([
-                'session_name'   => $input['session'] ?? 'default',
+            $this->whatsappModel->updateSession($input['session'] ?? 'default', [
                 'status'         => strtoupper($sessStatus),
                 'last_active_at' => date('Y-m-d H:i:s'),
-                'updated_at'     => date('Y-m-d H:i:s'),
             ]);
             return $this->response->setJSON(['success' => true, 'event' => 'session_updated']);
         }
 
-        // Message handling
+        // ACK handling (message delivery/read receipts)
+        if ($event === 'message.ack') {
+            $wahaMsgId = $payload['id'] ?? ($payload['messageId'] ?? '');
+            $ackStatus = $payload['ack'] ?? ($payload['status'] ?? 'DELIVERED');
+            $statusMap = [
+                1 => 'SENT',
+                2 => 'DELIVERED',
+                3 => 'READ',
+                4 => 'READ',
+            ];
+            $mapped = is_numeric($ackStatus) ? ($statusMap[(int)$ackStatus] ?? 'DELIVERED') : strtoupper($ackStatus);
+            $this->whatsappModel->updateMessageStatus($wahaMsgId, $mapped);
+
+            return $this->response->setJSON(['success' => true, 'event' => 'ack_updated', 'status' => $mapped]);
+        }
+
+        // Inbound Message handling
         $rawFrom = $payload['from'] ?? ($payload['sender'] ?? '');
         $cleanPhone = preg_replace('/[^0-9]/', '', (string)$rawFrom);
         $fromMe = !empty($payload['fromMe']);
 
         $bodyText = $payload['body'] ?? ($payload['text'] ?? ($payload['message']['conversation'] ?? ''));
         $senderName = $payload['pushName'] ?? ($payload['_data']['notifyName'] ?? 'KOL Talent');
-        $mediaUrl = $payload['mediaUrl'] ?? ($payload['media'] ?? null);
+        $mediaUrl = $payload['mediaUrl'] ?? ($payload['media']['url'] ?? null);
+        $mediaMime = $payload['mediaMime'] ?? ($payload['media']['mimetype'] ?? null);
 
         if (empty($bodyText) && empty($mediaUrl)) {
             return $this->response->setJSON(['success' => true, 'message' => 'Ignored empty payload']);
         }
 
         // Match phone to registered KOL
-        $db = \Config\Database::connect();
-        $kol = null;
-        if (!empty($cleanPhone)) {
-            $shortPhone = substr($cleanPhone, -8);
-            $kol = $db->table('kols')->like('whatsapp', $shortPhone)->get()->getRowArray();
-        }
+        $kol = $this->whatsappModel->findKolByPhone($cleanPhone);
 
         $msgId = $this->whatsappModel->recordMessage([
+            'waha_message_id' => $payload['id'] ?? ('inbound_' . time()),
             'kol_id'          => $kol['id'] ?? null,
             'recipient_phone' => $cleanPhone,
             'direction'       => $fromMe ? 'OUTBOUND' : 'INBOUND',
             'sender_name'     => $fromMe ? 'Staff Kolab.id' : ($kol['name'] ?? $senderName),
             'message_text'    => $bodyText,
             'media_url'       => $mediaUrl,
+            'media_mime'      => $mediaMime,
             'status'          => 'DELIVERED',
             'sent_at'         => date('Y-m-d H:i:s'),
             'created_at'      => date('Y-m-d H:i:s'),
@@ -378,5 +638,34 @@ class Whatsapp extends BaseController
             'message_id'  => $msgId,
             'matched_kol' => $kol ? $kol['name'] : null,
         ]);
+    }
+
+    /**
+     * Generate dynamic contextual templates
+     */
+    private function _generateTemplates(?array $kol, ?array $campaign, array $tasks, ?array $shipment): array
+    {
+        $dbTemplates = $this->whatsappModel->getTemplates();
+        $kolName = $kol['name'] ?? 'Kak';
+        $campaignTitle = $campaign['title'] ?? 'Campaign Eksklusif';
+        $tracking = $shipment['tracking_number'] ?? ($shipment['tracking_no'] ?? '-');
+        $courier = $shipment['courier_name'] ?? ($shipment['courier'] ?? 'Ekspedisi');
+
+        $result = [];
+        foreach ($dbTemplates as $tpl) {
+            $replaced = str_replace(
+                ['{kol_name}', '{campaign_name}', '{tracking_number}', '{courier}'],
+                [$kolName, $campaignTitle, $tracking, $courier],
+                $tpl['body_text']
+            );
+            $result[] = [
+                'id'            => $tpl['id'],
+                'template_code' => $tpl['template_code'],
+                'title'         => $tpl['title'],
+                'body_text'     => $replaced,
+            ];
+        }
+
+        return $result;
     }
 }
