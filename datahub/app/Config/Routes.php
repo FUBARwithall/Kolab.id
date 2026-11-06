@@ -15,6 +15,22 @@ $routes->get('logout', 'Auth::logout');
 $routes->get('datahub/logout', 'Auth::logout');
 
 // --------------------------------------------------------------------
+// AVATAR CORS PROXY
+// --------------------------------------------------------------------
+$routes->get('proxy/avatar', 'Proxy::avatar');
+$routes->get('datahub/proxy/avatar', 'Proxy::avatar');
+
+// --------------------------------------------------------------------
+// PERFORMANCE CARD GENERATOR (PUBLIC SIGNED / EMBED / AUTH)
+// --------------------------------------------------------------------
+$routes->get('performance-card/view/(:num)', 'PerformanceCard::view/$1');
+$routes->get('datahub/performance-card/view/(:num)', 'PerformanceCard::view/$1');
+$routes->get('performance-card/(:num)', 'PerformanceCard::view/$1');
+$routes->get('datahub/performance-card/(:num)', 'PerformanceCard::view/$1');
+$routes->get('performance-card/data/(:num)', 'PerformanceCard::cardDataAjax/$1');
+$routes->get('datahub/performance-card/data/(:num)', 'PerformanceCard::cardDataAjax/$1');
+
+// --------------------------------------------------------------------
 // KOL DATA HUB — AKSES UMUM (SUPERADMIN & KOL TALENT)
 // --------------------------------------------------------------------
 $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
@@ -23,28 +39,83 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
     $routes->get('datahub', 'Dashboard::index');
     $routes->get('datahub/dashboard', 'Dashboard::index');
     $routes->get('kols', 'Dashboard::kols');
+    $routes->get('snapshots', 'Dashboard::snapshots');
+    $routes->get('datahub/snapshots', 'Dashboard::snapshots');
+    $routes->get('kol-profile-snapshots', 'Dashboard::snapshots');
+    $routes->get('datahub/kol-profile-snapshots', 'Dashboard::snapshots');
+    $routes->get('snapshots/delete/(:num)', 'Dashboard::deleteSnapshot/$1');
+    $routes->get('datahub/snapshots/delete/(:num)', 'Dashboard::deleteSnapshot/$1');
     $routes->get('platforms', 'Dashboard::platforms');
     $routes->get('market', 'Dashboard::platforms');
     $routes->get('rate-cards', 'Dashboard::rateCards');
     $routes->get('categories', 'Dashboard::categories');
     $routes->get('tiers', 'Dashboard::tiers');
+
+    // Performance Card (Internal Auth)
+    $routes->get('performance-card', 'PerformanceCard::index');
+    $routes->get('datahub/performance-card', 'PerformanceCard::index');
+    $routes->get('performance-card/my-card', 'PerformanceCard::myCard');
+    $routes->get('datahub/performance-card/my-card', 'PerformanceCard::myCard');
     
-    // Ruang Talent KOL (Self-service creator)
-    $routes->get('my-profile', 'Dashboard::myProfile');
-    $routes->get('my-rates', 'Dashboard::myRates');
-    $routes->get('open-campaigns', 'Dashboard::openCampaigns');
-    $routes->post('apply-campaign', 'Dashboard::applyCampaign');
-    $routes->get('my-applications', 'Dashboard::myApplications');
-    $routes->get('my-tasks', 'Dashboard::myTasks');
-    $routes->get('my-contracts', 'Dashboard::myContracts');
-    $routes->get('my-invoices', 'Dashboard::myInvoices');
+    // Ruang Talent KOL (Self-service creator) — Refactored ke Talent Controller
+    $routes->get('my-profile', 'Talent::myProfile');
+    $routes->get('datahub/my-profile', 'Talent::myProfile');
+    $routes->post('my-profile/update', 'Talent::updateProfile');
+    $routes->post('datahub/my-profile/update', 'Talent::updateProfile');
+
+    $routes->get('open-campaigns', 'Talent::openCampaigns');
+    $routes->get('datahub/open-campaigns', 'Talent::openCampaigns');
+    $routes->post('apply-campaign', 'Talent::applyCampaign');
+    $routes->post('datahub/apply-campaign', 'Talent::applyCampaign');
+
+    $routes->get('my-applications', 'Talent::myApplications');
+    $routes->get('datahub/my-applications', 'Talent::myApplications');
+
+    $routes->get('my-tasks', 'Talent::myTasks');
+    $routes->get('datahub/my-tasks', 'Talent::myTasks');
+
+    $routes->get('my-contracts', 'Talent::myContracts');
+    $routes->get('datahub/my-contracts', 'Talent::myContracts');
+    $routes->get('my-contracts/preview/(:num)', 'Talent::getContractAjax/$1');
+    $routes->get('datahub/my-contracts/preview/(:num)', 'Talent::getContractAjax/$1');
+    $routes->post('my-contracts/sign', 'Talent::signContract');
+    $routes->post('datahub/my-contracts/sign', 'Talent::signContract');
+
+    $routes->get('my-rates', 'Talent::myRates');
+    $routes->get('datahub/my-rates', 'Talent::myRates');
+    $routes->post('my-rates/save', 'Talent::saveRate');
+    $routes->post('datahub/my-rates/save', 'Talent::saveRate');
+    $routes->get('my-rates/delete/(:num)', 'Talent::deleteRate/$1');
+    $routes->get('datahub/my-rates/delete/(:num)', 'Talent::deleteRate/$1');
+
+    $routes->get('my-invoices', 'Talent::myInvoices');
+    $routes->get('datahub/my-invoices', 'Talent::myInvoices');
+    $routes->get('my-invoices/deal-detail/(:num)', 'Talent::getDealDetailAjax/$1');
+    $routes->get('datahub/my-invoices/deal-detail/(:num)', 'Talent::getDealDetailAjax/$1');
+    $routes->post('my-invoices/submit', 'Talent::submitInvoice');
+    $routes->post('datahub/my-invoices/submit', 'Talent::submitInvoice');
+    $routes->get('my-invoices/detail/(:num)', 'Talent::getInvoiceDetailAjax/$1');
+    $routes->get('datahub/my-invoices/detail/(:num)', 'Talent::getInvoiceDetailAjax/$1');
 });
 
 // --------------------------------------------------------------------
 // KOL DATA HUB — AKSES SUPERADMIN ONLY
 // --------------------------------------------------------------------
 $routes->group('', ['filter' => 'auth:admin'], static function ($routes) {
-    $routes->get('scraper', 'Dashboard::scraper');
-    $routes->post('scraper/run', 'Dashboard::runScraper');
+    // Scraper Engine (dedicated Scraper controller)
+    $routes->get('scraper', 'Scraper::index');
+    $routes->get('datahub/scraper', 'Scraper::index');
+    $routes->get('scraping', 'Scraper::index');
+    $routes->get('datahub/scraping', 'Scraper::index');
+    $routes->post('scraper/run', 'Scraper::runScraper');
+    $routes->post('datahub/scraper/run', 'Scraper::runScraper');
+    $routes->post('scraper/bulk', 'Scraper::bulkScrape');
+    $routes->post('datahub/scraper/bulk', 'Scraper::bulkScrape');
+    $routes->get('scraper/job-status/(:num)', 'Scraper::jobStatus/$1');
+    $routes->get('datahub/scraper/job-status/(:num)', 'Scraper::jobStatus/$1');
+    $routes->post('scraper/webhook/(:segment)', 'Scraper::webhook/$1');
+    $routes->post('datahub/scraper/webhook/(:segment)', 'Scraper::webhook/$1');
+
     $routes->get('settings', 'Dashboard::settings');
+    $routes->get('datahub/settings', 'Dashboard::settings');
 });
