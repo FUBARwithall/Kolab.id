@@ -7,6 +7,7 @@ use App\Models\KolPlatformModel;
 
 class Scraper extends BaseController
 {
+    protected $db;
     protected ApifyJobModel   $apifyModel;
     protected KolPlatformModel $platformModel;
 
@@ -17,26 +18,157 @@ class Scraper extends BaseController
     ) {
         parent::initController($request, $response, $logger);
 
+        $this->db            = \Config\Database::connect();
         $this->apifyModel    = new ApifyJobModel();
         $this->platformModel = new KolPlatformModel();
     }
 
     // ---------------------------------------------------------------
-    // GET /scraper  — Dashboard Apify Scraper Engine
+    // GET /scraper  — Dashboard Scraping Hub (Active Platforms per KOL)
     // ---------------------------------------------------------------
     public function index()
     {
-        $jobs    = $this->apifyModel->getRecentJobs(50);
-        $summary = $this->apifyModel->getStatusSummary();
+        $q        = trim($this->request->getGet('q') ?? '');
+        $platform = trim($this->request->getGet('platform') ?? '');
+        $dateFrom = trim($this->request->getGet('date_from') ?? '');
+        $dateTo   = trim($this->request->getGet('date_to') ?? '');
+
+        $builder = $this->db->table('kol_platforms kp')
+            ->select('
+                kp.id,
+                kp.kol_id,
+                kp.platform_id,
+                kp.username,
+                kp.profile_url,
+                kp.followers_count,
+                kp.avg_views,
+                kp.avg_er,
+                kp.last_scraped_at,
+                k.name as kol_name,
+                p.name as platform_name,
+                p.icon as platform_icon,
+                LOWER(p.name) as platform_code,
+                (SELECT COUNT(*) FROM kol_profile_snapshots WHERE kol_id = kp.kol_id AND platform_id = kp.platform_id) as total_posts
+            ')
+            ->join('kols k', 'k.id = kp.kol_id', 'left')
+            ->join('platforms p', 'p.id = kp.platform_id', 'left');
+
+        if ($q !== '') {
+            $builder->groupStart()
+                ->like('k.name', $q)
+                ->orLike('kp.username', $q)
+            ->groupEnd();
+        }
+
+        if ($platform !== '') {
+            if (is_numeric($platform)) {
+                $builder->where('kp.platform_id', (int)$platform);
+            } else {
+                $builder->like('p.name', $platform);
+            }
+        }
+
+        if ($dateFrom !== '') {
+            $builder->where('kp.last_scraped_at >=', $dateFrom . ' 00:00:00');
+        }
+
+        if ($dateTo !== '') {
+            $builder->where('kp.last_scraped_at <=', $dateTo . ' 23:59:59');
+        }
+
+        $snapshots = $builder->orderBy('k.name', 'ASC')->get()->getResultArray();
+        $totalPlatforms = $this->db->table('kol_platforms')->countAllResults();
+
+        $allPlatforms = $this->db->table('platforms')->where('is_active', 1)->get()->getResultArray();
+        $jobs         = $this->apifyModel->getRecentJobs(50);
+        $summary      = $this->apifyModel->getStatusSummary();
 
         $data = [
-            'title'      => 'Apify Scraper Engine',
-            'controller' => 'Datahub',
-            'jobs'       => $jobs,
-            'summary'    => $summary,
+            'title'        => 'Scraping Hub',
+            'controller'   => 'Datahub',
+            'snapshots'    => $snapshots,
+            'total'        => $totalPlatforms,
+            'allPlatforms' => $allPlatforms,
+            'filter'       => [
+                'kol_name'      => $q,
+                'platform_code' => $platform,
+                'date_from'     => $dateFrom,
+                'date_to'       => $dateTo,
+            ],
+            'jobs'         => $jobs,
+            'summary'      => $summary,
         ];
 
         return view('scraper/index', $data);
+    }
+
+    // ---------------------------------------------------------------
+    // POST /scraper/bulk  — Bulk Scrape Selected Platforms
+    // ---------------------------------------------------------------
+    public function bulkScrape()
+    {
+        $platformIds = $this->request->getPost('kol_platform_ids');
+        if (empty($platformIds)) {
+            $singleId = $this->request->getPost('id');
+            if ($singleId) {
+                $platformIds = [$singleId];
+            }
+        }
+
+        if (empty($platformIds) || !is_array($platformIds)) {
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => false, 'message' => 'Tidak ada platform KOL yang dipilih.']);
+            }
+            return redirect()->to(base_url('scraper'))->with('error', 'Pilih minimal satu platform KOL.');
+        }
+
+        $targets = $this->db->table('kol_platforms kp')
+            ->select('kp.*, p.name as platform_name')
+            ->join('platforms p', 'p.id = kp.platform_id', 'left')
+            ->whereIn('kp.id', $platformIds)
+            ->get()
+            ->getResultArray();
+
+        $snapshotModel = new \App\Models\KolProfileSnapshotModel();
+        $now = date('Y-m-d H:i:s');
+        $queuedCount = 0;
+
+        foreach ($targets as $t) {
+            $pName = strtolower($t['platform_name'] ?? '');
+            $username = ltrim($t['username'] ?? '', '@');
+            $targetUrl = match (true) {
+                str_contains($pName, 'tiktok')    => "https://www.tiktok.com/@{$username}",
+                str_contains($pName, 'instagram') => "https://www.instagram.com/{$username}/",
+                str_contains($pName, 'youtube')   => "https://www.youtube.com/@{$username}",
+                default                           => "https://www.{$pName}.com/{$username}",
+            };
+
+            $this->apifyModel->enqueue($targetUrl, 'profile');
+
+            // Record snapshot in history
+            $snapshotModel->recordSnapshot(
+                (int)$t['kol_id'],
+                (int)$t['platform_id'],
+                (int)$t['followers_count'],
+                (int)$t['avg_views'],
+                (float)$t['avg_er'],
+                ['source' => 'bulk_scrape_sync', 'triggered_at' => $now]
+            );
+
+            // Update last_scraped_at
+            $this->db->table('kol_platforms')
+                ->where('id', $t['id'])
+                ->update(['last_scraped_at' => $now]);
+
+            $queuedCount++;
+        }
+
+        $msg = "Berhasil memicu scraping background untuk {$queuedCount} platform KOL!";
+        if ($this->request->isAJAX()) {
+            return $this->response->setJSON(['success' => true, 'message' => $msg, 'count' => $queuedCount]);
+        }
+
+        return redirect()->to(base_url('scraper'))->with('success', $msg);
     }
 
     // ---------------------------------------------------------------

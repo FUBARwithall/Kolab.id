@@ -2,268 +2,488 @@
 
 <?= $this->section('content') ?>
 
-<!-- Page Header -->
-<div class="d-flex align-items-center justify-content-between mb-4">
-  <div>
-    <h4 class="fw-bold text-dark mb-1"><i class="fas fa-robot text-danger me-2"></i>Apify Scraper Engine</h4>
-    <p class="text-muted text-sm mb-0">Sinkronisasi metrik KOL otomatis via Apify Scraper Cloud API</p>
-  </div>
-  <span class="badge bg-danger rounded-pill px-3 py-2 fs-6">
-    <i class="fas fa-circle me-1" style="font-size:8px"></i> Live Engine
-  </span>
-</div>
+<style>
+  .platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+  }
+  .platform-badge.tiktok { background: #000; color: #00f2ea; border: 1px solid #1e293b; }
+  .platform-badge.instagram { background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); color: #fff; }
+  .platform-badge.youtube { background: #FF0000; color: #fff; }
+  .platform-badge.twitter, .platform-badge.x { background: #0f1419; color: #fff; }
+  .platform-badge.facebook { background: #1877F2; color: #fff; }
 
-<!-- Flash Messages -->
+  .stat-number {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: #0f172a;
+  }
+  .stat-er {
+    font-weight: 700;
+    font-size: 13.5px;
+    color: #059669;
+  }
+  .filter-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+  }
+  .filter-row .form-group {
+    margin-bottom: 0;
+    min-width: 160px;
+  }
+  .filter-row label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+    display: block;
+  }
+  .btn-bulk-scrape {
+    background: linear-gradient(135deg, #4F46E5, #7C3AED) !important;
+    color: #fff !important;
+    border: none !important;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
+    transition: all 0.2s ease;
+  }
+  .btn-bulk-scrape:hover {
+    background: linear-gradient(135deg, #4338CA, #6D28D9) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+  }
+  .nav-tabs-clean .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #64748b;
+    font-weight: 600;
+    padding: 10px 16px;
+  }
+  .nav-tabs-clean .nav-link.active {
+    color: #4F46E5;
+    border-bottom: 2px solid #4F46E5;
+    background: transparent;
+  }
+</style>
+
+<!-- Flash Alerts -->
 <?php if (session()->getFlashdata('success')): ?>
-  <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+  <div class="alert alert-success alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
     <i class="fas fa-check-circle me-2"></i><?= esc(session()->getFlashdata('success')) ?>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
   </div>
 <?php endif; ?>
 <?php if (session()->getFlashdata('error')): ?>
-  <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-4" role="alert">
+  <div class="alert alert-danger alert-dismissible fade show rounded-3 shadow-sm mb-3" role="alert">
     <i class="fas fa-exclamation-triangle me-2"></i><?= esc(session()->getFlashdata('error')) ?>
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
   </div>
 <?php endif; ?>
 
-<!-- Stats Summary -->
-<div class="row g-3 mb-4">
-  <?php
-  $statCards = [
-    ['label' => 'Total Jobs',  'key' => 'total',     'icon' => 'fa-list',           'color' => 'secondary'],
-    ['label' => 'Queued',      'key' => 'QUEUED',     'icon' => 'fa-clock',          'color' => 'warning'],
-    ['label' => 'Running',     'key' => 'RUNNING',    'icon' => 'fa-sync-alt fa-spin','color' => 'primary'],
-    ['label' => 'Succeeded',   'key' => 'SUCCEEDED',  'icon' => 'fa-check-circle',   'color' => 'success'],
-    ['label' => 'Failed',      'key' => 'FAILED',     'icon' => 'fa-times-circle',   'color' => 'danger'],
-  ];
-  foreach ($statCards as $sc):
-  ?>
-  <div class="col-6 col-md">
-    <div class="card border-0 shadow-sm rounded-4 text-center py-3">
-      <div class="card-body py-2">
-        <i class="fas <?= $sc['icon'] ?> text-<?= $sc['color'] ?> mb-2" style="font-size:1.4rem"></i>
-        <div class="fw-bold fs-4 text-dark"><?= $summary[$sc['key']] ?? 0 ?></div>
-        <div class="text-muted text-xs"><?= $sc['label'] ?></div>
+<!-- Main Scraping Hub Card -->
+<div class="card border-0 shadow-sm mb-4" style="border-radius: 10px;">
+  <div class="card-body p-4">
+
+    <!-- Header Section -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center pb-3 mb-3 border-bottom" style="border-color: #e7edf3 !important;">
+      <div>
+        <h3 class="mb-1" style="color: #172b4d; font-size: 22px; font-weight: 700;">
+          <i class="fas fa-cloud-download-alt text-primary me-2"></i>Scraping Hub
+        </h3>
+        <p class="text-muted mb-0" style="font-size: 13.5px;">
+          Active Platforms per KOL &bull; 
+          <span style="display: inline-block; margin-left: 4px; padding: 2px 8px; border-radius: 10px; background: #fef3c7; color: #92400e; font-weight: 700; font-size: 12px;">
+            <?= number_format($total) ?> platforms
+          </span>
+        </p>
+      </div>
+      <div class="d-flex gap-2 mt-2 mt-md-0">
+        <button type="button" class="btn btn-bulk-scrape btn-sm px-3 py-2 rounded-2" id="btn_bulk_scrape">
+          <i class="fas fa-sync-alt me-1"></i> Bulk Scrape
+        </button>
+        <button type="button" class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-2" data-bs-toggle="collapse" data-bs-target="#apifyEnginePanel">
+          <i class="fas fa-robot me-1"></i> Apify Cloud Batch
+        </button>
       </div>
     </div>
-  </div>
-  <?php endforeach; ?>
-</div>
 
-<div class="row g-4">
-  <!-- Left: Run Form -->
-  <div class="col-lg-4">
-
-    <!-- Run Scraper Card -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4">
-      <div class="card-header bg-danger text-white py-3 rounded-top-4">
-        <h6 class="card-title mb-0 fw-bold"><i class="fas fa-play-circle me-2"></i>Jalankan Batch Scraper</h6>
-      </div>
-      <div class="card-body p-4">
-        <form method="POST" action="<?= base_url('scraper/run') ?>">
+    <!-- Collapsible Apify Engine Box -->
+    <div class="collapse mb-4" id="apifyEnginePanel">
+      <div class="p-3 bg-light rounded-3 border">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h6 class="fw-bold text-dark mb-0"><i class="fas fa-cogs text-danger me-2"></i>Apify Cloud Scraper API Runner</h6>
+          <span class="badge bg-danger">Engine Live</span>
+        </div>
+        <form method="POST" action="<?= base_url('scraper/run') ?>" class="row g-2 align-items-end">
           <?= csrf_field() ?>
-          <div class="mb-3">
-            <label class="form-label text-xs fw-bold text-muted text-uppercase">Platform Target</label>
-            <select name="platform" class="form-select">
+          <div class="col-md-3">
+            <label class="form-label text-xs fw-bold text-muted text-uppercase mb-1">Platform Target</label>
+            <select name="platform" class="form-select form-select-sm">
               <option value="all">Semua Platform</option>
               <option value="tiktok">TikTok</option>
               <option value="instagram">Instagram</option>
               <option value="youtube">YouTube</option>
             </select>
           </div>
-          <div class="mb-3">
-            <label class="form-label text-xs fw-bold text-muted text-uppercase">Tipe Scraping</label>
-            <select name="actor_type" class="form-select">
+          <div class="col-md-3">
+            <label class="form-label text-xs fw-bold text-muted text-uppercase mb-1">Tipe Scraping</label>
+            <select name="actor_type" class="form-select form-select-sm">
               <option value="profile">Profile Metrics (followers, ER)</option>
               <option value="post">Recent Posts (views, likes)</option>
             </select>
           </div>
-          <div class="mb-4">
-            <label class="form-label text-xs fw-bold text-muted text-uppercase">Batas Akun (Batch)</label>
-            <select name="batch_limit" class="form-select">
-              <option value="5">5 Akun (Cepat)</option>
-              <option value="10" selected>10 Akun (Rekomendasi)</option>
-              <option value="25">25 Akun (Besar)</option>
-              <option value="50">50 Akun (Penuh)</option>
+          <div class="col-md-3">
+            <label class="form-label text-xs fw-bold text-muted text-uppercase mb-1">Batch Limit</label>
+            <select name="batch_limit" class="form-select form-select-sm">
+              <option value="5">5 Akun</option>
+              <option value="10" selected>10 Akun</option>
+              <option value="25">25 Akun</option>
             </select>
           </div>
-          <button type="submit" class="btn btn-danger w-100 rounded-pill py-2 fw-bold shadow-sm">
-            <i class="fas fa-sync-alt me-2"></i>Mulai Scraping Sekarang
-          </button>
+          <div class="col-md-3">
+            <button type="submit" class="btn btn-danger btn-sm w-100 fw-bold">
+              <i class="fas fa-play me-1"></i> Enqueue Cloud Job
+            </button>
+          </div>
         </form>
       </div>
     </div>
 
-    <!-- Status Card -->
-    <div class="card border-0 shadow-sm rounded-4">
-      <div class="card-body p-4">
-        <div class="fw-bold text-dark text-sm mb-3"><i class="fas fa-info-circle text-primary me-1"></i>Status Konektor</div>
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom text-xs">
-          <span class="text-muted">Apify API Token:</span>
-          <span class="badge bg-success">Configured (.env)</span>
+    <!-- Filters Row -->
+    <form method="GET" action="<?= base_url('scraper') ?>">
+      <div class="filter-row">
+        <div class="form-group flex-grow-1">
+          <label>KOL Name / Username</label>
+          <input type="text" class="form-control form-control-sm" name="q" value="<?= esc($filter['kol_name'] ?? '') ?>" placeholder="Search...">
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom text-xs">
-          <span class="text-muted">Rate Limiting:</span>
-          <span class="fw-bold text-dark">60 req / min</span>
+        <div class="form-group">
+          <label>Platform</label>
+          <select class="form-select form-select-sm" name="platform">
+            <option value="">All Platforms</option>
+            <?php foreach ($allPlatforms as $p): ?>
+              <?php
+                $pId = (string)$p['id'];
+                $pName = $p['name'];
+                $selected = ($filter['platform_code'] == $pId || strtolower($filter['platform_code']) === strtolower($pName)) ? 'selected' : '';
+              ?>
+              <option value="<?= esc($pId) ?>" <?= $selected ?>><?= esc($pName) ?></option>
+            <?php endforeach; ?>
+          </select>
         </div>
-        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom text-xs">
-          <span class="text-muted">Webhook Endpoint:</span>
-          <span class="fw-bold text-success text-truncate" style="max-width:120px" title="<?= base_url('scraper/webhook/' . md5(env('KOL_SHARED_SECRET', 'kolab-ci4-shared-secret-key-2026'))) ?>">Aktif</span>
+        <div class="form-group">
+          <label>From</label>
+          <input type="date" class="form-control form-control-sm" name="date_from" value="<?= esc($filter['date_from'] ?? '') ?>">
         </div>
-        <div class="d-flex justify-content-between align-items-center text-xs">
-          <span class="text-muted">Snapshot Tracking:</span>
-          <span class="fw-bold text-success">Aktif</span>
+        <div class="form-group">
+          <label>To</label>
+          <input type="date" class="form-control form-control-sm" name="date_to" value="<?= esc($filter['date_to'] ?? '') ?>">
+        </div>
+        <div class="form-group d-flex gap-2">
+          <button type="submit" class="btn btn-primary btn-sm px-3">
+            <i class="fas fa-search me-1"></i> Filter
+          </button>
+          <a href="<?= base_url('scraper') ?>" class="btn btn-light btn-sm border" title="Reset Filter">
+            <i class="fas fa-times"></i> Reset
+          </a>
         </div>
       </div>
-    </div>
+    </form>
 
-  </div>
-
-  <!-- Right: Job History Table -->
-  <div class="col-lg-8">
-    <div class="card border-0 shadow-sm rounded-4">
-      <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between rounded-top-4">
-        <h6 class="card-title mb-0 fw-bold text-dark">
-          <i class="fas fa-history text-secondary me-2"></i>Riwayat Job Scraping (50 Terakhir)
-        </h6>
-        <span class="badge bg-secondary rounded-pill px-3"><?= count($jobs) ?> Jobs</span>
-      </div>
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-hover align-middle mb-0" id="jobsTable">
-            <thead class="table-light">
-              <tr>
-                <th class="ps-3">Job ID</th>
-                <th>Platform</th>
-                <th>Target</th>
-                <th>Tipe</th>
-                <th>Status</th>
-                <th>Waktu</th>
-                <th class="text-center">Aksi</th>
+    <!-- Snapshot / Active Platforms Table -->
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="table-scraping-monitor" style="border: 1px solid #f1f5f9;">
+        <thead style="background: #f8fafc; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #475569;">
+          <tr>
+            <th width="30" class="text-center">
+              <input type="checkbox" class="form-check-input" id="check_all" title="Select All">
+            </th>
+            <th>KOL Name</th>
+            <th>Platform</th>
+            <th>Username / Link</th>
+            <th class="text-end">Followers</th>
+            <th class="text-end">Avg Views (30)</th>
+            <th class="text-end">Avg ER (30)</th>
+            <th class="text-center">Posts Analyzed</th>
+            <th>Last Synced At</th>
+            <th class="text-center" width="90">Action</th>
+          </tr>
+        </thead>
+        <tbody style="font-size: 13.5px;">
+          <?php if (empty($snapshots)): ?>
+            <tr>
+              <td colspan="10" class="text-center py-5 text-muted">
+                <i class="fas fa-database fa-3x d-block mb-3 opacity-25"></i>
+                No platform profiles found matching the filter.
+              </td>
+            </tr>
+          <?php else: ?>
+            <?php foreach ($snapshots as $s): ?>
+              <?php
+                $codeLower = strtolower($s['platform_code'] ?? $s['platform_name'] ?? '');
+                $iconClass = match(true) {
+                  str_contains($codeLower, 'tiktok')    => 'fab fa-tiktok',
+                  str_contains($codeLower, 'instagram') => 'fab fa-instagram',
+                  str_contains($codeLower, 'youtube')   => 'fab fa-youtube',
+                  str_contains($codeLower, 'twitter') || $codeLower === 'x' => 'fab fa-twitter',
+                  str_contains($codeLower, 'facebook')  => 'fab fa-facebook',
+                  default => 'fas fa-globe',
+                };
+                $badgeClass = match(true) {
+                  str_contains($codeLower, 'tiktok')    => 'tiktok',
+                  str_contains($codeLower, 'instagram') => 'instagram',
+                  str_contains($codeLower, 'youtube')   => 'youtube',
+                  str_contains($codeLower, 'twitter') || $codeLower === 'x' => 'twitter',
+                  str_contains($codeLower, 'facebook')  => 'facebook',
+                  default => 'bg-secondary',
+                };
+              ?>
+              <tr id="row-platform-<?= $s['id'] ?>">
+                <td class="text-center">
+                  <input type="checkbox" class="form-check-input check-platform-item" name="kol_platform_id[]" value="<?= $s['id'] ?>">
+                </td>
+                <td>
+                  <a href="<?= base_url('kols?q=' . urlencode($s['kol_name'] ?? '')) ?>" class="text-decoration-none fw-bold" style="color: #4F46E5;">
+                    <?= esc($s['kol_name'] ?? 'KOL #' . $s['kol_id']) ?>
+                  </a>
+                </td>
+                <td>
+                  <span class="platform-badge <?= $badgeClass ?>">
+                    <i class="<?= $iconClass ?>"></i> <?= esc($s['platform_name'] ?? 'Platform') ?>
+                  </span>
+                </td>
+                <td>
+                  <?php if (!empty($s['profile_url'])): ?>
+                    <a href="<?= esc($s['profile_url']) ?>" target="_blank" class="text-decoration-none" style="color: #2563eb;">
+                      @<?= esc($s['username'] ?: $s['profile_url']) ?> <i class="fas fa-external-link-alt text-xs ms-1"></i>
+                    </a>
+                  <?php else: ?>
+                    <span class="text-dark">@<?= esc($s['username'] ?? '-') ?></span>
+                  <?php endif; ?>
+                </td>
+                <td class="text-end stat-number">
+                  <?= number_format($s['followers_count'] ?? 0) ?>
+                </td>
+                <td class="text-end stat-number">
+                  <?= number_format($s['avg_views'] ?? 0) ?>
+                </td>
+                <td class="text-end stat-er">
+                  <?= number_format(($s['avg_er'] ?? 0) * 100, 2) ?>%
+                </td>
+                <td class="text-center fw-semibold text-muted">
+                  <?= !empty($s['total_posts']) ? number_format($s['total_posts']) : '1' ?>
+                </td>
+                <td class="text-xs sync-col">
+                  <?php if (!empty($s['last_scraped_at'])): ?>
+                    <span class="text-muted"><i class="far fa-clock me-1"></i><?= date('d M Y, H:i', strtotime($s['last_scraped_at'])) ?></span>
+                  <?php else: ?>
+                    <span class="badge bg-warning text-dark"><i class="fas fa-exclamation-triangle me-1"></i>Never</span>
+                  <?php endif; ?>
+                </td>
+                <td class="text-center">
+                  <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 single-scrape-btn"
+                          data-id="<?= $s['id'] ?>"
+                          title="Scrape platform ini sekarang">
+                    <i class="fas fa-sync-alt text-xs"></i> Scrape
+                  </button>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              <?php if (empty($jobs)): ?>
-                <tr>
-                  <td colspan="7" class="text-center py-5 text-muted">
-                    <i class="fas fa-robot fa-3x d-block mb-3 opacity-25"></i>
-                    Belum ada riwayat antrean scraping. Klik <strong>"Mulai Scraping"</strong> untuk memulai.
-                  </td>
-                </tr>
-              <?php else: ?>
-                <?php foreach ($jobs as $j): ?>
-                  <?php
-                    $statusColor = match($j['status'] ?? '') {
-                        'QUEUED'    => 'warning text-dark',
-                        'RUNNING'   => 'primary',
-                        'SUCCEEDED' => 'success',
-                        'FAILED'    => 'danger',
-                        default     => 'secondary',
-                    };
-                    $platformIcon = match($j['platform'] ?? 'other') {
-                        'tiktok'    => '<i class="fab fa-tiktok"></i>',
-                        'instagram' => '<i class="fab fa-instagram text-danger"></i>',
-                        'youtube'   => '<i class="fab fa-youtube text-danger"></i>',
-                        default     => '<i class="fas fa-globe text-muted"></i>',
-                    };
-                  ?>
-                  <tr id="job-row-<?= $j['id'] ?>">
-                    <td class="ps-3 fw-bold text-muted text-sm">#<?= $j['id'] ?></td>
-                    <td><?= $platformIcon ?> <span class="text-xs ms-1"><?= esc(ucfirst($j['platform'] ?? 'other')) ?></span></td>
-                    <td class="fw-bold text-dark text-sm">@<?= esc($j['target_username'] ?? '-') ?></td>
-                    <td><span class="badge bg-light text-dark border text-xs"><?= esc($j['actor_type'] ?? 'profile') ?></span></td>
-                    <td>
-                      <span class="badge bg-<?= $statusColor ?> rounded-pill px-2" id="job-status-<?= $j['id'] ?>">
-                        <?= $j['status'] === 'RUNNING' ? '<i class="fas fa-circle-notch fa-spin me-1"></i>' : '' ?>
-                        <?= esc($j['status'] ?? 'QUEUED') ?>
-                      </span>
-                    </td>
-                    <td class="text-muted text-xs"><?= date('d M H:i', strtotime($j['created_at'] ?? 'now')) ?></td>
-                    <td class="text-center">
-                      <?php if (in_array($j['status'], ['QUEUED', 'RUNNING'])): ?>
-                        <button class="btn btn-xs btn-outline-primary rounded-pill px-2 py-0"
-                                onclick="pollJobStatus(<?= $j['id'] ?>)" title="Cek Status">
-                          <i class="fas fa-sync-alt text-xs"></i>
-                        </button>
-                      <?php elseif ($j['status'] === 'SUCCEEDED' && !empty($j['response_data'])): ?>
-                        <button class="btn btn-xs btn-outline-success rounded-pill px-2 py-0"
-                                onclick="viewResult(<?= $j['id'] ?>, <?= htmlspecialchars(json_encode($j['response_data']), ENT_QUOTES) ?>)"
-                                title="Lihat Hasil">
-                          <i class="fas fa-eye text-xs"></i>
-                        </button>
-                      <?php else: ?>
-                        <span class="text-muted text-xs">—</span>
-                      <?php endif; ?>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              <?php endif; ?>
-            </tbody>
-          </table>
-        </div>
-      </div>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- Apify Recent Jobs Section -->
+<div class="card border-0 shadow-sm" style="border-radius: 10px;">
+  <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between rounded-top-4">
+    <div>
+      <h6 class="mb-0 fw-bold text-dark">
+        <i class="fas fa-tasks text-secondary me-2"></i>Apify Scraper Engine Queue &bull; Riwayat Background Jobs
+      </h6>
+    </div>
+    <div class="d-flex gap-2">
+      <span class="badge bg-secondary"><?= count($jobs) ?> Jobs</span>
+      <span class="badge bg-success"><?= $summary['SUCCEEDED'] ?? 0 ?> Succeeded</span>
+      <span class="badge bg-warning text-dark"><?= $summary['QUEUED'] ?? 0 ?> Queued</span>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" style="font-size: 13px;">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Job ID</th>
+            <th>Platform</th>
+            <th>Target</th>
+            <th>Tipe</th>
+            <th>Status</th>
+            <th>Waktu Dibuat</th>
+            <th class="text-center">Status Worker</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php if (empty($jobs)): ?>
+            <tr>
+              <td colspan="7" class="text-center py-4 text-muted">
+                Belum ada antrean job Apify saat ini.
+              </td>
+            </tr>
+          <?php else: ?>
+            <?php foreach (array_slice($jobs, 0, 10) as $j): ?>
+              <?php
+                $statusColor = match($j['status'] ?? '') {
+                  'QUEUED'    => 'warning text-dark',
+                  'RUNNING'   => 'primary',
+                  'SUCCEEDED' => 'success',
+                  'FAILED'    => 'danger',
+                  default     => 'secondary',
+                };
+              ?>
+              <tr>
+                <td class="ps-3 fw-bold text-muted">#<?= $j['id'] ?></td>
+                <td><span class="fw-semibold"><?= esc(ucfirst($j['platform'] ?? 'Web')) ?></span></td>
+                <td class="fw-bold text-dark">@<?= esc($j['target_username'] ?? '-') ?></td>
+                <td><span class="badge bg-light text-dark border"><?= esc($j['actor_type'] ?? 'profile') ?></span></td>
+                <td>
+                  <span class="badge bg-<?= $statusColor ?> rounded-pill px-2">
+                    <?= $j['status'] === 'RUNNING' ? '<i class="fas fa-spinner fa-spin me-1"></i>' : '' ?>
+                    <?= esc($j['status'] ?? 'QUEUED') ?>
+                  </span>
+                </td>
+                <td class="text-muted text-xs"><?= date('d M Y, H:i', strtotime($j['created_at'] ?? 'now')) ?></td>
+                <td class="text-center text-xs">
+                  <?php if ($j['status'] === 'SUCCEEDED'): ?>
+                    <span class="text-success"><i class="fas fa-check-circle me-1"></i>Data Synced</span>
+                  <?php elseif ($j['status'] === 'RUNNING'): ?>
+                    <span class="text-primary"><i class="fas fa-sync-alt fa-spin me-1"></i>Processing</span>
+                  <?php else: ?>
+                    <span class="text-muted"><i class="far fa-clock me-1"></i>In Queue</span>
+                  <?php endif; ?>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
 
-<!-- Result Modal -->
-<div class="modal fade" id="resultModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content rounded-4">
-      <div class="modal-header">
-        <h6 class="modal-title fw-bold"><i class="fas fa-code me-2"></i>Hasil Scraping</h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <pre id="resultJson" class="bg-light rounded p-3 text-xs" style="max-height:400px;overflow:auto"></pre>
-      </div>
-    </div>
-  </div>
-</div>
-
-<?= $this->endSection() ?>
-
-<?= $this->section('pageScript') ?>
 <script>
-// Poll job status via AJAX
-function pollJobStatus(jobId) {
-  const badge = document.getElementById('job-status-' + jobId);
-  if (badge) badge.innerHTML = '<i class="fas fa-circle-notch fa-spin me-1"></i> Checking...';
-
-  fetch('<?= base_url('scraper/job-status') ?>/' + jobId)
-    .then(r => r.json())
-    .then(data => {
-      if (badge) {
-        const colorMap = { QUEUED: 'warning text-dark', RUNNING: 'primary', SUCCEEDED: 'success', FAILED: 'danger' };
-        const cls = colorMap[data.status] || 'secondary';
-        badge.className = 'badge bg-' + cls + ' rounded-pill px-2';
-        badge.innerHTML = data.status;
-      }
-    })
-    .catch(() => {
-      if (badge) badge.innerHTML = 'ERROR';
-    });
-}
-
-// View result JSON
-function viewResult(jobId, rawJson) {
-  let parsed;
-  try { parsed = JSON.parse(rawJson); } catch(e) { parsed = rawJson; }
-  document.getElementById('resultJson').textContent = JSON.stringify(parsed, null, 2);
-  new bootstrap.Modal(document.getElementById('resultModal')).show();
-}
-
-// Auto-poll RUNNING jobs every 10s
 document.addEventListener('DOMContentLoaded', function() {
-  const runningJobs = document.querySelectorAll('[id^="job-status-"]');
-  runningJobs.forEach(el => {
-    if (el.textContent.trim().includes('RUNNING') || el.textContent.trim().includes('QUEUED')) {
-      const jobId = el.id.replace('job-status-', '');
-      setInterval(() => pollJobStatus(parseInt(jobId)), 10000);
-    }
+  const checkAll = document.getElementById('check_all');
+  const checkItems = document.querySelectorAll('.check-platform-item');
+  const btnBulkScrape = document.getElementById('btn_bulk_scrape');
+
+  // Toggle All Checkboxes
+  if (checkAll) {
+    checkAll.addEventListener('change', function() {
+      checkItems.forEach(item => {
+        item.checked = checkAll.checked;
+      });
+    });
+  }
+
+  // Handle Bulk Scrape
+  if (btnBulkScrape) {
+    btnBulkScrape.addEventListener('click', function() {
+      const selected = Array.from(document.querySelectorAll('.check-platform-item:checked')).map(cb => cb.value);
+      if (selected.length === 0) {
+        alert('Silakan pilih minimal satu akun platform KOL yang ingin di-scrape.');
+        return;
+      }
+
+      if (!confirm('Jalankan background scraping untuk ' + selected.length + ' platform terpilih?')) {
+        return;
+      }
+
+      btnBulkScrape.disabled = true;
+      btnBulkScrape.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i> Scraping...';
+
+      const formData = new FormData();
+      selected.forEach(id => formData.append('kol_platform_ids[]', id));
+      formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+      fetch('<?= base_url('scraper/bulk') ?>', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        btnBulkScrape.disabled = false;
+        btnBulkScrape.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Bulk Scrape';
+        if (data.success) {
+          alert(data.message || 'Scraping berhasil dipicu!');
+          window.location.reload();
+        } else {
+          alert(data.message || 'Terjadi kesalahan saat memproses scraping.');
+        }
+      })
+      .catch(err => {
+        btnBulkScrape.disabled = false;
+        btnBulkScrape.innerHTML = '<i class="fas fa-sync-alt me-1"></i> Bulk Scrape';
+        alert('Gagal menghubungi server.');
+      });
+    });
+  }
+
+  // Handle Single Scrape
+  document.querySelectorAll('.single-scrape-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const id = this.getAttribute('data-id');
+      const origHtml = this.innerHTML;
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+      const formData = new FormData();
+      formData.append('kol_platform_ids[]', id);
+      formData.append('<?= csrf_token() ?>', '<?= csrf_hash() ?>');
+
+      fetch('<?= base_url('scraper/bulk') ?>', {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(res => res.json())
+      .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        if (data.success) {
+          alert('Scraping untuk akun ini berhasil dijalankan!');
+          window.location.reload();
+        } else {
+          alert(data.message || 'Gagal memproses scraping.');
+        }
+      })
+      .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+        alert('Gagal menghubungi server.');
+      });
+    });
   });
 });
 </script>
-<?= $this->endSection() ?>
 
+<?= $this->endSection() ?>

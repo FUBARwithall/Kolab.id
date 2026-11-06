@@ -39,6 +39,12 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
     $routes->get('datahub', 'Dashboard::index');
     $routes->get('datahub/dashboard', 'Dashboard::index');
     $routes->get('kols', 'Dashboard::kols');
+    $routes->get('snapshots', 'Dashboard::snapshots');
+    $routes->get('datahub/snapshots', 'Dashboard::snapshots');
+    $routes->get('kol-profile-snapshots', 'Dashboard::snapshots');
+    $routes->get('datahub/kol-profile-snapshots', 'Dashboard::snapshots');
+    $routes->get('snapshots/delete/(:num)', 'Dashboard::deleteSnapshot/$1');
+    $routes->get('datahub/snapshots/delete/(:num)', 'Dashboard::deleteSnapshot/$1');
     $routes->get('platforms', 'Dashboard::platforms');
     $routes->get('market', 'Dashboard::platforms');
     $routes->get('rate-cards', 'Dashboard::rateCards');
@@ -70,6 +76,10 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
 
     $routes->get('my-contracts', 'Talent::myContracts');
     $routes->get('datahub/my-contracts', 'Talent::myContracts');
+    $routes->get('my-contracts/preview/(:num)', 'Talent::getContractAjax/$1');
+    $routes->get('datahub/my-contracts/preview/(:num)', 'Talent::getContractAjax/$1');
+    $routes->post('my-contracts/sign', 'Talent::signContract');
+    $routes->post('datahub/my-contracts/sign', 'Talent::signContract');
 
     $routes->get('my-rates', 'Talent::myRates');
     $routes->get('datahub/my-rates', 'Talent::myRates');
@@ -80,6 +90,12 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
 
     $routes->get('my-invoices', 'Talent::myInvoices');
     $routes->get('datahub/my-invoices', 'Talent::myInvoices');
+    $routes->get('my-invoices/deal-detail/(:num)', 'Talent::getDealDetailAjax/$1');
+    $routes->get('datahub/my-invoices/deal-detail/(:num)', 'Talent::getDealDetailAjax/$1');
+    $routes->post('my-invoices/submit', 'Talent::submitInvoice');
+    $routes->post('datahub/my-invoices/submit', 'Talent::submitInvoice');
+    $routes->get('my-invoices/detail/(:num)', 'Talent::getInvoiceDetailAjax/$1');
+    $routes->get('datahub/my-invoices/detail/(:num)', 'Talent::getInvoiceDetailAjax/$1');
 });
 
 // --------------------------------------------------------------------
@@ -89,8 +105,12 @@ $routes->group('', ['filter' => 'auth:admin'], static function ($routes) {
     // Scraper Engine (dedicated Scraper controller)
     $routes->get('scraper', 'Scraper::index');
     $routes->get('datahub/scraper', 'Scraper::index');
+    $routes->get('scraping', 'Scraper::index');
+    $routes->get('datahub/scraping', 'Scraper::index');
     $routes->post('scraper/run', 'Scraper::runScraper');
     $routes->post('datahub/scraper/run', 'Scraper::runScraper');
+    $routes->post('scraper/bulk', 'Scraper::bulkScrape');
+    $routes->post('datahub/scraper/bulk', 'Scraper::bulkScrape');
     $routes->get('scraper/job-status/(:num)', 'Scraper::jobStatus/$1');
     $routes->get('datahub/scraper/job-status/(:num)', 'Scraper::jobStatus/$1');
     $routes->post('scraper/webhook/(:segment)', 'Scraper::webhook/$1');

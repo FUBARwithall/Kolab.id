@@ -235,6 +235,120 @@ class Talent extends BaseController
     }
 
     /**
+     * AJAX: Ambil HTML klausul + status kontrak berdasarkan ID
+     */
+    public function getContractAjax(int $id): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $contracts = $this->contractModel->getContractsByKol($kolId);
+        $contract  = null;
+        foreach ($contracts as $c) {
+            if ((int) $c['id'] === $id) { $contract = $c; break; }
+        }
+
+        if (! $contract) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kontrak tidak ditemukan']);
+        }
+
+        $isSigned     = ! empty($contract['signed_at']);
+        $rawStatus    = $contract['contract_status'] ?? ($isSigned ? 'SIGNED' : 'PENDING');
+        $status       = ($isSigned || in_array($rawStatus, ['SIGNED', 'ACTIVE', 'COMPLETED'])) ? 'SIGNED' : $rawStatus;
+
+        // Signature image URL / data
+        $sigImg = null;
+        if (! empty($contract['signature_image'])) {
+            $sigImg = str_starts_with($contract['signature_image'], 'data:')
+                ? $contract['signature_image']
+                : base_url($contract['signature_image']);
+        }
+
+        return $this->response->setJSON([
+            'success'         => true,
+            'html'            => $contract['clauses_rendered'] ?? '',
+            'status'          => $status,
+            'kol_name'        => session('name') ?? 'KOL / Creator',
+            'signature_image' => $sigImg,
+            'contract_number' => $contract['contract_number'] ?? ('CTR-' . $contract['id']),
+            'signed_at'       => $contract['signed_at'] ? date('d M Y, H:i', strtotime($contract['signed_at'])) : null,
+        ]);
+    }
+
+    /**
+     * AJAX POST: Simpan e-signature (draw) atau upload file tanda tangan
+     */
+    public function signContract(): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $id = (int) $this->request->getPost('id');
+        if (! $id) {
+            return $this->response->setJSON(['success' => false, 'message' => 'ID kontrak tidak valid']);
+        }
+
+        // Pastikan kontrak milik KOL ini
+        $contracts = $this->contractModel->getContractsByKol($kolId);
+        $contract  = null;
+        foreach ($contracts as $c) {
+            if ((int) $c['id'] === $id) { $contract = $c; break; }
+        }
+        if (! $contract) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kontrak tidak ditemukan']);
+        }
+        if (! empty($contract['signed_at'])) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kontrak sudah ditandatangani sebelumnya']);
+        }
+
+        $signatureImage = null;
+
+        // Option 1: draw (base64 data URL)
+        $sig = $this->request->getPost('signature');
+        if ($sig && str_starts_with($sig, 'data:image/')) {
+            $signatureImage = $sig;
+        }
+
+        // Option 2: upload file
+        $file = $this->request->getFile('contract_file');
+        if ($file && $file->isValid() && ! $file->hasMoved()) {
+            $uploadDir = FCPATH . 'uploads/signatures/';
+            if (! is_dir($uploadDir)) {
+                mkdir($uploadDir, 0775, true);
+            }
+            $newName = 'sign_' . $id . '_' . time() . '.' . $file->getClientExtension();
+            $file->move($uploadDir, $newName);
+            $signatureImage = 'uploads/signatures/' . $newName;
+        }
+
+        if (! $signatureImage) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Data tanda tangan tidak ditemukan']);
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $db  = \Config\Database::connect();
+        $db->table('campaign_kol_contracts')->where('id', $id)->update([
+            'signature_image' => $signatureImage,
+            'signed_at'       => $now,
+            'signed_ip'       => $this->request->getIPAddress(),
+            'updated_at'      => $now,
+        ]);
+
+        if (! empty($contract['campaign_kol_id'])) {
+            $db->table('campaign_kols')->where('id', $contract['campaign_kol_id'])->update([
+                'contract_status' => 'SIGNED',
+                'updated_at'      => $now,
+            ]);
+        }
+
+        return $this->response->setJSON(['success' => true, 'message' => 'Kontrak berhasil ditandatangani']);
+    }
+
+    /**
      * Rate Card Saya & Portofolio Tarif
      */
     public function myRates()
@@ -307,16 +421,220 @@ class Talent extends BaseController
      */
     public function myInvoices()
     {
-        $kolId    = $this->getMyKolId();
-        $invoices = $kolId ? $this->invoiceModel->getInvoicesByKol($kolId) : [];
+        $kolId         = $this->getMyKolId();
+        $invoices      = $kolId ? $this->invoiceModel->getInvoicesByKol($kolId) : [];
+        $billableDeals = $kolId ? $this->invoiceModel->getBillableDealsByKol($kolId) : [];
+        $kol           = $kolId ? $this->kolModel->find($kolId) : null;
 
         $data = [
-            'title'      => 'Tagihan & Riwayat Pembayaran Saya',
-            'controller' => 'Talent Space',
-            'invoices'   => $invoices,
+            'title'         => 'Tagihan Saya (Invoices)',
+            'controller'    => 'Talent Space',
+            'invoices'      => $invoices,
+            'billableDeals' => $billableDeals,
+            'kol'           => $kol,
         ];
 
         return view('talent/my_invoices', $data);
+    }
+
+    /**
+     * AJAX: Ambil rincian kerja sama & estimasi simulasi pajak
+     */
+    public function getDealDetailAjax(int $campaignKolId): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $deal = $this->invoiceModel->getDealDetail($campaignKolId, $kolId);
+        if (! $deal) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Data kerja sama tidak ditemukan.']);
+        }
+
+        // Check if there is an existing active invoice
+        $existing = $this->invoiceModel
+            ->where('campaign_kol_id', $campaignKolId)
+            ->whereIn('status', ['SUBMITTED', 'VERIFIED', 'PAID'])
+            ->first();
+
+        if ($existing) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Kerja sama ini sudah memiliki tagihan aktif (' . ($existing['invoice_number'] ?? '#') . ').',
+            ]);
+        }
+
+        $subtotal = (float) $deal['deal_amount'];
+        $hasNpwp  = ! empty(trim((string) ($deal['npwp'] ?? '')));
+
+        // PPh 21 estimation: 2.5% with NPWP, 3.0% without NPWP
+        $taxType    = 'PPh21';
+        $taxRatePct = $hasNpwp ? 2.50 : 3.00;
+        $taxRate    = $taxRatePct / 100;
+        $taxAmount  = round($subtotal * $taxRate, 2);
+        $netAmount  = max(0, $subtotal - $taxAmount);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'deal'    => [
+                'campaign_kol_id' => (int) $deal['campaign_kol_id'],
+                'campaign_title'  => $deal['campaign_title'],
+                'subtotal'        => $subtotal,
+                'subtotal_fmt'    => number_format($subtotal, 0, ',', '.'),
+                'has_npwp'        => $hasNpwp,
+                'npwp'            => $deal['npwp'] ?: '-',
+                'tax_type'        => $taxType,
+                'tax_rate_pct'    => $taxRatePct,
+                'tax_amount'      => $taxAmount,
+                'tax_amount_fmt'  => number_format($taxAmount, 0, ',', '.'),
+                'net_amount'      => $netAmount,
+                'net_amount_fmt'  => number_format($netAmount, 0, ',', '.'),
+                'bank_name'       => $deal['bank_name'] ?? '',
+                'bank_account'    => $deal['bank_account'] ?? '',
+                'bank_holder'     => $deal['bank_holder'] ?? '',
+            ],
+        ]);
+    }
+
+    /**
+     * AJAX POST: Buat & Ajukan Tagihan Baru
+     */
+    public function submitInvoice(): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $campaignKolId = (int) $this->request->getPost('campaign_kol_id');
+        $bankName      = trim((string) $this->request->getPost('bank_name'));
+        $bankAccount   = trim((string) $this->request->getPost('bank_account'));
+        $bankHolder    = trim((string) $this->request->getPost('bank_holder'));
+
+        if (! $campaignKolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Pilih kerja sama / campaign yang ingin ditagihkan.']);
+        }
+
+        if (empty($bankName) || empty($bankAccount) || empty($bankHolder)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Data rekening bank pembayaran wajib diisi lengkap.']);
+        }
+
+        $deal = $this->invoiceModel->getDealDetail($campaignKolId, $kolId);
+        if (! $deal) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kerja sama tidak ditemukan atau bukan milik Anda.']);
+        }
+
+        $subtotal = (float) $deal['deal_amount'];
+        if ($subtotal <= 0) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Nominal kerja sama tidak valid atau bernilai 0.']);
+        }
+
+        // Check if there is already an active invoice for this deal
+        $existing = $this->invoiceModel
+            ->where('campaign_kol_id', $campaignKolId)
+            ->whereIn('status', ['SUBMITTED', 'VERIFIED', 'PAID'])
+            ->first();
+
+        if ($existing) {
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Kerja sama ini sudah memiliki tagihan aktif (' . ($existing['invoice_number'] ?? '#') . '). Tidak dapat membuat tagihan ganda.',
+            ]);
+        }
+
+        // Update KOL bank information if changed
+        $kol = $this->kolModel->find($kolId);
+        $updateKol = [];
+        if (($kol['bank_name'] ?? '') !== $bankName) $updateKol['bank_name'] = $bankName;
+        if (($kol['bank_account'] ?? '') !== $bankAccount) $updateKol['bank_account'] = $bankAccount;
+        if (($kol['bank_holder'] ?? '') !== $bankHolder) $updateKol['bank_holder'] = $bankHolder;
+        if (! empty($updateKol)) {
+            $this->kolModel->update($kolId, $updateKol);
+        }
+
+        // Handle optional uploaded invoice file
+        $invoiceFile = null;
+        $file = $this->request->getFile('invoice_file');
+        if ($file && $file->isValid() && ! $file->hasMoved()) {
+            $uploadDir = FCPATH . 'uploads/invoices/';
+            if (! is_dir($uploadDir)) {
+                mkdir($uploadDir, 0775, true);
+            }
+            $newName = 'inv_' . time() . '_' . $file->getRandomName();
+            $file->move($uploadDir, $newName);
+            $invoiceFile = 'uploads/invoices/' . $newName;
+        }
+
+        // Tax calculation
+        $hasNpwp    = ! empty(trim((string) ($kol['npwp'] ?? '')));
+        $taxType    = 'PPh21';
+        $taxRatePct = $hasNpwp ? 2.50 : 3.00;
+        $taxRate    = $taxRatePct / 100;
+        $taxAmount  = round($subtotal * $taxRate, 2);
+        $grandTotal = max(0, $subtotal - $taxAmount);
+
+        $invoiceNumber = $this->invoiceModel->generateInvoiceNumber();
+
+        $invoiceData = [
+            'campaign_kol_id' => $campaignKolId,
+            'invoice_number'  => $invoiceNumber,
+            'subtotal'        => $subtotal,
+            'tax_type'        => $taxType,
+            'tax_rate'        => $taxRate,
+            'tax_amount'      => $taxAmount,
+            'grand_total'     => $grandTotal,
+            'status'          => 'SUBMITTED',
+            'invoice_file'    => $invoiceFile,
+            'created_at'      => date('Y-m-d H:i:s'),
+            'updated_at'      => date('Y-m-d H:i:s'),
+        ];
+
+        $invoiceId = $this->invoiceModel->insert($invoiceData);
+
+        // Record history
+        $db = \Config\Database::connect();
+        $notes = 'Invoice dibuat dan diajukan oleh Talent. Subtotal: Rp ' . number_format($subtotal, 0, ',', '.') .
+                 ', Potongan Pajak (' . $taxType . ' ' . $taxRatePct . '%): Rp ' . number_format($taxAmount, 0, ',', '.') .
+                 ', Net Transfer: Rp ' . number_format($grandTotal, 0, ',', '.');
+
+        $db->table('invoice_histories')->insert([
+            'invoice_id'  => $invoiceId,
+            'from_status' => 'DRAFT',
+            'to_status'   => 'SUBMITTED',
+            'changed_by'  => session('user_id') ?? 1,
+            'notes'       => $notes,
+            'created_at'  => date('Y-m-d H:i:s'),
+        ]);
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Tagihan ' . $invoiceNumber . ' berhasil diajukan! Tim Finance Brand akan memverifikasi tagihan dan memproses pembayaran.',
+        ]);
+    }
+
+    /**
+     * AJAX: Ambil detail invoice beserta riwayat log audit
+     */
+    public function getInvoiceDetailAjax(int $id): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $invoice = $this->invoiceModel->getInvoiceDetail($id, $kolId);
+        if (! $invoice) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Invoice tidak ditemukan atau Anda tidak memiliki akses.']);
+        }
+
+        $histories = $this->invoiceModel->getInvoiceHistories($id);
+
+        return $this->response->setJSON([
+            'success'   => true,
+            'invoice'   => $invoice,
+            'histories' => $histories,
+        ]);
     }
 }
 
