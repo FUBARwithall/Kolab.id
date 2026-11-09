@@ -544,7 +544,7 @@
 
 <?= $this->endSection() ?>
 
-<?= $this->section('scripts') ?>
+<?= $this->section('pageScript') ?>
 <script>
 let table;
 let currentDealData = null;

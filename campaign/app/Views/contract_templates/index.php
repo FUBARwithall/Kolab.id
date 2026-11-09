@@ -12,30 +12,45 @@
             <a href="<?= base_url('contracts') ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                 <i class="fas fa-arrow-left me-1"></i> Kembali ke Daftar Kontrak
             </a>
+            <div class="dropdown">
+                <button class="btn btn-outline-dark btn-sm rounded-pill px-3 dropdown-toggle shadow-sm" type="button" data-bs-toggle="dropdown">
+                    <i class="fas fa-download me-1"></i> Ekspor Data
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                    <li><a class="dropdown-item small" href="<?= base_url('contract-templates/export') ?>"><i class="fas fa-file-excel text-success me-2"></i>Ekspor CSV / Excel</a></li>
+                    <li><a class="dropdown-item small" href="<?= base_url('contract-templates/export-pdf') ?>" target="_blank"><i class="fas fa-file-pdf text-danger me-2"></i>Cetak / PDF Rekapitulasi</a></li>
+                </ul>
+            </div>
+            <a href="<?= base_url('contract-templates/add') ?>" class="btn btn-outline-primary btn-sm rounded-pill px-3 shadow-sm">
+                <i class="fas fa-external-link-alt me-1"></i> Halaman Tambah
+            </a>
             <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm" onclick="addTemplateModal()">
-                <i class="fas fa-plus me-1"></i> Tambah Template Baru
+                <i class="fas fa-plus me-1"></i> Tambah Cepat
             </button>
         </div>
     </div>
 
-    <!-- Info Box: Available Placeholders -->
+    <!-- Info Box: Available Placeholders with Click-to-Insert -->
     <div class="alert alert-info border-0 shadow-sm rounded-3 mb-4">
-        <h6 class="fw-bold mb-2"><i class="fas fa-tags me-1"></i> Tag Placeholder yang Didukung:</h6>
-        <div class="d-flex flex-wrap gap-2 text-xs font-monospace">
-            <span class="badge bg-white text-dark border"><code>{nomor_kontrak}</code></span>
-            <span class="badge bg-white text-dark border"><code>{tanggal}</code></span>
-            <span class="badge bg-white text-dark border"><code>{brand_name}</code></span>
-            <span class="badge bg-white text-dark border"><code>{campaign_title}</code></span>
-            <span class="badge bg-white text-dark border"><code>{kol_name}</code></span>
-            <span class="badge bg-white text-dark border"><code>{kol_nik}</code></span>
-            <span class="badge bg-white text-dark border"><code>{kol_address}</code></span>
-            <span class="badge bg-white text-dark border"><code>{kol_whatsapp}</code></span>
-            <span class="badge bg-white text-dark border"><code>{deal_amount}</code></span>
-            <span class="badge bg-white text-dark border"><code>{total_vt}</code></span>
-            <span class="badge bg-white text-dark border"><code>{kol_bank_name}</code></span>
-            <span class="badge bg-white text-dark border"><code>{kol_bank_account}</code></span>
+        <div class="d-flex align-items-center justify-content-between mb-2">
+            <h6 class="fw-bold mb-0"><i class="fas fa-tags me-2"></i> Tag Placeholder yang Didukung:</h6>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 small">Otomatis digantikan saat kontrak digenerate</span>
         </div>
-        <small class="text-muted d-block mt-2">Tag-tag di atas akan otomatis digantikan dengan data riil saat dokumen kontrak digenerate untuk KOL.</small>
+        <p class="small text-muted mb-2">Klik tag untuk menyalin nama placeholder ke clipboard Anda:</p>
+        <div class="d-flex flex-wrap gap-2 text-xs font-monospace">
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{nomor_kontrak}')"><code>{nomor_kontrak}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{tanggal}')"><code>{tanggal}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{brand_name}')"><code>{brand_name}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{campaign_title}')"><code>{campaign_title}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{kol_name}')"><code>{kol_name}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{kol_nik}')"><code>{kol_nik}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{kol_address}')"><code>{kol_address}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{kol_whatsapp}')"><code>{kol_whatsapp}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{deal_amount}')"><code>{deal_amount}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{total_vt}')"><code>{total_vt}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{kol_bank_name}')"><code>{kol_bank_name}</code></button>
+            <button type="button" class="btn btn-sm btn-light border py-1 px-2 tag-badge" onclick="copyTag('{kol_bank_account}')"><code>{kol_bank_account}</code></button>
+        </div>
     </div>
 
     <!-- Table Card -->
@@ -50,7 +65,7 @@
                             <th>Cuplikan Isi Klausul</th>
                             <th style="width: 120px;" class="text-center">Status</th>
                             <th style="width: 150px;">Tanggal Dibuat</th>
-                            <th style="width: 130px;" class="text-center">Aksi</th>
+                            <th style="width: 220px;" class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -77,8 +92,11 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Naskah Klausul &amp; Pasal Perjanjian <span class="text-danger">*</span></label>
-                        <textarea id="tplBody" name="body_template" class="form-control font-monospace small" rows="12" placeholder="Tuliskan draf pasal perjanjian di sini... Gunakan placeholder {kol_name}, {deal_amount}, dll." required style="line-height: 1.5;"></textarea>
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label fw-semibold mb-0">Naskah Klausul &amp; Pasal Perjanjian (HTML/Text) <span class="text-danger">*</span></label>
+                            <small class="text-muted">Gunakan placeholder {kol_name}, {deal_amount}, dll.</small>
+                        </div>
+                        <textarea id="tplBody" name="body_template" class="form-control font-monospace small" rows="12" placeholder="Tuliskan draf pasal perjanjian di sini... Anda dapat menggunakan tag HTML atau teks biasa." required style="line-height: 1.5;"></textarea>
                     </div>
 
                     <div class="form-check form-switch mb-2">
@@ -104,8 +122,25 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <div class="card bg-light border p-3 font-monospace small" style="white-space: pre-wrap; line-height: 1.6;" id="previewBody">
-                    Memuat...
+                <ul class="nav nav-pills mb-3" id="previewTabs" role="tablist">
+                    <li class="nav-item">
+                        <button class="nav-link active small py-1 px-3" id="tab-rendered-btn" data-bs-toggle="pill" data-bs-target="#tab-rendered" type="button">Contoh Tampilan Nyata</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link small py-1 px-3" id="tab-raw-btn" data-bs-toggle="pill" data-bs-target="#tab-raw" type="button">Raw Template (Placeholder Asli)</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="previewTabsContent">
+                    <div class="tab-pane fade show active" id="tab-rendered">
+                        <div class="card bg-white border p-4 shadow-sm" style="min-height: 300px; line-height: 1.7;" id="previewRendered">
+                            Memuat preview...
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab-raw">
+                        <div class="card bg-light border p-3 font-monospace small" style="white-space: pre-wrap; line-height: 1.6;" id="previewRaw">
+                            Memuat template asli...
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer bg-light">
@@ -149,6 +184,16 @@ $(document).ready(function() {
     });
 });
 
+function copyTag(tag) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(tag).then(function() {
+            alert('Tag ' + tag + ' berhasil disalin ke clipboard!');
+        });
+    } else {
+        prompt('Salin tag:', tag);
+    }
+}
+
 function reloadTplTable() {
     tplTable.ajax.reload(null, false);
 }
@@ -163,12 +208,12 @@ function addTemplateModal() {
 }
 
 function editTemplate(id) {
-    $.get('<?= base_url('contract-templates/get-one/') ?>' + id, function(res) {
+    $.get('<?= base_url('contract-templates/get-one/') ?>/' + id, function(res) {
         if (res.success) {
             $('#modalTplTitle').html('<i class="fas fa-edit me-2"></i>Edit Template Kontrak #' + id);
             $('#tplId').val(res.data.id);
             $('#tplTitle').val(res.data.title);
-            $('#tplBody').val(res.data.body_template);
+            $('#tplBody').val(res.data.body_template || res.data.content);
             $('#tplIsActive').prop('checked', res.data.is_active == 1);
             new bootstrap.Modal(document.getElementById('modalTplForm')).show();
         }
@@ -176,10 +221,11 @@ function editTemplate(id) {
 }
 
 function previewTemplate(id) {
-    $.get('<?= base_url('contract-templates/get-one/') ?>' + id, function(res) {
+    $.get('<?= base_url('contract-templates/preview-rendered/') ?>/' + id, function(res) {
         if (res.success) {
-            $('#previewTitle').text(res.data.title);
-            $('#previewBody').text(res.data.body_template);
+            $('#previewTitle').text(res.title);
+            $('#previewRendered').html(res.sampleRendered);
+            $('#previewRaw').text(res.raw);
             new bootstrap.Modal(document.getElementById('modalTplPreview')).show();
         }
     });
@@ -188,7 +234,7 @@ function previewTemplate(id) {
 function deleteTemplate(id) {
     if (!confirm('Apakah Anda yakin ingin menghapus template kontrak ini?')) return;
 
-    $.post('<?= base_url('contract-templates/delete/') ?>' + id, function(res) {
+    $.post('<?= base_url('contract-templates/delete/') ?>/' + id, function(res) {
         if (res.success) {
             reloadTplTable();
             alert(res.message);

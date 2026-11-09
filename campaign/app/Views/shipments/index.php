@@ -21,12 +21,68 @@
 <div class="app-content">
   <div class="container-fluid">
 
+    <!-- Mini Dashboard Summary Cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100 bg-white">
+          <div class="card-body p-3 d-flex align-items-center">
+            <div class="rounded-3 bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+              <i class="fas fa-boxes fa-lg"></i>
+            </div>
+            <div>
+              <div class="text-muted text-uppercase fw-semibold" style="font-size: 11px; letter-spacing: 0.5px;">Total Pengiriman</div>
+              <h4 class="mb-0 fw-bold text-dark"><?= esc($summary['total'] ?? 0) ?></h4>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100 bg-white">
+          <div class="card-body p-3 d-flex align-items-center">
+            <div class="rounded-3 bg-warning bg-opacity-10 text-warning d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+              <i class="far fa-clock fa-lg"></i>
+            </div>
+            <div>
+              <div class="text-muted text-uppercase fw-semibold" style="font-size: 11px; letter-spacing: 0.5px;">Pending Packing</div>
+              <h4 class="mb-0 fw-bold text-dark"><?= esc($summary['pending'] ?? 0) ?></h4>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100 bg-white">
+          <div class="card-body p-3 d-flex align-items-center">
+            <div class="rounded-3 bg-info bg-opacity-10 text-info d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+              <i class="fas fa-shipping-fast fa-lg"></i>
+            </div>
+            <div>
+              <div class="text-muted text-uppercase fw-semibold" style="font-size: 11px; letter-spacing: 0.5px;">Dalam Pengiriman</div>
+              <h4 class="mb-0 fw-bold text-dark"><?= esc($summary['shipped'] ?? 0) ?></h4>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm rounded-3 overflow-hidden h-100 bg-white">
+          <div class="card-body p-3 d-flex align-items-center">
+            <div class="rounded-3 bg-success bg-opacity-10 text-success d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+              <i class="fas fa-check-double fa-lg"></i>
+            </div>
+            <div>
+              <div class="text-muted text-uppercase fw-semibold" style="font-size: 11px; letter-spacing: 0.5px;">Terkirim ke KOL</div>
+              <h4 class="mb-0 fw-bold text-dark"><?= esc($summary['delivered'] ?? 0) ?></h4>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="card border-0 shadow-sm rounded-3">
       <div class="card-header bg-white border-bottom py-3">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
           
           <div class="d-flex align-items-center gap-2">
-            <select class="form-select form-select-sm rounded-2" id="filterCampaignShipment" style="min-width: 220px;" onchange="reloadShipmentTable()">
+            <select class="form-select form-select-sm rounded-2" id="filterCampaignShipment" style="min-width: 200px;" onchange="reloadShipmentTable()">
               <option value="">Semua Kampanye</option>
               <?php foreach ($allCampaigns as $c): ?>
                 <option value="<?= $c['id'] ?>"><?= esc($c['title']) ?></option>
@@ -35,13 +91,25 @@
             <select class="form-select form-select-sm rounded-2" id="filterStatusShipment" style="min-width: 170px;" onchange="reloadShipmentTable()">
               <option value="">Semua Status Logistik</option>
               <option value="PENDING">Pending Packing</option>
+              <option value="PROCESSING">Processing Gudang</option>
               <option value="SHIPPED">Shipped (Dalam Pengiriman)</option>
               <option value="DELIVERED">Delivered (Terkirim)</option>
               <option value="RETURNED">Returned (Retur)</option>
             </select>
           </div>
 
-          <div>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <div class="btn-group">
+              <a href="<?= base_url('shipments/export') ?>" class="btn btn-outline-success btn-sm rounded-2" title="Export Excel / CSV">
+                <i class="fas fa-file-excel me-1"></i> Excel
+              </a>
+              <a href="<?= base_url('shipments/export-pdf') ?>" target="_blank" class="btn btn-outline-danger btn-sm rounded-2" title="Print Laporan PDF">
+                <i class="fas fa-file-pdf me-1"></i> PDF
+              </a>
+            </div>
+            <a href="<?= base_url('shipments/add') ?>" class="btn btn-outline-primary btn-sm rounded-2">
+              <i class="fas fa-file-alt me-1"></i> Form Lengkap
+            </a>
             <button type="button" class="btn btn-primary rounded-2 btn-sm px-3 shadow-sm" onclick="addShipmentModal()">
               <i class="fas fa-box-open me-1"></i> Kirim Sampel Baru
             </button>
@@ -438,6 +506,39 @@ function saveUpdatedStatus() {
     }).fail(function(xhr) {
         const err = xhr.responseJSON ? xhr.responseJSON.message : 'Terjadi kesalahan sistem';
         Swal.fire({ icon: 'error', title: 'Gagal', text: err });
+    });
+}
+
+function deleteShipment(id) {
+    Swal.fire({
+        title: 'Hapus Pengiriman?',
+        text: 'Apakah Anda yakin ingin menghapus data pengiriman ini? Barang yang telah dikirim akan dikembalikan otomatis ke stok.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: '<?= base_url('shipments/delete') ?>/' + id,
+                type: 'POST',
+                dataType: 'json',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                success: function(res) {
+                    if (res.success) {
+                        dtShipments.ajax.reload(null, false);
+                        Swal.fire({ icon: 'success', title: 'Terhapus', text: res.message, timer: 1500, showConfirmButton: false });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Gagal', text: res.message || 'Gagal menghapus pengiriman.' });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Terjadi kesalahan sistem saat menghapus.' });
+                }
+            });
+        }
     });
 }
 </script>

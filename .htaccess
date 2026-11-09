@@ -15,10 +15,14 @@ AddDefaultCharset UTF-8
 
     # 2. Shared Uploads (/uploads/* -> shared/uploads/*)
     RewriteRule ^uploads/(.*)$ shared/uploads/$1 [L]
+    RewriteRule ^campaign/uploads/(.*)$ shared/uploads/$1 [L]
+    RewriteRule ^datahub/uploads/(.*)$ shared/uploads/$1 [L]
 
-    # 3. AdminLTE Assets (/asset/* -> assets/adminlte/*)
-    RewriteRule ^asset/(.*)$ assets/adminlte/$1 [L]
-    RewriteRule ^assets/adminlte/(.*)$ assets/adminlte/$1 [L]
+    # 3. AdminLTE Assets (/asset/* -> campaign/public/asset/*)
+    RewriteRule ^asset/(.*)$ campaign/public/asset/$1 [L]
+    RewriteRule ^assets/adminlte/(.*)$ campaign/public/asset/$1 [L]
+    RewriteRule ^campaign/asset/(.*)$ campaign/public/asset/$1 [L]
+    RewriteRule ^datahub/asset/(.*)$ campaign/public/asset/$1 [L]
 
     # 4. Landing Assets (/dist/* dan /assets/*)
     RewriteRule ^dist/(.*)$ landing/public/dist/$1 [L]
@@ -27,19 +31,17 @@ AddDefaultCharset UTF-8
     RewriteRule ^robots\.txt$ landing/public/robots.txt [L]
 
     # 5. Sub-aplikasi Campaign (/campaign/*)
-    RewriteRule ^campaign/asset/(.*)$ assets/adminlte/$1 [L]
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^campaign/public/(.*)$ campaign/public/$1 [L]
-    RewriteRule ^campaign/?(.*)$ campaign/public/index.php/$1 [L,QSA]
+    RewriteRule ^campaign/?(.*)$ campaign/public/index.php [L,QSA]
 
     # 6. Sub-aplikasi Datahub (/datahub/*)
-    RewriteRule ^datahub/asset/(.*)$ assets/adminlte/$1 [L]
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^datahub/public/(.*)$ datahub/public/$1 [L]
-    RewriteRule ^datahub/?(.*)$ datahub/public/index.php/$1 [L,QSA]
+    RewriteRule ^datahub/?(.*)$ datahub/public/index.php [L,QSA]
 
     # 7. Sub-aplikasi Landing (Default Route /)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteRule ^(.*)$ landing/public/index.php/$1 [L,QSA]
+    RewriteRule ^(.*)$ landing/public/index.php [L,QSA]
 </IfModule>

@@ -286,8 +286,8 @@
 
 <?php if (!empty($currentUser)): ?>
   <div class="alert-min info" style="width:100%;max-width:400px;justify-content:space-between;">
-    <div><i class="fas fa-user-check me-1"></i> Terhubung sebagai <strong><?= esc($currentUser['name']) ?></strong></div>
-    <a href="<?= esc($portal) === 'datahub' ? '/datahub/dashboard' : '/campaign/dashboard' ?>" style="font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;">
+    <div><i class="fas fa-user-check me-1"></i> Terhubung: <strong><?= esc($currentUser['name']) ?></strong> (<?= esc($currentUser['role'] ?? 'User') ?>)</div>
+    <a href="<?= base_url('dashboard') ?>" style="font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;">
       Dashboard &rarr;
     </a>
   </div>
@@ -365,12 +365,13 @@
 
   <!-- Footer Links -->
   <div class="login-footer">
-    <a href="/login" class="footer-link">
+    <a href="<?= root_url('login') ?>" class="footer-link">
       <i class="fas fa-th-large"></i> Portal Lain
     </a>
-    <a href="/" class="footer-link">
+    <a href="<?= root_url('') ?>" class="footer-link">
       <i class="fas fa-globe"></i> Landing Page
     </a>
+  </div>
   </div>
 
 </div>

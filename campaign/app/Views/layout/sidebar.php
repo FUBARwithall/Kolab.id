@@ -156,6 +156,18 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
+          <a href="<?= base_url('task-status-histories') ?>" class="nav-link <?= ($isActive('task-status-histories') || $isActive('task_status_histories')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-history text-secondary"></i>
+            <p>Riwayat Status Task</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="<?= base_url('task-budget-histories') ?>" class="nav-link <?= ($isActive('task-budget-histories') || $isActive('task_budget_histories')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-file-invoice-dollar text-success"></i>
+            <p>Riwayat Anggaran Task</p>
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="<?= base_url('variants') ?>" class="nav-link <?= $isActive('variants') ?>">
             <i class="nav-icon fas fa-layer-group text-info"></i>
             <p>Variant Konsep Konten</p>
@@ -168,7 +180,7 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
           </a>
         </li>
         <li class="nav-item">
-          <a href="<?= base_url('scraping-jobs') ?>" class="nav-link <?= ($isActive('scraping-jobs') || $isActive('apify-jobs') || $isActive('apify_jobs')) ? 'active' : '' ?>">
+          <a href="<?= base_url('apify-jobs') ?>" class="nav-link <?= ($isActive('apify-jobs') || $isActive('apify_jobs') || $isActive('scraping-jobs')) ? 'active' : '' ?>">
             <i class="nav-icon fas fa-spider text-danger"></i>
             <p>Apify &amp; Scraping Jobs</p>
           </a>
@@ -216,6 +228,12 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
           <a href="<?= base_url('kol-rate-cards') ?>" class="nav-link <?= ($isActive('kol-rate-cards') || $isActive('kol_rate_cards')) ? 'active' : '' ?>">
             <i class="nav-icon fas fa-hand-holding-usd text-success"></i>
             <p>Master Rate Card KOL</p>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="<?= base_url('score-histories') ?>" class="nav-link <?= ($isActive('score-histories') || $isActive('score_histories')) ? 'active' : '' ?>">
+            <i class="nav-icon fas fa-star-half-alt text-warning"></i>
+            <p>Riwayat Skor KOL</p>
           </a>
         </li>
 
@@ -308,7 +326,7 @@ $isActive = function(string|array ...$routes) use ($currentPath): string {
         <?php if ($isAdmin || $isLeader): ?>
           <li class="nav-header text-uppercase text-xs text-muted px-3 mt-3">SISTEM &amp; KEAMANAN</li>
           <li class="nav-item">
-            <a href="<?= base_url('audit-logs') ?>" class="nav-link <?= $isActive('audit-logs') ?>">
+            <a href="<?= base_url('audit-logs') ?>" class="nav-link <?= ($isActive('audit-logs') || $isActive('audit_logs')) ? 'active' : '' ?>">
               <i class="nav-icon fas fa-history text-secondary"></i>
               <p>Audit Trail &amp; Log</p>
             </a>

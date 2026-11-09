@@ -81,6 +81,7 @@
 
     <!-- PageScript -->
     <?= $this->renderSection("pageScript") ?>
+    <?= $this->renderSection("scripts") ?>
 
 </body>
 </html>

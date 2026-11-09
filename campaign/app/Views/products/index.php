@@ -72,6 +72,14 @@
           <option value="1">Aktif Saja</option>
           <option value="0">Nonaktif</option>
         </select>
+        <div class="btn-group">
+          <a href="<?= base_url('products/export') ?>" class="btn btn-outline-success btn-sm rounded-2" title="Export Excel / CSV">
+            <i class="fas fa-file-excel me-1"></i> Excel
+          </a>
+          <a href="<?= base_url('products/export-pdf') ?>" target="_blank" class="btn btn-outline-danger btn-sm rounded-2" title="Print Laporan PDF">
+            <i class="fas fa-file-pdf me-1"></i> PDF
+          </a>
+        </div>
         <a href="<?= base_url('stock-history') ?>" class="btn btn-outline-secondary btn-sm rounded-2">
           <i class="fas fa-history me-1"></i> Riwayat Stok
         </a>

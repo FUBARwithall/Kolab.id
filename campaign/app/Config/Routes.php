@@ -9,10 +9,13 @@ use CodeIgniter\Router\RouteCollection;
 // --------------------------------------------------------------------
 $routes->get('articles/feed', 'ArticlesApi::feed');
 $routes->get('articles/feed/(:segment)', 'ArticlesApi::feed/$1');
+$routes->get('artikel/(:segment)', 'Articles::read/$1');
 
 // --------------------------------------------------------------------
 // PUBLIC REST API: WhatsApp Webhook Receiver (WAHA & Baileys)
 // --------------------------------------------------------------------
+$routes->get('api/whatsapp', 'Whatsapp::ping');
+$routes->get('api/whatsapp/ping', 'Whatsapp::ping');
 $routes->match(['get', 'post'], 'api/whatsapp/webhook', 'Whatsapp::webhook');
 $routes->match(['get', 'post'], 'whatsapp/webhook', 'Whatsapp::webhook');
 
@@ -27,12 +30,12 @@ $routes->get('logout', 'Auth::logout');
 $routes->get('campaign/logout', 'Auth::logout');
 
 // Redirect legacy /kol or /KOL requests directly to Datahub
-$routes->get('kol/login', static fn() => redirect()->to('/datahub/login'));
-$routes->get('KOL/login', static fn() => redirect()->to('/datahub/login'));
-$routes->get('kol', static fn() => redirect()->to('/datahub/dashboard'));
-$routes->get('KOL', static fn() => redirect()->to('/datahub/dashboard'));
-$routes->get('kol/(:any)', static fn() => redirect()->to('/datahub/dashboard'));
-$routes->get('KOL/(:any)', static fn() => redirect()->to('/datahub/dashboard'));
+$routes->get('kol/login', static fn() => redirect()->to(root_url('datahub/login')));
+$routes->get('KOL/login', static fn() => redirect()->to(root_url('datahub/login')));
+$routes->get('kol', static fn() => redirect()->to(root_url('datahub/dashboard')));
+$routes->get('KOL', static fn() => redirect()->to(root_url('datahub/dashboard')));
+$routes->get('kol/(:any)', static fn() => redirect()->to(root_url('datahub/dashboard')));
+$routes->get('KOL/(:any)', static fn() => redirect()->to(root_url('datahub/dashboard')));
 
 // --------------------------------------------------------------------
 // CAMPAIGN MANAGEMENT — AKSES OPERASIONAL (LEADER, STAFF & SUPERADMIN)
@@ -42,7 +45,6 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('dashboard', 'Dashboard::index');
     $routes->get('campaign', 'Dashboard::index');
     $routes->get('campaign/dashboard', 'Dashboard::index');
-
     // Pusat Pemberitahuan (Notifications) — Full Parity with CI3 kol_notifications
     $routes->get('notifications', 'Notifications::index');
     $routes->get('campaign/notifications', 'Notifications::index');
@@ -50,18 +52,65 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('campaign/notifications/inbox', 'Notifications::getInboxAjax');
     $routes->post('notifications/mark-read', 'Notifications::markAllReadAjax');
     $routes->post('campaign/notifications/mark-read', 'Notifications::markAllReadAjax');
-    // Wave 1: Master Produk & Mutasi Stok Sampel
+
+    // Wave 1: Master Produk & Mutasi Stok Sampel (Full Parity with CI3 modules/products)
     $routes->get('products', 'Products::index');
     $routes->post('products/get-datatable', 'Products::getDatatable');
     $routes->get('products/get-one/(:num)', 'Products::getOne/$1');
+    $routes->get('products/view/(:num)', 'Products::view/$1');
+    $routes->get('products/add', 'Products::add');
+    $routes->post('products/add_save', 'Products::add_save');
+    $routes->get('products/edit/(:num)', 'Products::edit/$1');
+    $routes->post('products/edit_save/(:num)', 'Products::edit_save/$1');
     $routes->post('products/save', 'Products::save');
     $routes->post('products/adjust-stock', 'Products::adjustStock');
-    $routes->post('products/delete/(:num)', 'Products::delete/$1');
+    $routes->match(['GET', 'POST'], 'products/delete/(:num)', 'Products::delete/$1');
+    $routes->match(['GET', 'POST'], 'products/delete', 'Products::delete');
+    $routes->post('products/bulk-delete', 'Products::bulkDelete');
+    $routes->get('products/export', 'Products::export');
+    $routes->get('products/export-pdf', 'Products::export_pdf');
+    $routes->get('products/export_pdf', 'Products::export_pdf');
+    $routes->get('products/single-pdf/(:num)', 'Products::single_pdf/$1');
+    $routes->get('products/single_pdf/(:num)', 'Products::single_pdf/$1');
     $routes->get('products/variants/(:num)', 'Products::getVariants/$1');
     $routes->post('products/variants/save', 'Products::saveVariant');
     $routes->post('products/variants/delete/(:num)', 'Products::deleteVariant/$1');
+    // Wave 1.1: Riwayat Audit Mutasi Stok (Full Parity with CI3 modules/stock_history)
     $routes->get('stock-history', 'StockHistory::index');
+    $routes->get('stock-history/index', 'StockHistory::index');
+    $routes->get('stock-history/index/(:num)', 'StockHistory::index/$1');
     $routes->post('stock-history/get-datatable', 'StockHistory::getDatatable');
+    $routes->get('stock-history/get-one/(:num)', 'StockHistory::getOne/$1');
+    $routes->get('stock-history/view/(:num)', 'StockHistory::view/$1');
+    $routes->get('stock-history/export', 'StockHistory::export');
+    $routes->get('stock-history/export-pdf', 'StockHistory::export_pdf');
+    $routes->get('stock-history/export_pdf', 'StockHistory::export_pdf');
+    $routes->get('stock-history/single-pdf/(:num)', 'StockHistory::single_pdf/$1');
+    $routes->get('stock-history/single_pdf/(:num)', 'StockHistory::single_pdf/$1');
+
+    // CI3 Parity Aliases for Stock History (modules/stock_history)
+    $routes->get('administrator/stock_history', 'StockHistory::index');
+    $routes->get('administrator/stock_history/index', 'StockHistory::index');
+    $routes->get('administrator/stock_history/index/(:num)', 'StockHistory::index/$1');
+    $routes->get('administrator/stock_history/view/(:num)', 'StockHistory::view/$1');
+    $routes->get('administrator/stock_history/export', 'StockHistory::export');
+    $routes->get('administrator/stock_history/export_pdf', 'StockHistory::export_pdf');
+    $routes->get('administrator/stock_history/single_pdf/(:num)', 'StockHistory::single_pdf/$1');
+
+    // CI3 Parity Aliases for Products
+    $routes->get('administrator/products', 'Products::index');
+    $routes->get('administrator/products/index', 'Products::index');
+    $routes->get('administrator/products/index/(:num)', 'Products::index');
+    $routes->get('administrator/products/add', 'Products::add');
+    $routes->post('administrator/products/add_save', 'Products::add_save');
+    $routes->get('administrator/products/edit/(:num)', 'Products::edit/$1');
+    $routes->post('administrator/products/edit_save/(:num)', 'Products::edit_save/$1');
+    $routes->get('administrator/products/view/(:num)', 'Products::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/products/delete/(:num)', 'Products::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/products/delete', 'Products::delete');
+    $routes->get('administrator/products/export', 'Products::export');
+    $routes->get('administrator/products/export_pdf', 'Products::export_pdf');
+    $routes->get('administrator/products/single_pdf/(:num)', 'Products::single_pdf/$1');
 
     // Wave 13: Variant Konsep Konten (Full Parity with CI3 modules/variants)
     $routes->get('variants', 'Variants::index');
@@ -133,6 +182,8 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->post('campaign_kols/update-status-tasks-ajax', 'CampaignKols::updateStatusTasksAjax');
     $routes->get('campaign-kols/view/(:num)', 'CampaignKols::view/$1');
     $routes->get('campaign_kols/view/(:num)', 'CampaignKols::view/$1');
+    $routes->post('campaign-kols/save-score/(:num)', 'CampaignKols::saveScore/$1');
+    $routes->post('campaign_kols/save-score/(:num)', 'CampaignKols::saveScore/$1');
     $routes->match(['GET', 'POST'], 'campaign-kols/delete/(:num)', 'CampaignKols::delete/$1');
     $routes->match(['GET', 'POST'], 'campaign_kols/delete/(:num)', 'CampaignKols::delete/$1');
     $routes->post('campaign-kols/bulk-delete', 'CampaignKols::bulkDelete');
@@ -392,6 +443,109 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/draft_review_histories/export_pdf', 'DraftReviewHistories::export_pdf');
     $routes->get('administrator/draft_review_histories/single_pdf/(:num)', 'DraftReviewHistories::single_pdf/$1');
 
+    // Wave 3: Task Status Histories (Full Parity with CI3 modules/task_status_histories)
+    $routes->get('task-status-histories', 'TaskStatusHistories::index');
+    $routes->get('task-status-histories/index', 'TaskStatusHistories::index');
+    $routes->get('task_status_histories', 'TaskStatusHistories::index');
+    $routes->get('task_status_histories/index', 'TaskStatusHistories::index');
+    $routes->match(['GET', 'POST'], 'task-status-histories/get-datatable', 'TaskStatusHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'task_status_histories/get-datatable', 'TaskStatusHistories::getDatatable');
+    $routes->get('task-status-histories/get-one/(:num)', 'TaskStatusHistories::getOne/$1');
+    $routes->get('task_status_histories/get-one/(:num)', 'TaskStatusHistories::getOne/$1');
+    $routes->get('task-status-histories/view/(:num)', 'TaskStatusHistories::view/$1');
+    $routes->get('task_status_histories/view/(:num)', 'TaskStatusHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'task-status-histories/delete/(:num)', 'TaskStatusHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'task_status_histories/delete/(:num)', 'TaskStatusHistories::delete/$1');
+    $routes->post('task-status-histories/bulk-delete', 'TaskStatusHistories::bulkDelete');
+    $routes->post('task_status_histories/bulk-delete', 'TaskStatusHistories::bulkDelete');
+    $routes->get('task-status-histories/export', 'TaskStatusHistories::export');
+    $routes->get('task_status_histories/export', 'TaskStatusHistories::export');
+    $routes->get('task-status-histories/export-pdf', 'TaskStatusHistories::export_pdf');
+    $routes->get('task_status_histories/export-pdf', 'TaskStatusHistories::export_pdf');
+    $routes->get('task-status-histories/single-pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
+    $routes->get('task_status_histories/single-pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/task_status_histories/*
+    $routes->get('administrator/task_status_histories', 'TaskStatusHistories::index');
+    $routes->get('administrator/task_status_histories/index', 'TaskStatusHistories::index');
+    $routes->get('administrator/task_status_histories/index/(:num)', 'TaskStatusHistories::index/$1');
+    $routes->get('administrator/task_status_histories/view/(:num)', 'TaskStatusHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/task_status_histories/delete/(:num)', 'TaskStatusHistories::delete/$1');
+    $routes->get('administrator/task_status_histories/delete', 'TaskStatusHistories::delete');
+    $routes->get('administrator/task_status_histories/export', 'TaskStatusHistories::export');
+    $routes->get('administrator/task_status_histories/export_pdf', 'TaskStatusHistories::export_pdf');
+    $routes->get('administrator/task_status_histories/single_pdf/(:num)', 'TaskStatusHistories::single_pdf/$1');
+
+    // Wave 3: Score Histories (Full Parity with CI3 modules/score_histories)
+    $routes->get('score-histories', 'ScoreHistories::index');
+    $routes->get('score-histories/index', 'ScoreHistories::index');
+    $routes->get('score_histories', 'ScoreHistories::index');
+    $routes->get('score_histories/index', 'ScoreHistories::index');
+    $routes->match(['GET', 'POST'], 'score-histories/get-datatable', 'ScoreHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'score_histories/get-datatable', 'ScoreHistories::getDatatable');
+    $routes->get('score-histories/get-one/(:num)', 'ScoreHistories::getOne/$1');
+    $routes->get('score_histories/get-one/(:num)', 'ScoreHistories::getOne/$1');
+    $routes->get('score-histories/view/(:num)', 'ScoreHistories::view/$1');
+    $routes->get('score_histories/view/(:num)', 'ScoreHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'score-histories/delete/(:num)', 'ScoreHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'score_histories/delete/(:num)', 'ScoreHistories::delete/$1');
+    $routes->post('score-histories/bulk-delete', 'ScoreHistories::bulkDelete');
+    $routes->post('score_histories/bulk-delete', 'ScoreHistories::bulkDelete');
+    $routes->get('score-histories/export', 'ScoreHistories::export');
+    $routes->get('score_histories/export', 'ScoreHistories::export');
+    $routes->get('score-histories/export-pdf', 'ScoreHistories::export_pdf');
+    $routes->get('score_histories/export-pdf', 'ScoreHistories::export_pdf');
+    $routes->get('score-histories/single-pdf/(:num)', 'ScoreHistories::single_pdf/$1');
+    $routes->get('score_histories/single-pdf/(:num)', 'ScoreHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/score_histories/*
+    $routes->get('administrator/score_histories', 'ScoreHistories::index');
+    $routes->get('administrator/score_histories/index', 'ScoreHistories::index');
+    $routes->get('administrator/score_histories/index/(:num)', 'ScoreHistories::index/$1');
+    $routes->get('administrator/score_histories/view/(:num)', 'ScoreHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/score_histories/delete/(:num)', 'ScoreHistories::delete/$1');
+    $routes->get('administrator/score_histories/delete', 'ScoreHistories::delete');
+    $routes->get('administrator/score_histories/export', 'ScoreHistories::export');
+    $routes->get('administrator/score_histories/export_pdf', 'ScoreHistories::export_pdf');
+    $routes->get('administrator/score_histories/single_pdf/(:num)', 'ScoreHistories::single_pdf/$1');
+
+    // Wave 3: Task Budget Histories (Full Parity with CI3 modules/task_budget_histories)
+    $routes->get('task-budget-histories', 'TaskBudgetHistories::index');
+    $routes->get('task-budget-histories/index', 'TaskBudgetHistories::index');
+    $routes->get('task_budget_histories', 'TaskBudgetHistories::index');
+    $routes->get('task_budget_histories/index', 'TaskBudgetHistories::index');
+    $routes->match(['GET', 'POST'], 'task-budget-histories/get-datatable', 'TaskBudgetHistories::getDatatable');
+    $routes->match(['GET', 'POST'], 'task_budget_histories/get-datatable', 'TaskBudgetHistories::getDatatable');
+    $routes->get('task-budget-histories/get-one/(:num)', 'TaskBudgetHistories::getOne/$1');
+    $routes->get('task_budget_histories/get-one/(:num)', 'TaskBudgetHistories::getOne/$1');
+    $routes->get('task-budget-histories/view/(:num)', 'TaskBudgetHistories::view/$1');
+    $routes->get('task_budget_histories/view/(:num)', 'TaskBudgetHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'task-budget-histories/delete/(:num)', 'TaskBudgetHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'task_budget_histories/delete/(:num)', 'TaskBudgetHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'task-budget-histories/delete', 'TaskBudgetHistories::delete');
+    $routes->match(['GET', 'POST'], 'task_budget_histories/delete', 'TaskBudgetHistories::delete');
+    $routes->post('task-budget-histories/bulk-delete', 'TaskBudgetHistories::bulkDelete');
+    $routes->post('task_budget_histories/bulk-delete', 'TaskBudgetHistories::bulkDelete');
+    $routes->get('task-budget-histories/export', 'TaskBudgetHistories::export');
+    $routes->get('task_budget_histories/export', 'TaskBudgetHistories::export');
+    $routes->get('task-budget-histories/export-pdf', 'TaskBudgetHistories::export_pdf');
+    $routes->get('task_budget_histories/export-pdf', 'TaskBudgetHistories::export_pdf');
+    $routes->get('task-budget-histories/single-pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+    $routes->get('task_budget_histories/single-pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+    $routes->get('task-budget-histories/single_pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+    $routes->get('task_budget_histories/single_pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+
+    // CI3 Legacy Aliases: administrator/task_budget_histories/*
+    $routes->get('administrator/task_budget_histories', 'TaskBudgetHistories::index');
+    $routes->get('administrator/task_budget_histories/index', 'TaskBudgetHistories::index');
+    $routes->get('administrator/task_budget_histories/index/(:num)', 'TaskBudgetHistories::index/$1');
+    $routes->get('administrator/task_budget_histories/view/(:num)', 'TaskBudgetHistories::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/task_budget_histories/delete/(:num)', 'TaskBudgetHistories::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/task_budget_histories/delete', 'TaskBudgetHistories::delete');
+    $routes->get('administrator/task_budget_histories/export', 'TaskBudgetHistories::export');
+    $routes->get('administrator/task_budget_histories/export_pdf', 'TaskBudgetHistories::export_pdf');
+    $routes->get('administrator/task_budget_histories/single_pdf/(:num)', 'TaskBudgetHistories::single_pdf/$1');
+
     // Wave 3: Review Draft Video (Full Parity with CI3 modules/drafts)
     $routes->get('drafts', 'Drafts::index');
     $routes->post('drafts/get-datatable', 'Drafts::getDatatable');
@@ -417,11 +571,80 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->match(['GET', 'POST'], 'administrator/drafts/delete/(:num)', 'Drafts::delete/$1');
     $routes->get('administrator/drafts/export', 'Drafts::export');
 
+    // Wave 3: Logistik & Pengiriman Sampel KOL (Full Parity with CI3 modules/kol_shipments)
     $routes->get('shipments', 'Shipments::index');
     $routes->post('shipments/get-datatable', 'Shipments::getDatatable');
     $routes->get('shipments/get-one/(:num)', 'Shipments::getOne/$1');
+    $routes->get('shipments/view/(:num)', 'Shipments::view/$1');
+    $routes->get('shipments/add', 'Shipments::add');
+    $routes->post('shipments/add_save', 'Shipments::add_save');
+    $routes->get('shipments/edit/(:num)', 'Shipments::edit/$1');
+    $routes->post('shipments/edit_save/(:num)', 'Shipments::edit_save/$1');
     $routes->post('shipments/save', 'Shipments::save');
     $routes->post('shipments/update-status/(:num)', 'Shipments::updateStatus/$1');
+    $routes->post('shipments/update_status', 'Shipments::update_status');
+    $routes->post('shipments/bulk-update-status', 'Shipments::bulk_update_status');
+    $routes->post('shipments/bulk_update_status', 'Shipments::bulk_update_status');
+    $routes->match(['GET', 'POST'], 'shipments/delete/(:num)', 'Shipments::delete/$1');
+    $routes->match(['GET', 'POST'], 'shipments/delete', 'Shipments::delete');
+    $routes->post('shipments/bulk-delete', 'Shipments::bulkDelete');
+    $routes->get('shipments/export', 'Shipments::export');
+    $routes->get('shipments/export-pdf', 'Shipments::export_pdf');
+    $routes->get('shipments/export_pdf', 'Shipments::export_pdf');
+    $routes->get('shipments/single-pdf/(:num)', 'Shipments::single_pdf/$1');
+    $routes->get('shipments/single_pdf/(:num)', 'Shipments::single_pdf/$1');
+
+    // CI3 Parity Aliases for Kol Shipments (modules/kol_shipments)
+    $routes->get('administrator/kol_shipments', 'Shipments::index');
+    $routes->get('administrator/kol_shipments/index', 'Shipments::index');
+    $routes->get('administrator/kol_shipments/index/(:num)', 'Shipments::index');
+    $routes->get('administrator/kol_shipments/add', 'Shipments::add');
+    $routes->post('administrator/kol_shipments/add_save', 'Shipments::add_save');
+    $routes->get('administrator/kol_shipments/edit/(:num)', 'Shipments::edit/$1');
+    $routes->post('administrator/kol_shipments/edit_save/(:num)', 'Shipments::edit_save/$1');
+    $routes->get('administrator/kol_shipments/view/(:num)', 'Shipments::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_shipments/delete/(:num)', 'Shipments::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_shipments/delete', 'Shipments::delete');
+    $routes->post('administrator/kol_shipments/update_status', 'Shipments::update_status');
+    $routes->post('administrator/kol_shipments/bulk_update_status', 'Shipments::bulk_update_status');
+    $routes->get('administrator/kol_shipments/export', 'Shipments::export');
+    $routes->get('administrator/kol_shipments/export_pdf', 'Shipments::export_pdf');
+    $routes->get('administrator/kol_shipments/single_pdf/(:num)', 'Shipments::single_pdf/$1');
+
+    // Wave 3.1: Logistik & Rincian Item Sampel Pengiriman (Full Parity with CI3 modules/kol_shipment_items)
+    $routes->get('shipment-items', 'ShipmentItems::index');
+    $routes->get('kol-shipment-items', 'ShipmentItems::index');
+    $routes->post('shipment-items/get-datatable', 'ShipmentItems::getDatatable');
+    $routes->post('kol-shipment-items/get-datatable', 'ShipmentItems::getDatatable');
+    $routes->get('shipment-items/get-one/(:num)', 'ShipmentItems::getOne/$1');
+    $routes->get('shipment-items/view/(:num)', 'ShipmentItems::view/$1');
+    $routes->get('shipment-items/add', 'ShipmentItems::add');
+    $routes->post('shipment-items/add_save', 'ShipmentItems::add_save');
+    $routes->get('shipment-items/edit/(:num)', 'ShipmentItems::edit/$1');
+    $routes->post('shipment-items/edit_save/(:num)', 'ShipmentItems::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'shipment-items/delete/(:num)', 'ShipmentItems::delete/$1');
+    $routes->match(['GET', 'POST'], 'shipment-items/delete', 'ShipmentItems::delete');
+    $routes->post('shipment-items/bulk-delete', 'ShipmentItems::bulkDelete');
+    $routes->get('shipment-items/export', 'ShipmentItems::export');
+    $routes->get('shipment-items/export-pdf', 'ShipmentItems::export_pdf');
+    $routes->get('shipment-items/export_pdf', 'ShipmentItems::export_pdf');
+    $routes->get('shipment-items/single-pdf/(:num)', 'ShipmentItems::single_pdf/$1');
+    $routes->get('shipment-items/single_pdf/(:num)', 'ShipmentItems::single_pdf/$1');
+
+    // CI3 Parity Aliases for Kol Shipment Items (modules/kol_shipment_items)
+    $routes->get('administrator/kol_shipment_items', 'ShipmentItems::index');
+    $routes->get('administrator/kol_shipment_items/index', 'ShipmentItems::index');
+    $routes->get('administrator/kol_shipment_items/index/(:num)', 'ShipmentItems::index');
+    $routes->get('administrator/kol_shipment_items/add', 'ShipmentItems::add');
+    $routes->post('administrator/kol_shipment_items/add_save', 'ShipmentItems::add_save');
+    $routes->get('administrator/kol_shipment_items/edit/(:num)', 'ShipmentItems::edit/$1');
+    $routes->post('administrator/kol_shipment_items/edit_save/(:num)', 'ShipmentItems::edit_save/$1');
+    $routes->get('administrator/kol_shipment_items/view/(:num)', 'ShipmentItems::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_shipment_items/delete/(:num)', 'ShipmentItems::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/kol_shipment_items/delete', 'ShipmentItems::delete');
+    $routes->get('administrator/kol_shipment_items/export', 'ShipmentItems::export');
+    $routes->get('administrator/kol_shipment_items/export_pdf', 'ShipmentItems::export_pdf');
+    $routes->get('administrator/kol_shipment_items/single_pdf/(:num)', 'ShipmentItems::single_pdf/$1');
 
     // Wave 4: Postings, Metrics, Sentiment & Kalender (Full Parity with CI3 modules/postings)
     $routes->get('postings', 'Postings::index');
@@ -492,49 +715,174 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('administrator/kalender/get_events', 'Kalender::get_events');
     $routes->get('administrator/kalender/get-events', 'Kalender::getEvents');
 
-    // Wave 7: Backoffice CMS Artikel Blog & Landing
+    // Wave 7: Backoffice CMS Artikel Blog & Landing (Full Parity with CI3 modules/articles)
     $routes->get('articles', 'Articles::index');
+    $routes->get('articles/index', 'Articles::index');
+    $routes->get('articles/index/(:num)', 'Articles::index/$1');
     $routes->post('articles/get-datatable', 'Articles::getDatatable');
+    $routes->post('articles/get_datatable', 'Articles::getDatatable');
     $routes->get('articles/get-one/(:num)', 'Articles::getOne/$1');
-    $routes->post('articles/save', 'Articles::save');
-    $routes->post('articles/delete/(:num)', 'Articles::delete/$1');
+    $routes->get('articles/get_one/(:num)', 'Articles::getOne/$1');
+    $routes->get('articles/add', 'Articles::add');
+    $routes->post('articles/add_save', 'Articles::add_save');
+    $routes->post('articles/add-save', 'Articles::add_save');
+    $routes->get('articles/edit/(:num)', 'Articles::edit/$1');
+    $routes->post('articles/edit_save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('articles/edit-save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('articles/edit_save', 'Articles::edit_save');
+    $routes->get('articles/view/(:num)', 'Articles::view/$1');
+    $routes->match(['GET', 'POST'], 'articles/delete/(:num)', 'Articles::delete/$1');
+    $routes->match(['GET', 'POST'], 'articles/delete', 'Articles::delete');
+    $routes->post('articles/publish/(:num)', 'Articles::publish/$1');
+    $routes->post('articles/unpublish/(:num)', 'Articles::unpublish/$1');
+    $routes->post('articles/archive/(:num)', 'Articles::archive/$1');
+    $routes->match(['GET', 'POST'], 'articles/upload_cover_file', 'Articles::upload_cover_file');
+    $routes->match(['GET', 'POST'], 'articles/delete_cover_file/(:segment)', 'Articles::delete_cover_file/$1');
+    $routes->match(['GET', 'POST'], 'articles/delete_cover_file', 'Articles::delete_cover_file');
+    $routes->get('articles/get_cover_file/(:num)', 'Articles::get_cover_file/$1');
+    $routes->get('articles/export', 'Articles::export');
+    $routes->get('articles/export_pdf', 'Articles::export_pdf');
+    $routes->get('articles/single_pdf/(:num)', 'Articles::single_pdf/$1');
+    $routes->get('articles/read/(:segment)', 'Articles::read/$1');
 
-    // Wave 8: WhatsApp Communication Console & Broadcast
+    // CI3 Legacy Aliases (administrator/articles/*)
+    $routes->get('administrator/articles', 'Articles::index');
+    $routes->get('administrator/articles/index', 'Articles::index');
+    $routes->get('administrator/articles/index/(:num)', 'Articles::index/$1');
+    $routes->post('administrator/articles/get-datatable', 'Articles::getDatatable');
+    $routes->post('administrator/articles/get_datatable', 'Articles::getDatatable');
+    $routes->get('administrator/articles/add', 'Articles::add');
+    $routes->post('administrator/articles/add_save', 'Articles::add_save');
+    $routes->post('administrator/articles/add-save', 'Articles::add_save');
+    $routes->get('administrator/articles/edit/(:num)', 'Articles::edit/$1');
+    $routes->post('administrator/articles/edit_save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('administrator/articles/edit-save/(:num)', 'Articles::edit_save/$1');
+    $routes->post('administrator/articles/edit_save', 'Articles::edit_save');
+    $routes->get('administrator/articles/view/(:num)', 'Articles::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete/(:num)', 'Articles::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete', 'Articles::delete');
+    $routes->post('administrator/articles/publish/(:num)', 'Articles::publish/$1');
+    $routes->post('administrator/articles/unpublish/(:num)', 'Articles::unpublish/$1');
+    $routes->post('administrator/articles/archive/(:num)', 'Articles::archive/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/upload_cover_file', 'Articles::upload_cover_file');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete_cover_file/(:segment)', 'Articles::delete_cover_file/$1');
+    $routes->match(['GET', 'POST'], 'administrator/articles/delete_cover_file', 'Articles::delete_cover_file');
+    $routes->get('administrator/articles/get_cover_file/(:num)', 'Articles::get_cover_file/$1');
+    $routes->get('administrator/articles/export', 'Articles::export');
+    $routes->get('administrator/articles/export_pdf', 'Articles::export_pdf');
+    $routes->get('administrator/articles/single_pdf/(:num)', 'Articles::single_pdf/$1');
+
+    // Wave 8: WhatsApp Communication Console & Broadcast (Full Parity with CI3 modules/whatsapp)
     $routes->get('whatsapp', 'Whatsapp::index');
+    $routes->get('whatsapp/index', 'Whatsapp::index');
+    $routes->get('whatsapp/index/(:num)', 'Whatsapp::index/$1');
+    $routes->get('whatsapp/chat', 'Whatsapp::chat');
     $routes->get('whatsapp/chat/(:num)', 'Whatsapp::chat/$1');
-    $routes->post('whatsapp/send', 'Whatsapp::ajaxSendMessage');
-    $routes->get('whatsapp/poll/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->match(['GET', 'POST'], 'whatsapp/send', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-send-message', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_send_message', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'whatsapp/send-media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-send-media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_send_media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'whatsapp/poll/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->match(['GET', 'POST'], 'whatsapp/poll', 'Whatsapp::ajaxPollMessages');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-poll-messages', 'Whatsapp::ajaxPollMessages');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_poll_messages', 'Whatsapp::ajaxPollMessages');
+    $routes->get('whatsapp/unread-counts', 'Whatsapp::ajaxUnreadCounts');
+    $routes->get('whatsapp/ajax-unread-counts', 'Whatsapp::ajaxUnreadCounts');
+    $routes->get('whatsapp/ajax_unread_counts', 'Whatsapp::ajaxUnreadCounts');
     $routes->get('whatsapp/session-status', 'Whatsapp::ajaxSessionStatus');
-    $routes->post('whatsapp/start-session', 'Whatsapp::ajaxStartSession');
+    $routes->get('whatsapp/ajax-session-status', 'Whatsapp::ajaxSessionStatus');
+    $routes->get('whatsapp/ajax_session_status', 'Whatsapp::ajaxSessionStatus');
+    $routes->match(['GET', 'POST'], 'whatsapp/start-session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-start-session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_start_session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'whatsapp/logout-waha', 'Whatsapp::ajaxLogoutWaha');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax-logout-waha', 'Whatsapp::ajaxLogoutWaha');
+    $routes->match(['GET', 'POST'], 'whatsapp/ajax_logout_waha', 'Whatsapp::ajaxLogoutWaha');
     $routes->get('whatsapp/broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->get('whatsapp/ajax-get-broadcast-kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->get('whatsapp/ajax_get_broadcast_kols', 'Whatsapp::ajaxGetBroadcastKols');
     $routes->post('whatsapp/send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
+    $routes->post('whatsapp/ajax-send-broadcast-item', 'Whatsapp::ajaxSendBroadcastItem');
+    $routes->post('whatsapp/ajax_send_broadcast_item', 'Whatsapp::ajaxSendBroadcastItem');
+
+    // CI3 Parity Aliases for WhatsApp (modules/whatsapp)
+    $routes->get('administrator/whatsapp', 'Whatsapp::index');
+    $routes->get('administrator/whatsapp/index', 'Whatsapp::index');
+    $routes->get('administrator/whatsapp/index/(:num)', 'Whatsapp::index/$1');
+    $routes->get('administrator/whatsapp/chat', 'Whatsapp::chat');
+    $routes->get('administrator/whatsapp/chat/(:num)', 'Whatsapp::chat/$1');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_send_message', 'Whatsapp::ajaxSendMessage');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_send_media', 'Whatsapp::ajaxSendMedia');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_poll_messages', 'Whatsapp::ajaxPollMessages');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_poll_messages/(:num)', 'Whatsapp::ajaxPollMessages/$1');
+    $routes->get('administrator/whatsapp/ajax_unread_counts', 'Whatsapp::ajaxUnreadCounts');
+    $routes->get('administrator/whatsapp/ajax_session_status', 'Whatsapp::ajaxSessionStatus');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_start_session', 'Whatsapp::ajaxStartSession');
+    $routes->match(['GET', 'POST'], 'administrator/whatsapp/ajax_logout_waha', 'Whatsapp::ajaxLogoutWaha');
+    $routes->get('administrator/whatsapp/ajax_get_broadcast_kols', 'Whatsapp::ajaxGetBroadcastKols');
+    $routes->post('administrator/whatsapp/ajax_send_broadcast_item', 'Whatsapp::ajaxSendBroadcastItem');
 
     // Wave 9: Monitoring Scraping & Apify Jobs (Full Parity with CI3 modules/apify_jobs)
-    $routes->get('scraping-jobs', 'ScrapingJobs::index');
-    $routes->post('scraping-jobs/get-datatable', 'ScrapingJobs::getDatatable');
-    $routes->get('scraping-jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->get('scraping-jobs/get-one/(:num)', 'ScrapingJobs::getOne/$1');
-    $routes->post('scraping-jobs/retry/(:num)', 'ScrapingJobs::retry/$1');
-    $routes->post('scraping-jobs/trigger', 'ScrapingJobs::triggerNew');
-    $routes->match(['GET', 'POST'], 'scraping-jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->post('scraping-jobs/bulk-delete', 'ScrapingJobs::bulkDelete');
-    $routes->get('scraping-jobs/export', 'ScrapingJobs::export');
+    $routes->get('apify-jobs', 'ApifyJobs::index');
+    $routes->get('apify-jobs/index', 'ApifyJobs::index');
+    $routes->match(['GET', 'POST'], 'apify-jobs/get-datatable', 'ApifyJobs::getDatatable');
+    $routes->get('apify-jobs/get-one/(:num)', 'ApifyJobs::getOne/$1');
+    $routes->get('apify-jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/retry/(:num)', 'ApifyJobs::retry/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/trigger', 'ApifyJobs::triggerNew');
+    $routes->match(['GET', 'POST'], 'apify-jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'apify-jobs/delete', 'ApifyJobs::delete');
+    $routes->post('apify-jobs/bulk-delete', 'ApifyJobs::bulkDelete');
+    $routes->get('apify-jobs/export', 'ApifyJobs::export');
+    $routes->get('apify-jobs/export-pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify-jobs/export_pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify-jobs/single-pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+    $routes->get('apify-jobs/single_pdf/(:num)', 'ApifyJobs::single_pdf/$1');
 
-    // CI3 Parity Aliases (apify-jobs & apify_jobs)
-    $routes->get('apify-jobs', 'ScrapingJobs::index');
-    $routes->get('apify_jobs', 'ScrapingJobs::index');
-    $routes->post('apify-jobs/get-datatable', 'ScrapingJobs::getDatatable');
-    $routes->post('apify_jobs/get-datatable', 'ScrapingJobs::getDatatable');
-    $routes->get('apify-jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->get('apify_jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->match(['GET', 'POST'], 'apify-jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->match(['GET', 'POST'], 'apify_jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->get('apify-jobs/export', 'ScrapingJobs::export');
-    $routes->get('apify_jobs/export', 'ScrapingJobs::export');
-    $routes->get('administrator/apify_jobs', 'ScrapingJobs::index');
-    $routes->get('administrator/apify_jobs/view/(:num)', 'ScrapingJobs::view/$1');
-    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete/(:num)', 'ScrapingJobs::delete/$1');
-    $routes->get('administrator/apify_jobs/export', 'ScrapingJobs::export');
+    // Snake_case aliases (apify_jobs)
+    $routes->get('apify_jobs', 'ApifyJobs::index');
+    $routes->get('apify_jobs/index', 'ApifyJobs::index');
+    $routes->match(['GET', 'POST'], 'apify_jobs/get-datatable', 'ApifyJobs::getDatatable');
+    $routes->get('apify_jobs/get-one/(:num)', 'ApifyJobs::getOne/$1');
+    $routes->get('apify_jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/retry/(:num)', 'ApifyJobs::retry/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/trigger', 'ApifyJobs::triggerNew');
+    $routes->match(['GET', 'POST'], 'apify_jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'apify_jobs/delete', 'ApifyJobs::delete');
+    $routes->post('apify_jobs/bulk-delete', 'ApifyJobs::bulkDelete');
+    $routes->get('apify_jobs/export', 'ApifyJobs::export');
+    $routes->get('apify_jobs/export-pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify_jobs/export_pdf', 'ApifyJobs::export_pdf');
+    $routes->get('apify_jobs/single-pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+    $routes->get('apify_jobs/single_pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+
+    // Scraping-jobs alias backwards-compatibility
+    $routes->get('scraping-jobs', 'ApifyJobs::index');
+    $routes->get('scraping-jobs/index', 'ApifyJobs::index');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/get-datatable', 'ApifyJobs::getDatatable');
+    $routes->get('scraping-jobs/get-one/(:num)', 'ApifyJobs::getOne/$1');
+    $routes->get('scraping-jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/retry/(:num)', 'ApifyJobs::retry/$1');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/trigger', 'ApifyJobs::triggerNew');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'scraping-jobs/delete', 'ApifyJobs::delete');
+    $routes->post('scraping-jobs/bulk-delete', 'ApifyJobs::bulkDelete');
+    $routes->get('scraping-jobs/export', 'ApifyJobs::export');
+    $routes->get('scraping-jobs/export-pdf', 'ApifyJobs::export_pdf');
+    $routes->get('scraping-jobs/single-pdf/(:num)', 'ApifyJobs::single_pdf/$1');
+
+    // CI3 Legacy Aliases (administrator/apify_jobs)
+    $routes->get('administrator/apify_jobs', 'ApifyJobs::index');
+    $routes->get('administrator/apify_jobs/index', 'ApifyJobs::index');
+    $routes->get('administrator/apify_jobs/index/(:num)', 'ApifyJobs::index');
+    $routes->get('administrator/apify_jobs/view/(:num)', 'ApifyJobs::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete/(:num)', 'ApifyJobs::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/apify_jobs/delete', 'ApifyJobs::delete');
+    $routes->get('administrator/apify_jobs/export', 'ApifyJobs::export');
+    $routes->get('administrator/apify_jobs/export_pdf', 'ApifyJobs::export_pdf');
+    $routes->get('administrator/apify_jobs/single_pdf/(:num)', 'ApifyJobs::single_pdf/$1');
 
     // Wave 12: Direktori & Performance KOL (View Only Intelligence)
     $routes->get('kols', 'Kols::index');
@@ -647,48 +995,334 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
 // CAMPAIGN MANAGEMENT — AKSES STRATEGIS, EVALUASI & KEUANGAN (LEADER & SUPERADMIN)
 // --------------------------------------------------------------------
 $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) {
-    // Wave 5: Evaluasi Kinerja Internal Tim Operasional
-    $routes->get('evaluations', 'InternalEvaluation::index');
-    $routes->get('evaluations/staff', 'InternalEvaluation::staff');
-    $routes->get('evaluations/export-excel', 'InternalEvaluation::exportExcel');
-    $routes->get('internal-evaluation', 'InternalEvaluation::index');
-    $routes->get('internal-evaluation/export-excel', 'InternalEvaluation::exportExcel');
-    // Wave 6: Executive Finance Hub
-    $routes->get('finance', 'FinanceHub::index');
-    $routes->get('finance-hub', 'FinanceHub::index');
-    $routes->post('finance/get-datatable', 'FinanceHub::getDatatable');
-    $routes->post('finance-hub/get-datatable', 'FinanceHub::getDatatable');
-    $routes->post('finance/reject-invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
-    $routes->post('finance/upload-bupot/(:num)', 'FinanceHub::uploadBupot/$1');
-    $routes->get('finance/invoice-print/(:num)', 'FinanceHub::printInvoice/$1');
+    // Wave 5: Evaluasi Kinerja Internal Tim Operasional & Leader (Full CI4 & CI3 Parity)
+    foreach (['evaluations', 'internal-evaluation', 'internal_evaluation', 'administrator/internal_evaluation'] as $prefix) {
+        $routes->get($prefix, 'InternalEvaluation::index');
+        $routes->get($prefix . '/index', 'InternalEvaluation::index');
+        $routes->get($prefix . '/staff', 'InternalEvaluation::staff');
+        $routes->get($prefix . '/leader', 'InternalEvaluation::leader');
+        $routes->get($prefix . '/export-excel', 'InternalEvaluation::exportExcel');
+        $routes->get($prefix . '/export_excel', 'InternalEvaluation::export_excel');
+        $routes->get($prefix . '/staff-export-excel', 'InternalEvaluation::staff_export_excel');
+        $routes->get($prefix . '/staff_export_excel', 'InternalEvaluation::staff_export_excel');
+        $routes->get($prefix . '/leader-export-excel', 'InternalEvaluation::leader_export_excel');
+        $routes->get($prefix . '/leader_export_excel', 'InternalEvaluation::leader_export_excel');
+        $routes->match(['GET', 'POST'], $prefix . '/get-staff-kpis', 'InternalEvaluation::getStaffKpisJson');
+        $routes->match(['GET', 'POST'], $prefix . '/get_staff_kpis', 'InternalEvaluation::getStaffKpisJson');
+        $routes->match(['GET', 'POST'], $prefix . '/get-leader-kpis', 'InternalEvaluation::getLeaderKpisJson');
+        $routes->match(['GET', 'POST'], $prefix . '/get_leader_kpis', 'InternalEvaluation::getLeaderKpisJson');
+    }
+    // Wave 6: Executive Finance Hub (Full Parity with CI3 modules/finance_hub)
+    foreach (['finance', 'finance-hub', 'finance_hub'] as $prefix) {
+        $routes->get($prefix, 'FinanceHub::index');
+        $routes->get($prefix . '/index', 'FinanceHub::index');
+        $routes->match(['GET', 'POST'], $prefix . '/get-datatable', 'FinanceHub::getDatatable');
+        $routes->match(['GET', 'POST'], $prefix . '/getDatatable', 'FinanceHub::getDatatable');
+        $routes->post($prefix . '/approve-invoice', 'FinanceHub::approve_invoice');
+        $routes->post($prefix . '/approve_invoice', 'FinanceHub::approve_invoice');
+        $routes->post($prefix . '/approve-invoice/(:num)', 'FinanceHub::approveInvoice/$1');
+        $routes->post($prefix . '/approve_invoice/(:num)', 'FinanceHub::approveInvoice/$1');
+        $routes->post($prefix . '/reject-invoice', 'FinanceHub::reject_invoice');
+        $routes->post($prefix . '/reject_invoice', 'FinanceHub::reject_invoice');
+        $routes->post($prefix . '/reject-invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
+        $routes->post($prefix . '/reject_invoice/(:num)', 'FinanceHub::rejectInvoice/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/upload-bupot', 'FinanceHub::upload_bupot');
+        $routes->match(['GET', 'POST'], $prefix . '/upload_bupot', 'FinanceHub::upload_bupot');
+        $routes->match(['GET', 'POST'], $prefix . '/upload-bupot/(:num)', 'FinanceHub::uploadBupot/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/upload_bupot/(:num)', 'FinanceHub::uploadBupot/$1');
+        $routes->post($prefix . '/save-payment', 'FinanceHub::save_payment');
+        $routes->post($prefix . '/save_payment', 'FinanceHub::save_payment');
+        $routes->get($prefix . '/get_invoice_history_ajax/(:num)', 'FinanceHub::get_invoice_history_ajax/$1');
+        $routes->get($prefix . '/view_invoice_file/(:num)', 'FinanceHub::view_invoice_file/$1');
+        $routes->get($prefix . '/invoice-print/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/invoice_print/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/print-invoice/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/print_invoice/(:num)', 'FinanceHub::printInvoice/$1');
+        $routes->get($prefix . '/export', 'FinanceHub::export');
+        $routes->get($prefix . '/export-pdf', 'FinanceHub::export_pdf');
+        $routes->get($prefix . '/export_pdf', 'FinanceHub::export_pdf');
+    }
+
+    // Legacy CI3 Routes: administrator/finance_hub/*
+    $routes->get('administrator/finance_hub', 'Finance_hub::index');
+    $routes->get('administrator/finance_hub/index', 'Finance_hub::index');
+    $routes->get('administrator/finance_hub/index/(:num)', 'Finance_hub::index/$1');
+    $routes->post('administrator/finance_hub/approve_invoice', 'Finance_hub::approve_invoice');
+    $routes->post('administrator/finance_hub/reject_invoice', 'Finance_hub::reject_invoice');
+    $routes->match(['GET', 'POST'], 'administrator/finance_hub/upload_bupot', 'Finance_hub::upload_bupot');
+    $routes->post('administrator/finance_hub/save_payment', 'Finance_hub::save_payment');
+    $routes->get('administrator/finance_hub/get_invoice_history_ajax/(:num)', 'Finance_hub::get_invoice_history_ajax/$1');
+    $routes->get('administrator/finance_hub/view_invoice_file/(:num)', 'Finance_hub::view_invoice_file/$1');
+    $routes->get('administrator/finance_hub/export', 'Finance_hub::export');
+    $routes->get('administrator/finance_hub/export_pdf', 'Finance_hub::export_pdf');
 
     // Wave 6: Invoices & Finansial
     $routes->get('invoices', 'Invoices::index');
-    $routes->post('invoices/get-datatable', 'Invoices::getDatatable');
+    $routes->get('invoices/index', 'Invoices::index');
+    $routes->match(['GET', 'POST'], 'invoices/get-datatable', 'Invoices::getDatatable');
+    $routes->match(['GET', 'POST'], 'invoices/getDatatable', 'Invoices::getDatatable');
     $routes->get('invoices/get-one/(:num)', 'Invoices::getOne/$1');
-    $routes->post('invoices/create-from-deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->get('invoices/getOne/(:num)', 'Invoices::getOne/$1');
+    $routes->get('invoices/view/(:num)', 'Invoices::view/$1');
+    $routes->get('invoices/add', 'Invoices::add');
+    $routes->post('invoices/add_save', 'Invoices::add_save');
+    $routes->post('invoices/add-save', 'Invoices::add_save');
+    $routes->match(['GET', 'POST'], 'invoices/create-from-deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->match(['GET', 'POST'], 'invoices/create_from_deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->match(['GET', 'POST'], 'invoices/createFromDeal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->get('invoices/edit/(:num)', 'Invoices::edit/$1');
+    $routes->post('invoices/edit_save/(:num)', 'Invoices::edit_save/$1');
+    $routes->post('invoices/edit-save/(:num)', 'Invoices::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'invoices/delete/(:num)', 'Invoices::delete/$1');
+    $routes->match(['GET', 'POST'], 'invoices/delete', 'Invoices::delete');
+    $routes->post('invoices/bulk-delete', 'Invoices::bulkDelete');
+    $routes->post('invoices/bulkDelete', 'Invoices::bulkDelete');
+    $routes->get('invoices/export', 'Invoices::export');
+    $routes->get('invoices/export-pdf', 'Invoices::export_pdf');
+    $routes->get('invoices/export_pdf', 'Invoices::export_pdf');
+    $routes->get('invoices/single-pdf/(:num)', 'Invoices::single_pdf/$1');
+    $routes->get('invoices/single_pdf/(:num)', 'Invoices::single_pdf/$1');
+    $routes->get('invoices/print-pdf/(:num)', 'Invoices::print_pdf/$1');
+    $routes->get('invoices/print_pdf/(:num)', 'Invoices::print_pdf/$1');
+    $routes->get('invoices/my-invoices', 'Invoices::my_invoices');
+    $routes->get('invoices/my_invoices', 'Invoices::my_invoices');
+    $routes->match(['GET', 'POST'], 'invoices/upload_invoice_file_file', 'Invoices::upload_invoice_file_file');
+    $routes->match(['GET', 'POST'], 'invoices/delete_invoice_file_file/(:segment)', 'Invoices::delete_invoice_file_file/$1');
+    $routes->match(['GET', 'POST'], 'invoices/delete_invoice_file_file', 'Invoices::delete_invoice_file_file');
+    $routes->get('invoices/get_invoice_file_file/(:num)', 'Invoices::get_invoice_file_file/$1');
     $routes->post('invoices/verify/(:num)', 'Invoices::verify/$1');
     $routes->post('invoices/save-payment/(:num)', 'Invoices::savePayment/$1');
 
-    // Wave 6: Contracts & Komisi
+    // CI3 Legacy Aliases (administrator/invoices & administrator/my_invoices)
+    $routes->get('administrator/invoices', 'Invoices::index');
+    $routes->get('administrator/invoices/index', 'Invoices::index');
+    $routes->get('administrator/invoices/index/(:num)', 'Invoices::index');
+    $routes->get('administrator/invoices/add', 'Invoices::add');
+    $routes->post('administrator/invoices/add_save', 'Invoices::add_save');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/create_from_deal/(:num)', 'Invoices::createFromDeal/$1');
+    $routes->get('administrator/invoices/edit/(:num)', 'Invoices::edit/$1');
+    $routes->post('administrator/invoices/edit_save/(:num)', 'Invoices::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/delete/(:num)', 'Invoices::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/delete', 'Invoices::delete');
+    $routes->get('administrator/invoices/view/(:num)', 'Invoices::view/$1');
+    $routes->get('administrator/invoices/export', 'Invoices::export');
+    $routes->get('administrator/invoices/export_pdf', 'Invoices::export_pdf');
+    $routes->get('administrator/invoices/single_pdf/(:num)', 'Invoices::single_pdf/$1');
+    $routes->get('administrator/invoices/print_pdf/(:num)', 'Invoices::print_pdf/$1');
+    $routes->get('administrator/invoices/my_invoices', 'Invoices::my_invoices');
+    $routes->get('administrator/my_invoices', 'Invoices::my_invoices');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/upload_invoice_file_file', 'Invoices::upload_invoice_file_file');
+    $routes->match(['GET', 'POST'], 'administrator/invoices/delete_invoice_file_file/(:segment)', 'Invoices::delete_invoice_file_file/$1');
+    $routes->get('administrator/invoices/get_invoice_file_file/(:num)', 'Invoices::get_invoice_file_file/$1');
+
+    // Wave 6: Contracts & MoU (Full Parity with CI3 modules/campaign_kol_contracts)
     $routes->get('contracts', 'Contracts::index');
-    $routes->post('contracts/get-datatable', 'Contracts::getDatatable');
+    $routes->get('contracts/index', 'Contracts::index');
+    $routes->match(['GET', 'POST'], 'contracts/get-datatable', 'Contracts::getDatatable');
+    $routes->match(['GET', 'POST'], 'contracts/getDatatable', 'Contracts::getDatatable');
     $routes->get('contracts/get-one/(:num)', 'Contracts::getOne/$1');
+    $routes->get('contracts/getOne/(:num)', 'Contracts::getOne/$1');
+    $routes->get('contracts/view/(:num)', 'Contracts::view/$1');
+    $routes->get('contracts/add', 'Contracts::add');
+    $routes->post('contracts/add_save', 'Contracts::add_save');
+    $routes->post('contracts/add-save', 'Contracts::add_save');
     $routes->post('contracts/generate', 'Contracts::generate');
-    $routes->get('contracts/print/(:num)', 'Contracts::printContract/$1');
+    $routes->post('contracts/create_draft_ajax', 'Contracts::create_draft_ajax');
+    $routes->post('contracts/create-draft-ajax', 'Contracts::create_draft_ajax');
+    $routes->get('contracts/edit/(:num)', 'Contracts::edit/$1');
+    $routes->post('contracts/edit_save/(:num)', 'Contracts::edit_save/$1');
+    $routes->post('contracts/edit-save/(:num)', 'Contracts::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'contracts/delete/(:num)', 'Contracts::delete/$1');
+    $routes->match(['GET', 'POST'], 'contracts/delete', 'Contracts::delete');
+    $routes->post('contracts/bulk-delete', 'Contracts::bulkDelete');
+    $routes->post('contracts/bulkDelete', 'Contracts::bulkDelete');
+    $routes->get('contracts/my-contracts', 'Contracts::my_contracts');
+    $routes->get('contracts/my_contracts', 'Contracts::my_contracts');
+    $routes->get('contracts/get_contract_html_ajax/(:num)', 'Contracts::get_contract_html_ajax/$1');
+    $routes->post('contracts/save_contract_snk_ajax', 'Contracts::save_contract_snk_ajax');
+    $routes->post('contracts/admin_counter_sign_action', 'Contracts::admin_counter_sign_action');
+    $routes->post('contracts/kol_sign_action', 'Contracts::kol_sign_action');
+    $routes->post('contracts/sign_contract_action', 'Contracts::sign_contract_action');
     $routes->post('contracts/sign/(:num)', 'Contracts::signContract/$1');
+    $routes->post('contracts/kol_issue_invoice_ajax', 'Contracts::kol_issue_invoice_ajax');
+    $routes->post('contracts/generate_initial_invoice_ajax', 'Contracts::generate_initial_invoice_ajax');
+    $routes->get('contracts/print/(:num)', 'Contracts::printContract/$1');
+    $routes->get('contracts/print-pdf/(:num)', 'Contracts::print_pdf/$1');
+    $routes->get('contracts/print_pdf/(:num)', 'Contracts::print_pdf/$1');
+    $routes->get('contracts/download-pdf/(:num)', 'Contracts::download_pdf/$1');
+    $routes->get('contracts/download_pdf/(:num)', 'Contracts::download_pdf/$1');
+    $routes->get('contracts/single-pdf/(:num)', 'Contracts::single_pdf/$1');
+    $routes->get('contracts/single_pdf/(:num)', 'Contracts::single_pdf/$1');
+    $routes->get('contracts/export', 'Contracts::export');
+    $routes->get('contracts/export-pdf', 'Contracts::export_pdf');
+    $routes->get('contracts/export_pdf', 'Contracts::export_pdf');
+    $routes->match(['GET', 'POST'], 'contracts/upload_contract_file_file', 'Contracts::upload_contract_file_file');
+    $routes->match(['GET', 'POST'], 'contracts/delete_contract_file_file/(:segment)', 'Contracts::delete_contract_file_file/$1');
+    $routes->match(['GET', 'POST'], 'contracts/delete_contract_file_file', 'Contracts::delete_contract_file_file');
+    $routes->get('contracts/get_contract_file_file/(:num)', 'Contracts::get_contract_file_file/$1');
 
-    // Wave 6: Master Contract Templates
+    // Snake_case & kebab-case aliases: campaign_kol_contracts & campaign-kol-contracts
+    foreach (['campaign_kol_contracts', 'campaign-kol-contracts'] as $prefix) {
+        $routes->get($prefix, 'CampaignKolContracts::index');
+        $routes->get($prefix . '/index', 'CampaignKolContracts::index');
+        $routes->match(['GET', 'POST'], $prefix . '/get-datatable', 'CampaignKolContracts::getDatatable');
+        $routes->match(['GET', 'POST'], $prefix . '/getDatatable', 'CampaignKolContracts::getDatatable');
+        $routes->get($prefix . '/view/(:num)', 'CampaignKolContracts::view/$1');
+        $routes->get($prefix . '/add', 'CampaignKolContracts::add');
+        $routes->post($prefix . '/add_save', 'CampaignKolContracts::add_save');
+        $routes->get($prefix . '/edit/(:num)', 'CampaignKolContracts::edit/$1');
+        $routes->post($prefix . '/edit_save/(:num)', 'CampaignKolContracts::edit_save/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/delete/(:num)', 'CampaignKolContracts::delete/$1');
+        $routes->match(['GET', 'POST'], $prefix . '/delete', 'CampaignKolContracts::delete');
+        $routes->get($prefix . '/my_contracts', 'CampaignKolContracts::my_contracts');
+        $routes->get($prefix . '/my-contracts', 'CampaignKolContracts::my_contracts');
+        $routes->get($prefix . '/print/(:num)', 'CampaignKolContracts::printContract/$1');
+        $routes->get($prefix . '/export', 'CampaignKolContracts::export');
+        $routes->get($prefix . '/export_pdf', 'CampaignKolContracts::export_pdf');
+        $routes->get($prefix . '/export-pdf', 'CampaignKolContracts::export_pdf');
+    }
+
+    // Legacy CI3 Routes: administrator/campaign_kol_contracts/*
+    $routes->get('administrator/campaign_kol_contracts', 'CampaignKolContracts::index');
+    $routes->get('administrator/campaign_kol_contracts/index', 'CampaignKolContracts::index');
+    $routes->get('administrator/campaign_kol_contracts/index/(:num)', 'CampaignKolContracts::index');
+    $routes->get('administrator/campaign_kol_contracts/add', 'CampaignKolContracts::add');
+    $routes->post('administrator/campaign_kol_contracts/add_save', 'CampaignKolContracts::add_save');
+    $routes->post('administrator/campaign_kol_contracts/create_draft_ajax', 'CampaignKolContracts::create_draft_ajax');
+    $routes->get('administrator/campaign_kol_contracts/edit/(:num)', 'CampaignKolContracts::edit/$1');
+    $routes->post('administrator/campaign_kol_contracts/edit_save/(:num)', 'CampaignKolContracts::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete/(:num)', 'CampaignKolContracts::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete', 'CampaignKolContracts::delete');
+    $routes->get('administrator/campaign_kol_contracts/view/(:num)', 'CampaignKolContracts::view/$1');
+    $routes->get('administrator/campaign_kol_contracts/my_contracts', 'CampaignKolContracts::my_contracts');
+    $routes->post('administrator/campaign_kol_contracts/sign_contract_action', 'CampaignKolContracts::sign_contract_action');
+    $routes->post('administrator/campaign_kol_contracts/admin_counter_sign_action', 'CampaignKolContracts::admin_counter_sign_action');
+    $routes->get('administrator/campaign_kol_contracts/get_contract_html_ajax/(:num)', 'CampaignKolContracts::get_contract_html_ajax/$1');
+    $routes->post('administrator/campaign_kol_contracts/save_contract_snk_ajax', 'CampaignKolContracts::save_contract_snk_ajax');
+    $routes->post('administrator/campaign_kol_contracts/kol_sign_action', 'CampaignKolContracts::kol_sign_action');
+    $routes->post('administrator/campaign_kol_contracts/kol_issue_invoice_ajax', 'CampaignKolContracts::kol_issue_invoice_ajax');
+    $routes->post('administrator/campaign_kol_contracts/generate_initial_invoice_ajax', 'CampaignKolContracts::generate_initial_invoice_ajax');
+    $routes->get('administrator/campaign_kol_contracts/download_pdf/(:num)', 'CampaignKolContracts::download_pdf/$1');
+    $routes->get('administrator/campaign_kol_contracts/single_pdf/(:num)', 'CampaignKolContracts::single_pdf/$1');
+    $routes->get('administrator/campaign_kol_contracts/export', 'CampaignKolContracts::export');
+    $routes->get('administrator/campaign_kol_contracts/export_pdf', 'CampaignKolContracts::export_pdf');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/upload_contract_file_file', 'CampaignKolContracts::upload_contract_file_file');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete_contract_file_file/(:segment)', 'CampaignKolContracts::delete_contract_file_file/$1');
+    $routes->match(['GET', 'POST'], 'administrator/campaign_kol_contracts/delete_contract_file_file', 'CampaignKolContracts::delete_contract_file_file');
+    $routes->get('administrator/campaign_kol_contracts/get_contract_file_file/(:num)', 'CampaignKolContracts::get_contract_file_file/$1');
+
+    // Wave 6: Master Contract Templates (Full CI4 & CI3 Parity)
     $routes->get('contract-templates', 'ContractTemplates::index');
-    $routes->post('contract-templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->get('contract-templates/index', 'ContractTemplates::index');
+    $routes->get('contract-templates/index/(:num)', 'ContractTemplates::index/$1');
+    $routes->match(['GET', 'POST'], 'contract-templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->match(['GET', 'POST'], 'contract-templates/get_datatable', 'ContractTemplates::getDatatable');
     $routes->get('contract-templates/get-one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->get('contract-templates/get_one/(:num)', 'ContractTemplates::getOne/$1');
     $routes->post('contract-templates/save', 'ContractTemplates::save');
-    $routes->post('contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->get('contract-templates/add', 'ContractTemplates::add');
+    $routes->post('contract-templates/add-save', 'ContractTemplates::add_save');
+    $routes->post('contract-templates/add_save', 'ContractTemplates::add_save');
+    $routes->get('contract-templates/edit/(:num)', 'ContractTemplates::edit/$1');
+    $routes->post('contract-templates/edit-save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract-templates/edit_save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract-templates/edit-save', 'ContractTemplates::edit_save');
+    $routes->post('contract-templates/edit_save', 'ContractTemplates::edit_save');
+    $routes->match(['GET', 'POST'], 'contract-templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->match(['GET', 'POST'], 'contract-templates/delete', 'ContractTemplates::delete');
+    $routes->get('contract-templates/view/(:num)', 'ContractTemplates::view/$1');
+    $routes->get('contract-templates/export', 'ContractTemplates::export');
+    $routes->get('contract-templates/export-pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract-templates/export_pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract-templates/single-pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract-templates/single_pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract-templates/preview-rendered/(:num)', 'ContractTemplates::preview_rendered/$1');
 
-    // Wave 10: Audit Trail & Activity Logs
+    // Underscore aliases: contract_templates
+    $routes->get('contract_templates', 'ContractTemplates::index');
+    $routes->get('contract_templates/index', 'ContractTemplates::index');
+    $routes->get('contract_templates/index/(:num)', 'ContractTemplates::index/$1');
+    $routes->match(['GET', 'POST'], 'contract_templates/get-datatable', 'ContractTemplates::getDatatable');
+    $routes->match(['GET', 'POST'], 'contract_templates/get_datatable', 'ContractTemplates::getDatatable');
+    $routes->get('contract_templates/get-one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->get('contract_templates/get_one/(:num)', 'ContractTemplates::getOne/$1');
+    $routes->post('contract_templates/save', 'ContractTemplates::save');
+    $routes->get('contract_templates/add', 'ContractTemplates::add');
+    $routes->post('contract_templates/add-save', 'ContractTemplates::add_save');
+    $routes->post('contract_templates/add_save', 'ContractTemplates::add_save');
+    $routes->get('contract_templates/edit/(:num)', 'ContractTemplates::edit/$1');
+    $routes->post('contract_templates/edit-save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract_templates/edit_save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('contract_templates/edit-save', 'ContractTemplates::edit_save');
+    $routes->post('contract_templates/edit_save', 'ContractTemplates::edit_save');
+    $routes->match(['GET', 'POST'], 'contract_templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->match(['GET', 'POST'], 'contract_templates/delete', 'ContractTemplates::delete');
+    $routes->get('contract_templates/view/(:num)', 'ContractTemplates::view/$1');
+    $routes->get('contract_templates/export', 'ContractTemplates::export');
+    $routes->get('contract_templates/export-pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract_templates/export_pdf', 'ContractTemplates::export_pdf');
+    $routes->get('contract_templates/single-pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract_templates/single_pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+    $routes->get('contract_templates/preview-rendered/(:num)', 'ContractTemplates::preview_rendered/$1');
+
+    // Legacy CI3 Administrator Aliases: administrator/contract_templates
+    $routes->get('administrator/contract_templates', 'ContractTemplates::index');
+    $routes->get('administrator/contract_templates/index', 'ContractTemplates::index');
+    $routes->get('administrator/contract_templates/index/(:num)', 'ContractTemplates::index/$1');
+    $routes->get('administrator/contract_templates/add', 'ContractTemplates::add');
+    $routes->post('administrator/contract_templates/add_save', 'ContractTemplates::add_save');
+    $routes->post('administrator/contract_templates/add-save', 'ContractTemplates::add_save');
+    $routes->get('administrator/contract_templates/edit/(:num)', 'ContractTemplates::edit/$1');
+    $routes->post('administrator/contract_templates/edit_save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('administrator/contract_templates/edit-save/(:num)', 'ContractTemplates::edit_save/$1');
+    $routes->post('administrator/contract_templates/edit_save', 'ContractTemplates::edit_save');
+    $routes->match(['GET', 'POST'], 'administrator/contract_templates/delete/(:num)', 'ContractTemplates::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/contract_templates/delete', 'ContractTemplates::delete');
+    $routes->get('administrator/contract_templates/view/(:num)', 'ContractTemplates::view/$1');
+    $routes->get('administrator/contract_templates/export', 'ContractTemplates::export');
+    $routes->get('administrator/contract_templates/export_pdf', 'ContractTemplates::export_pdf');
+    $routes->get('administrator/contract_templates/single_pdf/(:num)', 'ContractTemplates::single_pdf/$1');
+
+    // Wave 10: Audit Trail & Activity Logs (Full Parity with CI3 modules/audit_logs)
     $routes->get('audit-logs', 'AuditLogs::index');
-    $routes->post('audit-logs/get-datatable', 'AuditLogs::getDatatable');
+    $routes->get('audit-logs/index', 'AuditLogs::index');
+    $routes->match(['GET', 'POST'], 'audit-logs/get-datatable', 'AuditLogs::getDatatable');
     $routes->get('audit-logs/get-one/(:num)', 'AuditLogs::getOne/$1');
+    $routes->get('audit-logs/view/(:num)', 'AuditLogs::view/$1');
+    $routes->match(['GET', 'POST'], 'audit-logs/delete/(:num)', 'AuditLogs::delete/$1');
+    $routes->match(['GET', 'POST'], 'audit-logs/delete', 'AuditLogs::delete');
+    $routes->post('audit-logs/bulk-delete', 'AuditLogs::bulkDelete');
+    $routes->get('audit-logs/export', 'AuditLogs::export');
+    $routes->get('audit-logs/export-pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit-logs/export_pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit-logs/single-pdf/(:num)', 'AuditLogs::single_pdf/$1');
+    $routes->get('audit-logs/single_pdf/(:num)', 'AuditLogs::single_pdf/$1');
+
+    // Snake_case aliases (audit_logs)
+    $routes->get('audit_logs', 'AuditLogs::index');
+    $routes->get('audit_logs/index', 'AuditLogs::index');
+    $routes->match(['GET', 'POST'], 'audit_logs/get-datatable', 'AuditLogs::getDatatable');
+    $routes->get('audit_logs/get-one/(:num)', 'AuditLogs::getOne/$1');
+    $routes->get('audit_logs/view/(:num)', 'AuditLogs::view/$1');
+    $routes->match(['GET', 'POST'], 'audit_logs/delete/(:num)', 'AuditLogs::delete/$1');
+    $routes->match(['GET', 'POST'], 'audit_logs/delete', 'AuditLogs::delete');
+    $routes->post('audit_logs/bulk-delete', 'AuditLogs::bulkDelete');
+    $routes->get('audit_logs/export', 'AuditLogs::export');
+    $routes->get('audit_logs/export-pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit_logs/export_pdf', 'AuditLogs::export_pdf');
+    $routes->get('audit_logs/single-pdf/(:num)', 'AuditLogs::single_pdf/$1');
+    $routes->get('audit_logs/single_pdf/(:num)', 'AuditLogs::single_pdf/$1');
+
+    // CI3 Legacy Aliases (administrator/audit_logs)
+    $routes->get('administrator/audit_logs', 'AuditLogs::index');
+    $routes->get('administrator/audit_logs/index', 'AuditLogs::index');
+    $routes->get('administrator/audit_logs/index/(:num)', 'AuditLogs::index');
+    $routes->get('administrator/audit_logs/view/(:num)', 'AuditLogs::view/$1');
+    $routes->match(['GET', 'POST'], 'administrator/audit_logs/delete/(:num)', 'AuditLogs::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/audit_logs/delete', 'AuditLogs::delete');
+    $routes->get('administrator/audit_logs/export', 'AuditLogs::export');
+    $routes->get('administrator/audit_logs/export_pdf', 'AuditLogs::export_pdf');
+    $routes->get('administrator/audit_logs/single_pdf/(:num)', 'AuditLogs::single_pdf/$1');
 
     // Wave 11: Team & User Management
     $routes->get('users', 'Users::index');
@@ -697,7 +1331,57 @@ $routes->group('', ['filter' => 'auth:admin,leader'], static function ($routes) 
     $routes->post('users/save', 'Users::save');
     $routes->post('users/toggle-status/(:num)', 'Users::toggleStatus/$1');
 
-    $routes->get('payments', 'Invoices::index');
+    // Wave 12: Financial Disbursements & Payments (Full Parity with CI3 modules/payments)
+    $routes->get('payments', 'Payments::index');
+    $routes->get('payments/index', 'Payments::index');
+    $routes->match(['GET', 'POST'], 'payments/get-datatable', 'Payments::getDatatable');
+    $routes->match(['GET', 'POST'], 'payments/getDatatable', 'Payments::getDatatable');
+    $routes->get('payments/get-one/(:num)', 'Payments::getOne/$1');
+    $routes->get('payments/getOne/(:num)', 'Payments::getOne/$1');
+    $routes->get('payments/view/(:num)', 'Payments::view/$1');
+    $routes->get('payments/add', 'Payments::add');
+    $routes->post('payments/add_save', 'Payments::add_save');
+    $routes->post('payments/add-save', 'Payments::add_save');
+    $routes->get('payments/edit/(:num)', 'Payments::edit/$1');
+    $routes->post('payments/edit_save/(:num)', 'Payments::edit_save/$1');
+    $routes->post('payments/edit-save/(:num)', 'Payments::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'payments/delete/(:num)', 'Payments::delete/$1');
+    $routes->match(['GET', 'POST'], 'payments/delete', 'Payments::delete');
+    $routes->post('payments/bulk-delete', 'Payments::bulkDelete');
+    $routes->post('payments/bulkDelete', 'Payments::bulkDelete');
+    $routes->get('payments/get_invoice_balance/(:num)', 'Payments::get_invoice_balance/$1');
+    $routes->get('payments/get-invoice-balance/(:num)', 'Payments::get_invoice_balance/$1');
+    $routes->get('payments/export', 'Payments::export');
+    $routes->get('payments/export-pdf', 'Payments::export_pdf');
+    $routes->get('payments/export_pdf', 'Payments::export_pdf');
+    $routes->get('payments/single-pdf/(:num)', 'Payments::single_pdf/$1');
+    $routes->get('payments/single_pdf/(:num)', 'Payments::single_pdf/$1');
+    $routes->get('payments/receipt-pdf/(:num)', 'Payments::receipt_pdf/$1');
+    $routes->get('payments/receipt_pdf/(:num)', 'Payments::receipt_pdf/$1');
+    $routes->match(['GET', 'POST'], 'payments/upload_payment_proof_file_file', 'Payments::upload_payment_proof_file_file');
+    $routes->match(['GET', 'POST'], 'payments/delete_payment_proof_file_file/(:segment)', 'Payments::delete_payment_proof_file_file/$1');
+    $routes->match(['GET', 'POST'], 'payments/delete_payment_proof_file_file', 'Payments::delete_payment_proof_file_file');
+    $routes->get('payments/get_payment_proof_file_file/(:num)', 'Payments::get_payment_proof_file_file/$1');
+
+    // Legacy CI3 Payments Aliases (administrator/payments/*)
+    $routes->get('administrator/payments', 'Payments::index');
+    $routes->get('administrator/payments/index', 'Payments::index');
+    $routes->get('administrator/payments/index/(:num)', 'Payments::index');
+    $routes->get('administrator/payments/add', 'Payments::add');
+    $routes->post('administrator/payments/add_save', 'Payments::add_save');
+    $routes->get('administrator/payments/edit/(:num)', 'Payments::edit/$1');
+    $routes->post('administrator/payments/edit_save/(:num)', 'Payments::edit_save/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete/(:num)', 'Payments::delete/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete', 'Payments::delete');
+    $routes->get('administrator/payments/view/(:num)', 'Payments::view/$1');
+    $routes->get('administrator/payments/export', 'Payments::export');
+    $routes->get('administrator/payments/export_pdf', 'Payments::export_pdf');
+    $routes->get('administrator/payments/single_pdf/(:num)', 'Payments::single_pdf/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/upload_payment_proof_file_file', 'Payments::upload_payment_proof_file_file');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete_payment_proof_file_file/(:segment)', 'Payments::delete_payment_proof_file_file/$1');
+    $routes->match(['GET', 'POST'], 'administrator/payments/delete_payment_proof_file_file', 'Payments::delete_payment_proof_file_file');
+    $routes->get('administrator/payments/get_payment_proof_file_file/(:num)', 'Payments::get_payment_proof_file_file/$1');
+
     $routes->get('budget', 'Invoices::index');
     $routes->get('approvals', 'Invoices::index');
 });

@@ -24,7 +24,18 @@ class App extends BaseConfig
             $scheme = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on") 
                 || (isset($_SERVER["HTTP_X_FORWARDED_PROTO"]) && $_SERVER["HTTP_X_FORWARDED_PROTO"] === "https") 
                 ? "https" : "http";
-            $this->baseURL = $scheme . "://" . $_SERVER["HTTP_HOST"] . '/campaign/';
+
+            // Detect if running inside a subfolder under Apache DOCUMENT_ROOT (e.g. C:/laragon/www/Kolab.id -> subfolder "Kolab.id")
+            $repoRoot = rtrim(str_replace('\\', '/', realpath(dirname(ROOTPATH)) ?: ''), '/');
+            $docRoot  = isset($_SERVER['DOCUMENT_ROOT']) ? rtrim(str_replace('\\', '/', realpath($_SERVER['DOCUMENT_ROOT']) ?: ''), '/') : '';
+
+            $subfolder = '';
+            if ($docRoot !== '' && $repoRoot !== '' && stripos($repoRoot, $docRoot) === 0) {
+                $subfolder = trim(substr($repoRoot, strlen($docRoot)), '/');
+            }
+
+            $basePath = ($subfolder !== '' ? '/' . $subfolder : '') . '/campaign';
+            $this->baseURL = $scheme . "://" . $_SERVER["HTTP_HOST"] . $basePath . '/';
         }
     }
 

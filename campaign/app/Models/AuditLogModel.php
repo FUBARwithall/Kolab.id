@@ -31,13 +31,6 @@ class AuditLogModel extends Model
     public function getDatatables(array $filters = [], int $start = 0, int $length = 10, string $search = '', string $orderCol = 'audit_logs.id', string $orderDir = 'DESC'): array
     {
         $builder = $this->db->table($this->table)
-            ->select('
-                audit_logs.*,
-                users.name as user_name,
-                users.email as user_email,
-                roles.name as role_name,
-                roles.label as role_label
-            ')
             ->join('users', 'users.id = audit_logs.user_id', 'left')
             ->join('user_roles', 'user_roles.user_id = users.id', 'left')
             ->join('roles', 'roles.id = user_roles.role_id', 'left');
@@ -64,9 +57,20 @@ class AuditLogModel extends Model
                 ->groupEnd();
         }
 
-        $recordsFiltered = (clone $builder)->countAllResults(false);
+        $countBuilder = clone $builder;
+        $filteredRow = $countBuilder->select('COUNT(DISTINCT audit_logs.id) as cnt')->get()->getRowArray();
+        $recordsFiltered = (int)($filteredRow['cnt'] ?? 0);
 
-        $builder->orderBy($orderCol, $orderDir);
+        $builder->select('
+                audit_logs.*,
+                users.name as user_name,
+                users.email as user_email,
+                GROUP_CONCAT(DISTINCT roles.name SEPARATOR ", ") as role_name,
+                GROUP_CONCAT(DISTINCT roles.label SEPARATOR ", ") as role_label
+            ')
+            ->groupBy('audit_logs.id')
+            ->orderBy($orderCol, $orderDir);
+
         if ($length > 0) {
             $builder->limit($length, $start);
         }
@@ -79,6 +83,57 @@ class AuditLogModel extends Model
             'recordsFiltered' => $recordsFiltered,
             'data'            => $data,
         ];
+    }
+
+    /**
+     * Get single log record with complete user and role relation
+     */
+    public function getDetail(int $id): ?array
+    {
+        return $this->db->table($this->table)
+            ->select('
+                audit_logs.*,
+                users.name as user_name,
+                users.email as user_email,
+                GROUP_CONCAT(DISTINCT roles.name SEPARATOR ", ") as role_name,
+                GROUP_CONCAT(DISTINCT roles.label SEPARATOR ", ") as role_label
+            ')
+            ->join('users', 'users.id = audit_logs.user_id', 'left')
+            ->join('user_roles', 'user_roles.user_id = users.id', 'left')
+            ->join('roles', 'roles.id = user_roles.role_id', 'left')
+            ->where('audit_logs.id', $id)
+            ->groupBy('audit_logs.id')
+            ->get()
+            ->getRowArray();
+    }
+
+    /**
+     * Get all logs for export CSV & PDF
+     */
+    public function getAllForExport(array $filters = []): array
+    {
+        $builder = $this->db->table($this->table)
+            ->select('
+                audit_logs.*,
+                users.name as user_name,
+                users.email as user_email,
+                GROUP_CONCAT(DISTINCT roles.label SEPARATOR ", ") as role_label
+            ')
+            ->join('users', 'users.id = audit_logs.user_id', 'left')
+            ->join('user_roles', 'user_roles.user_id = users.id', 'left')
+            ->join('roles', 'roles.id = user_roles.role_id', 'left');
+
+        if (!empty($filters['action'])) {
+            $builder->where('audit_logs.action', $filters['action']);
+        }
+        if (!empty($filters['entity_type'])) {
+            $builder->where('audit_logs.entity_type', $filters['entity_type']);
+        }
+        if (!empty($filters['user_id'])) {
+            $builder->where('audit_logs.user_id', (int)$filters['user_id']);
+        }
+
+        return $builder->groupBy('audit_logs.id')->orderBy('audit_logs.id', 'DESC')->get()->getResultArray();
     }
 
     /**

@@ -159,16 +159,30 @@ class ArticlesApi extends BaseController
     {
         $coverImage = $row['cover_image'] ?? $row['featured_image'] ?? null;
         $coverUrl = '';
+        $rootBase = preg_replace('#/(campaign|datahub)/?$#', '/', base_url());
+
         if (!empty($coverImage)) {
             if (strpos($coverImage, 'http://') === 0 || strpos($coverImage, 'https://') === 0) {
                 $coverUrl = $coverImage;
-            } elseif (strpos($coverImage, 'uploads/') === 0) {
-                $coverUrl = base_url(ltrim($coverImage, '/'));
             } else {
-                $coverUrl = base_url('uploads/campaign/articles/' . ltrim($coverImage, '/'));
+                $relativePath = (strpos($coverImage, 'uploads/') === 0)
+                    ? ltrim($coverImage, '/')
+                    : 'uploads/campaign/articles/' . ltrim($coverImage, '/');
+
+                $repoRoot = dirname(ROOTPATH);
+                $diskFile = $repoRoot . '/shared/' . $relativePath;
+                if (!is_file($diskFile)) {
+                    $diskFile = $repoRoot . '/' . $relativePath;
+                }
+
+                if (is_file($diskFile)) {
+                    $coverUrl = rtrim($rootBase, '/') . '/' . $relativePath;
+                } else {
+                    $coverUrl = rtrim($rootBase, '/') . '/assets/images/hero-mockup.png';
+                }
             }
         } else {
-            $coverUrl = base_url('assets/images/hero-mockup.png');
+            $coverUrl = rtrim($rootBase, '/') . '/assets/images/hero-mockup.png';
         }
 
         $tags = [];

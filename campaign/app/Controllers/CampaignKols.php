@@ -980,6 +980,48 @@ class CampaignKols extends BaseController
     }
 
     /**
+     * Submit / Update Skor Evaluasi Kerjasama KOL
+     */
+    public function saveScore(int $id)
+    {
+        $campaignKol = $this->campaignKolModel->find($id);
+        if (!$campaignKol) {
+            return $this->response->setStatusCode(404)->setJSON([
+                'success' => false,
+                'message' => 'Data Dealing KOL tidak ditemukan.'
+            ]);
+        }
+
+        $score = (float) $this->request->getPost('score');
+        $scoreType = strtoupper((string)($this->request->getPost('score_type') ?: 'COLLABORATION'));
+
+        if ($score < 0 || $score > 100) {
+            return $this->response->setStatusCode(400)->setJSON([
+                'success' => false,
+                'message' => 'Nilai skor harus di antara 0 sampai 100.'
+            ]);
+        }
+
+        $historyModel = new \App\Models\ScoreHistoryModel();
+        $historyModel->logScore(
+            (int) $campaignKol['kol_id'],
+            $scoreType,
+            $score,
+            $scoreType === 'COLLABORATION' ? $id : null
+        );
+
+        if ($scoreType === 'COLLABORATION') {
+            $this->campaignKolModel->update($id, ['collaboration_score' => $score]);
+        }
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Skor evaluasi berhasil dicatat ke riwayat audit.',
+            'score'   => number_format($score, 2),
+        ]);
+    }
+
+    /**
      * Delete Dealing KOL with full cascade
      */
     public function delete(int $id): ResponseInterface

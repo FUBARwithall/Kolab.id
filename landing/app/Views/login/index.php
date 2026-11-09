@@ -48,7 +48,7 @@
     <div class="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2 max-w-4xl mx-auto">
 
       <!-- ================= CARD 1: CAMPAIGN MANAGEMENT ================= -->
-      <div onclick="window.location.href='/campaign/login'"
+      <div onclick="window.location.href='<?= base_url('campaign/login') ?>'"
            class="group relative flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-8 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-blue-500/40 hover:shadow-[0_20px_35px_-10px_rgba(37,99,235,0.12)] cursor-pointer">
         <div class="absolute inset-x-8 top-0 h-1.5 rounded-b-full bg-gradient-to-r from-blue-600 to-indigo-600"></div>
 
@@ -92,7 +92,7 @@
 
         <!-- Button Redirect ke Form Login Campaign -->
         <div class="mt-8 pt-6 border-t border-slate-100">
-          <a href="/campaign/login"
+          <a href="<?= base_url('campaign/login') ?>"
              class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 text-sm font-semibold text-white shadow-[0_2px_10px_-2px_rgba(37,99,235,0.4)] transition hover:bg-blue-700 hover:shadow-[0_4px_16px_-2px_rgba(37,99,235,0.5)]">
             <span>Buka Login Campaign</span>
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,7 +104,7 @@
       </div>
 
       <!-- ================= CARD 2: KOL DATA HUB ================= -->
-      <div onclick="window.location.href='/datahub/login'"
+      <div onclick="window.location.href='<?= base_url('datahub/login') ?>'"
            class="group relative flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-8 shadow-[0_4px_25px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 hover:-translate-y-1 hover:border-emerald-500/40 hover:shadow-[0_20px_35px_-10px_rgba(16,185,129,0.12)] cursor-pointer">
         <div class="absolute inset-x-8 top-0 h-1.5 rounded-b-full bg-gradient-to-r from-emerald-500 to-teal-500"></div>
 
@@ -148,7 +148,7 @@
 
         <!-- Button Redirect ke Form Login Datahub -->
         <div class="mt-8 pt-6 border-t border-slate-100">
-          <a href="/datahub/login"
+          <a href="<?= base_url('datahub/login') ?>"
              class="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3.5 text-sm font-semibold text-white shadow-[0_2px_10px_-2px_rgba(16,185,129,0.4)] transition hover:bg-emerald-700 hover:shadow-[0_4px_16px_-2px_rgba(16,185,129,0.5)]">
             <span>Buka Login Datahub</span>
             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -15,7 +15,7 @@ class AuditLogs extends BaseController
     }
 
     /**
-     * Halaman Utama Audit Trail & Log Aktivitas
+     * Halaman Utama Audit Trail & Log Aktivitas (CI3 & CI4 Parity)
      */
     public function index()
     {
@@ -44,30 +44,31 @@ class AuditLogs extends BaseController
      */
     public function getDatatable()
     {
-        $draw   = (int) ($this->request->getPost('draw') ?? 1);
-        $start  = (int) ($this->request->getPost('start') ?? 0);
-        $length = (int) ($this->request->getPost('length') ?? 10);
-        $search = (string) ($this->request->getPost('search')['value'] ?? '');
+        $draw   = (int) ($this->request->getVar('draw') ?? 1);
+        $start  = (int) ($this->request->getVar('start') ?? 0);
+        $length = (int) ($this->request->getVar('length') ?? 10);
+        $search = (string) ($this->request->getVar('search')['value'] ?? '');
 
-        $orderColIdx = (int) ($this->request->getPost('order')[0]['column'] ?? 0);
-        $orderDir    = strtoupper((string) ($this->request->getPost('order')[0]['dir'] ?? 'DESC'));
+        $orderColIdx = (int) ($this->request->getVar('order')[0]['column'] ?? 1);
+        $orderDir    = strtoupper((string) ($this->request->getVar('order')[0]['dir'] ?? 'DESC'));
 
         $columns = [
-            0 => 'audit_logs.id',
-            1 => 'audit_logs.created_at',
-            2 => 'users.name',
-            3 => 'audit_logs.action',
-            4 => 'audit_logs.entity_type',
-            5 => 'audit_logs.ip_address',
-            6 => 'audit_logs.id',
+            0 => 'audit_logs.id', // Checkbox
+            1 => 'audit_logs.id',
+            2 => 'audit_logs.created_at',
+            3 => 'users.name',
+            4 => 'audit_logs.action',
+            5 => 'audit_logs.entity_type',
+            6 => 'audit_logs.ip_address',
+            7 => 'audit_logs.id', // Actions
         ];
 
         $orderCol = $columns[$orderColIdx] ?? 'audit_logs.id';
 
         $filters = [
-            'action'      => $this->request->getPost('action') ?: null,
-            'entity_type' => $this->request->getPost('entity_type') ?: null,
-            'user_id'     => $this->request->getPost('user_id') ?: null,
+            'action'      => $this->request->getVar('action') ?: null,
+            'entity_type' => $this->request->getVar('entity_type') ?: null,
+            'user_id'     => $this->request->getVar('user_id') ?: null,
         ];
 
         $result = $this->auditModel->getDatatables($filters, $start, $length, $search, $orderCol, $orderDir);
@@ -100,21 +101,24 @@ class AuditLogs extends BaseController
                 case 'LOGIN':
                     $actBadge = '<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"><i class="fas fa-sign-in-alt me-1"></i>LOGIN</span>';
                     break;
+                case 'LOGOUT':
+                    $actBadge = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1"><i class="fas fa-sign-out-alt me-1"></i>LOGOUT</span>';
+                    break;
                 default:
                     $actBadge = '<span class="badge bg-light text-dark border px-2 py-1">' . esc($row['action']) . '</span>';
                     break;
             }
 
             // Role badge
-            $roleLabel = esc($row['role_label'] ?? 'User');
+            $roleLabel = esc($row['role_label'] ?? 'Operator');
             $roleColor = 'secondary';
-            if (($row['role_name'] ?? '') === 'admin') $roleColor = 'danger';
-            elseif (($row['role_name'] ?? '') === 'leader') $roleColor = 'primary';
-            elseif (($row['role_name'] ?? '') === 'staff') $roleColor = 'info';
-            elseif (($row['role_name'] ?? '') === 'kol') $roleColor = 'purple';
+            if (stripos($row['role_name'] ?? '', 'admin') !== false) $roleColor = 'danger';
+            elseif (stripos($row['role_name'] ?? '', 'leader') !== false) $roleColor = 'primary';
+            elseif (stripos($row['role_name'] ?? '', 'staff') !== false) $roleColor = 'info';
+            elseif (stripos($row['role_name'] ?? '', 'kol') !== false) $roleColor = 'purple';
 
             $userDisplay = '
-                <div class="fw-semibold text-dark" style="font-size: 13.5px;">' . esc($row['user_name'] ?? 'System') . '</div>
+                <div class="fw-semibold text-dark" style="font-size: 13.5px;">' . esc($row['user_name'] ?? 'System / Automated') . '</div>
                 <div class="d-flex align-items-center gap-1 mt-1">
                     <span class="badge bg-' . $roleColor . '-subtle text-' . $roleColor . ' border border-' . $roleColor . '-subtle" style="font-size: 10px;">' . $roleLabel . '</span>
                     <small class="text-muted">' . esc($row['user_email'] ?? '-') . '</small>
@@ -132,21 +136,31 @@ class AuditLogs extends BaseController
                 <small class="text-muted text-truncate d-inline-block" style="max-width: 180px;" title="' . esc($row['user_agent'] ?? '') . '">' . esc($row['user_agent'] ?? '-') . '</small>
             ';
 
-            // Action
+            // Actions: Diff, View, Print, Delete
             $hasDiff = !empty($row['old_values']) || !empty($row['new_values']);
             $actions = '
-                <div class="text-center">
-                    <button type="button" class="btn btn-outline-primary btn-sm rounded-2 py-1 px-2" title="Lihat Perubahan Data (Diff)" onclick="viewAuditDiff(' . $row['id'] . ')" ' . (!$hasDiff ? 'disabled' : '') . '>
-                        <i class="fas fa-columns me-1"></i> Diff
+                <div class="d-flex align-items-center justify-content-center gap-1">
+                    <button type="button" class="btn btn-outline-primary btn-sm rounded-2 py-1 px-2" title="Lihat Perubahan (Diff)" onclick="viewAuditDiff(' . $row['id'] . ')" ' . (!$hasDiff ? 'disabled' : '') . '>
+                        <i class="fas fa-columns"></i>
+                    </button>
+                    <a href="' . base_url('audit-logs/view/' . $row['id']) . '" class="btn btn-outline-info btn-sm rounded-2 py-1 px-2" title="Lihat Detail Lengkap">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="' . base_url('audit-logs/single-pdf/' . $row['id']) . '" target="_blank" class="btn btn-outline-secondary btn-sm rounded-2 py-1 px-2" title="Cetak Lembar Audit PDF">
+                        <i class="fas fa-print"></i>
+                    </a>
+                    <button type="button" class="btn btn-outline-danger btn-sm rounded-2 py-1 px-2" title="Hapus Log" onclick="deleteAuditLog(' . $row['id'] . ')">
+                        <i class="fas fa-trash"></i>
                     </button>
                 </div>
             ';
 
             $formattedData[] = [
-                'id'          => '<span class="font-monospace text-muted">#' . $row['id'] . '</span>',
+                'checkbox'    => '<input type="checkbox" class="form-check-input check-audit-item" value="' . $row['id'] . '">',
+                'id'          => '<span class="font-monospace text-muted fw-bold">#' . $row['id'] . '</span>',
                 'created_at'  => '
                     <div class="fw-semibold text-dark">' . date('d M Y', strtotime($row['created_at'])) . '</div>
-                    <small class="text-muted font-monospace">' . date('H:i:s', strtotime($row['created_at'])) . '</small>
+                    <small class="text-muted font-monospace">' . date('H:i:s', strtotime($row['created_at'])) . ' WIB</small>
                 ',
                 'user'        => $userDisplay,
                 'action_type' => $actBadge,
@@ -165,22 +179,201 @@ class AuditLogs extends BaseController
     }
 
     /**
-     * Get single log details for diff modal
+     * Get single log details for modal diff viewer
      */
     public function getOne(int $id)
     {
-        $db = \Config\Database::connect();
-        $log = $db->table('audit_logs')
-            ->select('audit_logs.*, users.name as user_name, users.email as user_email')
-            ->join('users', 'users.id = audit_logs.user_id', 'left')
-            ->where('audit_logs.id', $id)
-            ->get()
-            ->getRowArray();
+        $log = $this->auditModel->getDetail($id);
 
         if (!$log) {
-            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Log tidak ditemukan']);
+            return $this->response->setStatusCode(404)->setJSON(['success' => false, 'message' => 'Log audit tidak ditemukan']);
         }
 
         return $this->response->setJSON(['success' => true, 'data' => $log]);
+    }
+
+    /**
+     * Dedicated detail page for an audit log (Full CI3 Parity)
+     */
+    public function view(int $id)
+    {
+        $log = $this->auditModel->getDetail($id);
+        if (!$log) {
+            return redirect()->to(base_url('audit-logs'))->with('error', 'Log audit #' . $id . ' tidak ditemukan');
+        }
+
+        $formattedOld = null;
+        if (!empty($log['old_values'])) {
+            $decOld = json_decode($log['old_values'], true);
+            $formattedOld = $decOld ? json_encode($decOld, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $log['old_values'];
+        }
+
+        $formattedNew = null;
+        if (!empty($log['new_values'])) {
+            $decNew = json_decode($log['new_values'], true);
+            $formattedNew = $decNew ? json_encode($decNew, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : $log['new_values'];
+        }
+
+        $data = [
+            'title'        => 'Detail Audit Log #' . $id,
+            'controller'   => 'AuditLogs',
+            'log'          => $log,
+            'formattedOld' => $formattedOld,
+            'formattedNew' => $formattedNew,
+        ];
+
+        return view('audit_logs/view', $data);
+    }
+
+    /**
+     * Delete single or multiple audit logs (CI3 Parity)
+     */
+    public function delete($id = null)
+    {
+        $arrId = $this->request->getGet('id') ?: ($this->request->getPost('id') ?: null);
+
+        if (!empty($id)) {
+            $this->auditModel->delete((int)$id);
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => true, 'message' => 'Log audit #' . $id . ' berhasil dihapus.']);
+            }
+            return redirect()->to(base_url('audit-logs'))->with('success', 'Log audit #' . $id . ' berhasil dihapus.');
+        }
+
+        if (is_array($arrId) && count($arrId) > 0) {
+            foreach ($arrId as $singleId) {
+                $this->auditModel->delete((int)$singleId);
+            }
+            if ($this->request->isAJAX()) {
+                return $this->response->setJSON(['success' => true, 'message' => count($arrId) . ' log audit berhasil dihapus.']);
+            }
+            return redirect()->to(base_url('audit-logs'))->with('success', count($arrId) . ' log audit berhasil dihapus.');
+        }
+
+        if ($this->request->isAJAX()) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Tidak ada log audit yang dipilih untuk dihapus.']);
+        }
+        return redirect()->to(base_url('audit-logs'))->with('error', 'Tidak ada log audit yang dipilih untuk dihapus.');
+    }
+
+    /**
+     * Bulk delete audit logs via AJAX
+     */
+    public function bulkDelete()
+    {
+        $ids = $this->request->getPost('ids');
+        if (empty($ids) || !is_array($ids)) {
+            return $this->response->setStatusCode(400)->setJSON(['success' => false, 'message' => 'Pilih setidaknya satu log audit untuk dihapus']);
+        }
+
+        $cleanIds = array_map('intval', $ids);
+        $this->auditModel->whereIn('id', $cleanIds)->delete();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => count($cleanIds) . ' log audit berhasil dihapus',
+        ]);
+    }
+
+    /**
+     * Export audit logs to CSV (CI3 Parity with XLS/CSV)
+     */
+    public function export()
+    {
+        $filters = [
+            'action'      => $this->request->getGet('action') ?: null,
+            'entity_type' => $this->request->getGet('entity_type') ?: null,
+            'user_id'     => $this->request->getGet('user_id') ?: null,
+        ];
+
+        $logs = $this->auditModel->getAllForExport($filters);
+
+        $filename = 'audit_logs_export_' . date('Ymd_His') . '.csv';
+
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Pragma: no-cache');
+        header('Expires: 0');
+
+        $output = fopen('php://output', 'w');
+        // UTF-8 BOM for Microsoft Excel compatibility
+        fprintf($output, chr(0xEF) . chr(0xBB) . chr(0xBF));
+
+        fputcsv($output, [
+            'Log ID',
+            'Timestamp',
+            'User ID',
+            'Operator Name',
+            'Operator Email',
+            'Role',
+            'Action',
+            'Entity Type',
+            'Entity ID',
+            'IP Address',
+            'User Agent',
+            'Old Values',
+            'New Values',
+        ]);
+
+        foreach ($logs as $l) {
+            fputcsv($output, [
+                $l['id'],
+                $l['created_at'],
+                $l['user_id'] ?? '',
+                $l['user_name'] ?? 'System',
+                $l['user_email'] ?? '',
+                $l['role_label'] ?? '',
+                $l['action'],
+                $l['entity_type'],
+                $l['entity_id'],
+                $l['ip_address'] ?? '',
+                $l['user_agent'] ?? '',
+                $l['old_values'] ?? '',
+                $l['new_values'] ?? '',
+            ]);
+        }
+
+        fclose($output);
+        exit;
+    }
+
+    /**
+     * Export PDF Rekapitulasi Tabel Audit Logs
+     */
+    public function export_pdf()
+    {
+        $filters = [
+            'action'      => $this->request->getGet('action') ?: null,
+            'entity_type' => $this->request->getGet('entity_type') ?: null,
+            'user_id'     => $this->request->getGet('user_id') ?: null,
+        ];
+
+        $items = $this->auditModel->getAllForExport($filters);
+
+        return view('audit_logs/export_pdf', [
+            'items'     => $items,
+            'title'     => 'Laporan Audit Trail & Rekam Jejak Sistem',
+            'generated' => date('d F Y, H:i:s'),
+            'filters'   => $filters,
+        ]);
+    }
+
+    /**
+     * Cetak Lembar Single PDF Bukti Audit Log Record
+     */
+    public function single_pdf($id = null)
+    {
+        $id = (int) $id;
+        $log = $this->auditModel->getDetail($id);
+
+        if (!$log) {
+            return redirect()->to(base_url('audit-logs'))->with('error', 'Log audit #' . $id . ' tidak ditemukan.');
+        }
+
+        return view('audit_logs/single_pdf', [
+            'log'       => $log,
+            'title'     => 'Lembar Audit Log Record #' . $log['id'],
+            'generated' => date('d F Y, H:i:s'),
+        ]);
     }
 }
