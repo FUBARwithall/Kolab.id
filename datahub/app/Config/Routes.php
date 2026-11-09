@@ -65,6 +65,8 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
 
     $routes->get('open-campaigns', 'Talent::openCampaigns');
     $routes->get('datahub/open-campaigns', 'Talent::openCampaigns');
+    $routes->get('open-campaigns/detail/(:num)', 'Talent::getCampaignDetailAjax/$1');
+    $routes->get('datahub/open-campaigns/detail/(:num)', 'Talent::getCampaignDetailAjax/$1');
     $routes->post('apply-campaign', 'Talent::applyCampaign');
     $routes->post('datahub/apply-campaign', 'Talent::applyCampaign');
 
@@ -73,6 +75,10 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
 
     $routes->get('my-tasks', 'Talent::myTasks');
     $routes->get('datahub/my-tasks', 'Talent::myTasks');
+    $routes->post('my-tasks/submit-draft', 'Talent::submitDraft');
+    $routes->post('datahub/my-tasks/submit-draft', 'Talent::submitDraft');
+    $routes->post('my-tasks/submit-live', 'Talent::submitLiveUrl');
+    $routes->post('datahub/my-tasks/submit-live', 'Talent::submitLiveUrl');
 
     $routes->get('my-contracts', 'Talent::myContracts');
     $routes->get('datahub/my-contracts', 'Talent::myContracts');
@@ -96,6 +102,24 @@ $routes->group('', ['filter' => 'auth:admin,kol'], static function ($routes) {
     $routes->post('datahub/my-invoices/submit', 'Talent::submitInvoice');
     $routes->get('my-invoices/detail/(:num)', 'Talent::getInvoiceDetailAjax/$1');
     $routes->get('datahub/my-invoices/detail/(:num)', 'Talent::getInvoiceDetailAjax/$1');
+
+    // Pusat Pemberitahuan (Notifications) — Full Parity with CI3 kol_notifications
+    $routes->get('notifications', 'Notifications::index');
+    $routes->get('datahub/notifications', 'Notifications::index');
+    $routes->get('kol_notifications', 'Notifications::index');
+    $routes->get('datahub/kol_notifications', 'Notifications::index');
+    $routes->get('administrator/kol_notifications', 'Notifications::index');
+    $routes->get('datahub/administrator/kol_notifications', 'Notifications::index');
+
+    $routes->get('notifications/inbox', 'Notifications::getInboxAjax');
+    $routes->get('datahub/notifications/inbox', 'Notifications::getInboxAjax');
+    $routes->get('administrator/kol_notifications/get_inbox', 'Notifications::getInboxAjax');
+    $routes->get('datahub/administrator/kol_notifications/get_inbox', 'Notifications::getInboxAjax');
+
+    $routes->post('notifications/mark-read', 'Notifications::markAllReadAjax');
+    $routes->post('datahub/notifications/mark-read', 'Notifications::markAllReadAjax');
+    $routes->post('administrator/kol_notifications/mark_all_read', 'Notifications::markAllReadAjax');
+    $routes->post('datahub/administrator/kol_notifications/mark_all_read', 'Notifications::markAllReadAjax');
 });
 
 // --------------------------------------------------------------------

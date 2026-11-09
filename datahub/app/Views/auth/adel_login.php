@@ -6,227 +6,371 @@
   <title><?= esc($portalTitle) ?> — KOLAB.ID</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Google Font: Plus Jakarta Sans -->
+  <!-- Google Font: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
   <!-- Font Awesome -->
   <link rel="stylesheet" href="<?= base_url('asset/plugins/fontawesome-free/css/all.min.css') ?>">
-  <!-- Bootstrap 5 & AdminLTE 4 (Adel UI) -->
+  <!-- Bootstrap 5 -->
   <link rel="stylesheet" href="<?= base_url('asset/css/bootstrap.min.css') ?>">
-  <link rel="stylesheet" href="<?= base_url('asset/css/adminlte.min.css') ?>">
 
   <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
     body {
-      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: radial-gradient(circle at 50% 10%, #1e293b 0%, #0f172a 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #f5f6fa;
       min-height: 100vh;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       margin: 0;
       padding: 24px 16px;
+      color: #0f172a;
     }
 
-    .login-box {
-      width: 100%;
-      max-width: 440px;
+    /* ── Wordmark / brand row ── */
+    .brand-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
     }
-
-    .card {
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 20px;
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-      overflow: hidden;
-      background: #ffffff;
-    }
-
-    .card-header {
-      background: #ffffff;
-      border-bottom: 1px solid #f1f5f9;
-      padding: 30px 24px 20px;
-      text-align: center;
-    }
-
-    .portal-avatar {
-      width: 58px;
-      height: 58px;
-      border-radius: 16px;
-      display: inline-flex;
+    .brand-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      margin-bottom: 14px;
+      font-size: 16px;
+      flex-shrink: 0;
     }
-
-    /* Color styles based on portal */
-    .portal-primary .portal-avatar { background: #eff6ff; color: #0d6efd; }
-    .portal-primary .btn-portal { background: #0d6efd; border-color: #0d6efd; color: #fff; }
-    .portal-primary .btn-portal:hover { background: #0b5ed7; border-color: #0a58ca; }
-
-    .portal-success .portal-avatar { background: #ecfdf5; color: #198754; }
-    .portal-success .btn-portal { background: #198754; border-color: #198754; color: #fff; }
-    .portal-success .btn-portal:hover { background: #157347; border-color: #146c43; }
-
-    .portal-warning .portal-avatar { background: #f5f3ff; color: #7c3aed; }
-    .portal-warning .btn-portal { background: #7c3aed; border-color: #7c3aed; color: #fff; }
-    .portal-warning .btn-portal:hover { background: #6d28d9; border-color: #5b21b6; }
-
-    .form-control {
-      border-radius: 10px 0 0 10px;
-      padding: 11px 16px;
-      font-size: 14px;
-      border: 1px solid #cbd5e1;
+    .brand-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: #0f172a;
+      letter-spacing: -0.01em;
     }
-
-    .form-control:focus {
-      border-color: #0d6efd;
-      box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
-    }
-
-    .input-group-text {
-      border-radius: 0 10px 10px 0;
-      border: 1px solid #cbd5e1;
-      border-left: none;
-      background: #f8fafc;
+    .brand-sep { color: #cbd5e1; font-size: 18px; font-weight: 300; }
+    .brand-portal {
+      font-size: 13px;
+      font-weight: 500;
       color: #64748b;
     }
 
-    .demo-helper {
-      background: #f8fafc;
-      border: 1px dashed #cbd5e1;
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 12px;
-      margin-top: 20px;
+    /* ── Card ── */
+    .login-card {
+      width: 100%;
+      max-width: 400px;
+      background: #ffffff;
+      border: 1px solid #e8edf2;
+      border-radius: 16px;
+      padding: 36px 32px 28px;
+      box-shadow: 0 4px 24px rgba(15, 23, 42, 0.07);
     }
 
-    .demo-btn {
-      cursor: pointer;
-      border: 1px solid #e2e8f0;
-      background: #ffffff;
-      border-radius: 8px;
-      padding: 6px 10px;
+    /* ── Header inside card ── */
+    .card-brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 4px;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    .card-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin: 0 0 28px;
+      line-height: 1.5;
+    }
+
+    /* ── Form ── */
+    .field-label {
+      display: block;
       font-size: 11.5px;
       font-weight: 600;
-      transition: all 0.15s ease;
-      display: inline-flex;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+    .field-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+    .field-input {
+      width: 100%;
+      padding: 10px 40px 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      color: #0f172a;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      outline: none;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+    }
+    .field-input::placeholder { color: #94a3b8; }
+    .field-input:focus {
+      background: #fff;
+      border-color: var(--accent, #10b981);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #10b981) 15%, transparent);
+    }
+    .field-icon {
+      position: absolute;
+      right: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    /* ── Submit Button ── */
+    .btn-submit {
+      width: 100%;
+      padding: 11px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: var(--accent, #10b981);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 8px;
+      transition: opacity .15s, transform .1s;
+    }
+    .btn-submit:hover { opacity: .92; transform: translateY(-1px); }
+    .btn-submit:active { opacity: 1; transform: translateY(0); }
+
+    /* ── Demo accounts ── */
+    .demo-box {
+      background: #f8fafc;
+      border: 1px dashed #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-top: 20px;
+    }
+    .demo-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      display: flex;
       align-items: center;
       gap: 6px;
     }
-
-    .demo-btn:hover {
-      background: #f1f5f9;
-      color: #0f172a;
+    .demo-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #e8edf2;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      margin-bottom: 6px;
     }
+    .demo-row:last-child { margin-bottom: 0; }
+    .demo-row:hover {
+      border-color: var(--accent, #10b981);
+      background: color-mix(in srgb, var(--accent, #10b981) 5%, #fff);
+    }
+    .demo-row-info { display: flex; align-items: center; gap: 10px; }
+    .demo-row-icon { font-size: 18px; }
+    .demo-role { font-size: 12.5px; font-weight: 600; color: #0f172a; }
+    .demo-email { font-size: 11px; color: #64748b; }
+    .demo-cta {
+      font-size: 10.5px;
+      font-weight: 600;
+      color: #94a3b8;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 2px 8px;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer links ── */
+    .login-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #f1f5f9;
+    }
+    .footer-link {
+      font-size: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: color .15s;
+    }
+    .footer-link:hover { color: #0f172a; }
+
+    /* ── Alert ── */
+    .alert-min {
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .alert-min.danger { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+    .alert-min.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .alert-min.info { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+
+    /* ── Theme Colors ── */
+    /* Datahub: emerald/green */
+    .theme-success { --accent: #10b981; }
+    /* Campaign: blue */
+    .theme-primary { --accent: #2563eb; }
+    /* KOL: purple */
+    .theme-warning { --accent: #7c3aed; }
   </style>
 </head>
-<body class="hold-transition portal-<?= esc($themeColor) ?>">
+<body class="theme-<?= esc($themeColor) ?>">
 
-<div class="login-box">
+<!-- Brand Row -->
+<div class="brand-row">
+  <div class="brand-icon" style="background: color-mix(in srgb, var(--accent) 12%, #fff);">
+    <i class="<?= esc($icon) ?>" style="color: var(--accent);"></i>
+  </div>
+  <span class="brand-name">KOLAB<span style="color: var(--accent);">.</span>ID</span>
+  <span class="brand-sep">|</span>
+  <span class="brand-portal"><?= esc($badgeText) ?></span>
+</div>
 
-  <!-- Alert / Flash Messages -->
-  <?php if (session()->getFlashdata('error')): ?>
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm text-sm rounded-3 py-2.5 px-3 mb-3 d-flex align-items-center gap-2" role="alert">
-      <i class="fas fa-exclamation-circle text-danger fs-5"></i>
-      <div class="flex-grow-1"><?= esc(session()->getFlashdata('error')) ?></div>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+<!-- Alerts -->
+<?php if (session()->getFlashdata('error')): ?>
+  <div class="alert-min danger" style="width:100%;max-width:400px;">
+    <i class="fas fa-exclamation-circle"></i>
+    <?= esc(session()->getFlashdata('error')) ?>
+  </div>
+<?php endif; ?>
+
+<?php if (session()->getFlashdata('success')): ?>
+  <div class="alert-min success" style="width:100%;max-width:400px;">
+    <i class="fas fa-check-circle"></i>
+    <?= esc(session()->getFlashdata('success')) ?>
+  </div>
+<?php endif; ?>
+
+<?php if (!empty($currentUser)): ?>
+  <div class="alert-min info" style="width:100%;max-width:400px;justify-content:space-between;">
+    <div><i class="fas fa-user-check me-1"></i> Terhubung sebagai <strong><?= esc($currentUser['name']) ?></strong></div>
+    <a href="<?= esc($portal) === 'datahub' ? '/datahub/dashboard' : '/campaign/dashboard' ?>" style="font-size:12px;font-weight:600;color:var(--accent);text-decoration:none;">
+      Dashboard &rarr;
+    </a>
+  </div>
+<?php endif; ?>
+
+<!-- Login Card -->
+<div class="login-card">
+
+  <!-- Header -->
+  <div style="margin-bottom: 24px;">
+    <h1 class="card-title"><?= esc($portalTitle) ?></h1>
+    <p class="card-subtitle"><?= esc($portalSubtitle) ?></p>
+  </div>
+
+  <!-- Form -->
+  <form action="<?= esc($formAction) ?>" method="POST">
+    <?= csrf_field() ?>
+    <input type="hidden" name="portal" value="<?= esc($portal) ?>">
+
+    <div class="field-wrap">
+      <label class="field-label" for="login_email">Email Pengguna</label>
+      <input type="email" name="email" id="login_email" class="field-input"
+             placeholder="nama@kolab.id" value="<?= old('email') ?>" required autofocus>
+      <i class="fas fa-envelope field-icon"></i>
     </div>
-  <?php endif; ?>
 
-  <?php if (session()->getFlashdata('success')): ?>
-    <div class="alert alert-success alert-dismissible fade show shadow-sm text-sm rounded-3 py-2.5 px-3 mb-3 d-flex align-items-center gap-2" role="alert">
-      <i class="fas fa-check-circle text-success fs-5"></i>
-      <div class="flex-grow-1"><?= esc(session()->getFlashdata('success')) ?></div>
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-  <?php endif; ?>
-
-  <!-- Active User Alert -->
-  <?php if (!empty($currentUser)): ?>
-    <div class="alert alert-info shadow-sm text-xs rounded-3 py-2.5 px-3 mb-3 d-flex align-items-center justify-content-between" role="alert">
-      <div>
-        <i class="fas fa-user-check text-info me-1"></i> Terhubung: <strong><?= esc($currentUser['name']) ?></strong> (<?= esc($currentUser['role']) ?>)
-      </div>
-      <a href="/datahub/dashboard" class="btn btn-sm btn-success py-0 px-2 fw-semibold" style="font-size: 11px;">Ke Dashboard &rarr;</a>
-    </div>
-  <?php endif; ?>
-
-  <!-- Card Login Adel UI -->
-  <div class="card">
-    <div class="card-header">
-      <div class="portal-avatar">
-        <i class="<?= esc($icon) ?>"></i>
-      </div>
-      <span class="badge bg-<?= esc($themeColor) ?> mb-2 text-uppercase fw-bold" style="font-size: 10px; letter-spacing: 0.08em;">
-        <?= esc($badgeText) ?>
-      </span>
-      <h2 class="fw-bold fs-4 text-dark mb-1"><?= esc($portalTitle) ?></h2>
-      <p class="text-muted text-xs mb-0"><?= esc($portalSubtitle) ?></p>
+    <div class="field-wrap">
+      <label class="field-label" for="login_password">Kata Sandi</label>
+      <input type="password" name="password" id="login_password" class="field-input"
+             placeholder="••••••••" required>
+      <i class="fas fa-lock field-icon"></i>
     </div>
 
-    <div class="card-body p-4">
-      <form action="<?= esc($formAction) ?>" method="POST">
-        <?= csrf_field() ?>
-        <input type="hidden" name="portal" value="<?= esc($portal) ?>">
+    <button type="submit" class="btn-submit">
+      Masuk <i class="fas fa-arrow-right" style="font-size:12px;"></i>
+    </button>
+  </form>
 
-        <div class="mb-3">
-          <label class="form-label text-xs fw-bold text-muted text-uppercase mb-1">Email Pengguna</label>
-          <div class="input-group">
-            <input type="email" name="email" id="login_email" class="form-control" placeholder="nama@kolab.id" value="<?= old('email') ?>" required autofocus>
-            <span class="input-group-text"><i class="fas fa-envelope"></i></span>
-          </div>
-        </div>
+  <!-- Demo Accounts -->
+  <?php if (!empty($demoAccounts) || !empty($demoEmail)): ?>
+  <div class="demo-box">
+    <div class="demo-label">
+      <i class="fas fa-user-friends" style="color: var(--accent);"></i>
+      Akun Demo
+    </div>
 
-        <div class="mb-4">
-          <label class="form-label text-xs fw-bold text-muted text-uppercase mb-1">Kata Sandi</label>
-          <div class="input-group">
-            <input type="password" name="password" id="login_password" class="form-control" placeholder="••••••••" required>
-            <span class="input-group-text"><i class="fas fa-lock"></i></span>
-          </div>
-        </div>
-
-        <button type="submit" class="btn btn-portal w-100 fw-bold py-2.5 rounded-3 shadow-sm">
-          <span>Masuk ke <?= esc($portalTitle) ?></span>
-          <i class="fas fa-arrow-right ms-1"></i>
-        </button>
-      </form>
-
-      <!-- Quick Demo Account Fill (2 RBAC: Superadmin & KOL) -->
-      <div class="demo-helper">
-        <div class="fw-bold text-dark text-xs mb-2"><i class="fas fa-users-cog text-success me-1"></i> Pilih Akun Role Demo:</div>
-        <?php if (!empty($demoAccounts)): ?>
-          <?php foreach ($demoAccounts as $acc): ?>
-            <div class="demo-btn w-100 justify-content-between mb-2 p-2 rounded border" style="cursor: pointer;" onclick="fillCredential('<?= esc($acc['email']) ?>', '<?= esc($acc['pass']) ?>')" title="<?= esc($acc['desc'] ?? '') ?>">
-              <div class="d-flex align-items-center">
-                <i class="<?= esc($acc['icon'] ?? 'fas fa-user-circle') ?> me-2 fs-5"></i>
-                <div class="text-start">
-                  <div class="fw-bold text-dark" style="font-size: 12px;"><?= esc($acc['role']) ?></div>
-                  <div class="text-muted" style="font-size: 11px;"><?= esc($acc['email']) ?></div>
-                </div>
-              </div>
-              <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 10px;">Klik untuk Isi</span>
+    <?php if (!empty($demoAccounts)): ?>
+      <?php foreach ($demoAccounts as $acc): ?>
+        <div class="demo-row" onclick="fillCredential('<?= esc($acc['email']) ?>', '<?= esc($acc['pass']) ?>')"
+             title="<?= esc($acc['desc'] ?? '') ?>">
+          <div class="demo-row-info">
+            <span class="demo-row-icon"><i class="<?= esc($acc['icon'] ?? 'fas fa-user-circle') ?>" style="color: var(--accent);"></i></span>
+            <div>
+              <div class="demo-role"><?= esc($acc['role']) ?></div>
+              <div class="demo-email"><?= esc($acc['email']) ?></div>
             </div>
-          <?php endforeach; ?>
-        <?php else: ?>
-          <div class="demo-btn w-100 justify-content-between" onclick="fillCredential('<?= esc($demoEmail) ?>', '<?= esc($demoPass) ?>')">
-            <span><i class="fas fa-user-circle text-muted me-1"></i> <?= esc($demoRole) ?></span>
-            <span class="badge bg-light text-muted border"><?= esc($demoPass) ?></span>
           </div>
-        <?php endif; ?>
+          <span class="demo-cta">Isi Otomatis</span>
+        </div>
+      <?php endforeach; ?>
+    <?php else: ?>
+      <div class="demo-row" onclick="fillCredential('<?= esc($demoEmail) ?>', '<?= esc($demoPass) ?>')">
+        <div class="demo-row-info">
+          <span class="demo-row-icon"><i class="fas fa-user-circle" style="color: var(--accent);"></i></span>
+          <div>
+            <div class="demo-role"><?= esc($demoRole) ?></div>
+            <div class="demo-email"><?= esc($demoEmail) ?></div>
+          </div>
+        </div>
+        <span class="demo-cta">Isi Otomatis</span>
       </div>
+    <?php endif; ?>
+  </div>
+  <?php endif; ?>
 
-      <!-- Links to Hub and Landing -->
-      <div class="d-flex align-items-center justify-content-between mt-4 pt-3 border-top text-xs">
-        <a href="/login" class="text-decoration-none text-muted hover-dark">
-          <i class="fas fa-th-large me-1"></i> Pilih Portal Lain
-        </a>
-        <a href="/" class="text-decoration-none text-muted hover-dark">
-          <i class="fas fa-globe me-1"></i> Ke Landing Page
-        </a>
-      </div>
-    </div>
+  <!-- Footer Links -->
+  <div class="login-footer">
+    <a href="/login" class="footer-link">
+      <i class="fas fa-th-large"></i> Portal Lain
+    </a>
+    <a href="/" class="footer-link">
+      <i class="fas fa-globe"></i> Landing Page
+    </a>
   </div>
 
 </div>
