@@ -45,6 +45,14 @@ $routes->group('', ['filter' => 'auth:admin,leader,staff'], static function ($ro
     $routes->get('dashboard', 'Dashboard::index');
     $routes->get('campaign', 'Dashboard::index');
     $routes->get('campaign/dashboard', 'Dashboard::index');
+    // Pusat Pemberitahuan (Notifications) — Full Parity with CI3 kol_notifications
+    $routes->get('notifications', 'Notifications::index');
+    $routes->get('campaign/notifications', 'Notifications::index');
+    $routes->get('notifications/inbox', 'Notifications::getInboxAjax');
+    $routes->get('campaign/notifications/inbox', 'Notifications::getInboxAjax');
+    $routes->post('notifications/mark-read', 'Notifications::markAllReadAjax');
+    $routes->post('campaign/notifications/mark-read', 'Notifications::markAllReadAjax');
+
     // Wave 1: Master Produk & Mutasi Stok Sampel (Full Parity with CI3 modules/products)
     $routes->get('products', 'Products::index');
     $routes->post('products/get-datatable', 'Products::getDatatable');

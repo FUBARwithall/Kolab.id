@@ -131,6 +131,266 @@ class Talent extends BaseController
     }
 
     /**
+     * AJAX: Ambil detail lengkap kampanye terbuka
+     */
+    public function getCampaignDetailAjax(int $id): ResponseInterface
+    {
+        $campaign = $this->campaignModel->find($id);
+        if (! $campaign) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Kampanye tidak ditemukan']);
+        }
+
+        $kolId = $this->getMyKolId();
+        $hasApplied = false;
+        if ($kolId) {
+            $hasApplied = $this->applicationModel->hasApplied($id, $kolId);
+        }
+
+        $db = \Config\Database::connect();
+
+        // 1. Fetch Products
+        $products = $db->table('campaign_products cp')
+            ->select('p.id, p.name, p.category, p.sku, p.price')
+            ->join('products p', 'p.id = cp.product_id')
+            ->where('cp.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        foreach ($products as &$prod) {
+            $prod['price_fmt'] = 'Rp ' . number_format((float)($prod['price'] ?? 0), 0, ',', '.');
+            $prod['category'] = !empty($prod['category']) ? $prod['category'] : 'General';
+            $prod['sku'] = !empty($prod['sku']) ? $prod['sku'] : 'PROD';
+        }
+
+        // 2. Fetch Required Platforms
+        $requiredPlatforms = $db->table('campaign_required_platforms crp')
+            ->select('p.id, p.name, p.code, p.icon')
+            ->join('platforms p', 'p.id = crp.platform_id')
+            ->where('crp.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        // 3. Fetch Allowed Tiers
+        $allowedTiers = $db->table('campaign_allowed_tiers cat')
+            ->select('t.id, t.name')
+            ->join('tiers t', 't.id = cat.tier_id')
+            ->where('cat.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        // 4. Fetch Allowed Categories
+        $allowedCategories = $db->table('campaign_allowed_categories cac')
+            ->select('c.id, c.name')
+            ->join('categories c', 'c.id = cac.category_id')
+            ->where('cac.campaign_id', $id)
+            ->get()
+            ->getResultArray();
+
+        // 5. Qualification evaluation for logged-in KOL
+        $evaluation = [
+            'is_qualified'   => true,
+            'summary'        => '6/6 criteria met',
+            'passed_count'   => 6,
+            'total_criteria' => 6,
+            'percentage'     => 100,
+            'note'           => 'Profil Anda memenuhi seluruh kriteria resmi campaign ini.',
+            'criteria'       => []
+        ];
+
+        if ($kolId) {
+            $kol = $db->table('kols k')
+                ->select('k.*, t.name as tier_name')
+                ->join('tiers t', 't.id = k.tier_id', 'left')
+                ->where('k.id', $kolId)
+                ->get()
+                ->getRowArray();
+
+            $kolPlats = $db->table('kol_platforms kp')
+                ->select('kp.*, p.name as platform_name, p.code as platform_code')
+                ->join('platforms p', 'p.id = kp.platform_id')
+                ->where('kp.kol_id', $kolId)
+                ->get()
+                ->getResultArray();
+
+            $kolCats = $db->table('kol_categories kc')
+                ->select('c.id, c.name')
+                ->join('categories c', 'c.id = kc.category_id')
+                ->where('kc.kol_id', $kolId)
+                ->get()
+                ->getResultArray();
+
+            $kolPlatIds = array_column($kolPlats, 'platform_id');
+            $kolMaxFollowers = !empty($kolPlats) ? max(array_column($kolPlats, 'followers')) : 0;
+            $kolMaxEr = !empty($kolPlats) ? max(array_column($kolPlats, 'avg_er')) : 0.0;
+            $kolCatIds = array_column($kolCats, 'id');
+
+            $criteria = [];
+
+            // Crit 1: Status
+            $criteria[] = [
+                'label'    => 'Status Akun Aktif',
+                'required' => 'Aktif & Terverifikasi',
+                'actual'   => ($kol['status'] ?? 'ACTIVE') === 'ACTIVE' ? 'Aktif' : 'Tidak Aktif',
+                'passed'   => empty($kol['is_blacklisted']) && ($kol['status'] ?? 'ACTIVE') === 'ACTIVE'
+            ];
+
+            // Crit 2: Platform
+            $reqPlatIds = array_column($requiredPlatforms, 'id');
+            $platPassed = empty($reqPlatIds) || !empty(array_intersect($kolPlatIds, $reqPlatIds));
+            $reqPlatNames = !empty($requiredPlatforms) ? implode(', ', array_column($requiredPlatforms, 'name')) : 'Semua Platform';
+            $myPlatNames = !empty($kolPlats) ? implode(', ', array_column($kolPlats, 'platform_name')) : 'Belum Ada';
+            $criteria[] = [
+                'label'    => 'Platform Media Sosial',
+                'required' => $reqPlatNames,
+                'actual'   => $myPlatNames,
+                'passed'   => $platPassed
+            ];
+
+            // Crit 3: Min Followers
+            $minFollowers = (int)($campaign['min_followers'] ?? 0);
+            $criteria[] = [
+                'label'    => 'Jumlah Pengikut (Followers)',
+                'required' => $minFollowers > 0 ? number_format($minFollowers, 0, ',', '.') : 'Bebas',
+                'actual'   => number_format((int)$kolMaxFollowers, 0, ',', '.'),
+                'passed'   => $minFollowers <= 0 || $kolMaxFollowers >= $minFollowers
+            ];
+
+            // Crit 4: Min ER
+            $minEr = (float)($campaign['min_er'] ?? 0);
+            $criteria[] = [
+                'label'    => 'Engagement Rate (ER)',
+                'required' => $minEr > 0 ? number_format($minEr * 100, 2) . '%' : 'Bebas',
+                'actual'   => number_format($kolMaxEr * 100, 2) . '%',
+                'passed'   => $minEr <= 0 || $kolMaxEr >= $minEr
+            ];
+
+            // Crit 5: Tier
+            $reqTierIds = array_column($allowedTiers, 'id');
+            $tierPassed = empty($reqTierIds) || in_array($kol['tier_id'], $reqTierIds);
+            $reqTierNames = !empty($allowedTiers) ? implode(', ', array_column($allowedTiers, 'name')) : 'Bebas';
+            $criteria[] = [
+                'label'    => 'Tingkatan (Tier) KOL',
+                'required' => $reqTierNames,
+                'actual'   => $kol['tier_name'] ?? 'Unassigned',
+                'passed'   => $tierPassed
+            ];
+
+            // Crit 6: Kategori
+            $reqCatIds = array_column($allowedCategories, 'id');
+            $catPassed = empty($reqCatIds) || !empty(array_intersect($kolCatIds, $reqCatIds));
+            $reqCatNames = !empty($allowedCategories) ? implode(', ', array_column($allowedCategories, 'name')) : 'Bebas';
+            $myCatNames = !empty($kolCats) ? implode(', ', array_column($kolCats, 'name')) : 'Umum';
+            $criteria[] = [
+                'label'    => 'Kategori / Niche',
+                'required' => $reqCatNames,
+                'actual'   => $myCatNames,
+                'passed'   => $catPassed
+            ];
+
+            $passedCount = count(array_filter($criteria, fn($c) => $c['passed']));
+            $totalCriteria = count($criteria);
+            $pct = $totalCriteria > 0 ? round(($passedCount / $totalCriteria) * 100) : 100;
+            $isQualified = ($passedCount === $totalCriteria);
+
+            $evaluation = [
+                'is_qualified'   => $isQualified,
+                'summary'        => "{$passedCount}/{$totalCriteria} criteria met",
+                'passed_count'   => $passedCount,
+                'total_criteria' => $totalCriteria,
+                'percentage'     => $pct,
+                'note'           => $isQualified
+                    ? 'Profil Anda memenuhi seluruh kriteria resmi campaign ini.'
+                    : 'Catatan: Beberapa kriteria belum sesuai, namun Anda tetap dapat mengirimkan pitch.',
+                'criteria'       => $criteria
+            ];
+        }
+
+        // 6. Metrics: Periode, Batas Daftar, Slot, Target ER
+        $acceptedCount = $db->table('campaign_kols')
+            ->where('campaign_id', $id)
+            ->countAllResults();
+
+        $maxSlots = !empty($campaign['max_slots']) ? (int)$campaign['max_slots'] : 0;
+        $slotsLeft = $maxSlots > 0 ? max(0, $maxSlots - $acceptedCount) : 0;
+        $isSlotsFull = ($maxSlots > 0 && $acceptedCount >= $maxSlots);
+        $slotPct = ($maxSlots > 0) ? min(100, round(($acceptedCount / $maxSlots) * 100)) : 0;
+
+        $startDateFmt = !empty($campaign['start_date']) ? date('d M Y', strtotime($campaign['start_date'])) : '-';
+        $endDateFmt = !empty($campaign['end_date']) ? date('d M Y', strtotime($campaign['end_date'])) : '-';
+        $periodRangeFmt = ($startDateFmt !== '-' && $endDateFmt !== '-') 
+            ? date('d M', strtotime($campaign['start_date'])) . ' - ' . date('d M Y', strtotime($campaign['end_date'])) 
+            : '-';
+        $daysRemaining = !empty($campaign['end_date']) ? (int)ceil((strtotime($campaign['end_date']) - time()) / 86400) : 0;
+        $periodSub = $daysRemaining > 0 ? "{$daysRemaining} hari tersisa" : 'Periode berakhir';
+
+        $appDeadline = $campaign['application_deadline'] ?? null;
+        $appDeadlineFmt = !empty($appDeadline) ? date('d M Y', strtotime($appDeadline)) : 'Fleksibel';
+        $deadlineDays = !empty($appDeadline) ? (int)ceil((strtotime($appDeadline) - time()) / 86400) : null;
+        $deadlineSub = 'Tanpa batas waktu';
+        if ($deadlineDays !== null) {
+            $deadlineSub = $deadlineDays >= 0 ? "{$deadlineDays} hari lagi" : 'Pendaftaran ditutup';
+        }
+
+        $targetEr = (float)($campaign['target_er'] ?? 0);
+        if ($targetEr <= 0 && !empty($campaign['min_er'])) {
+            $targetEr = (float)$campaign['min_er'];
+        }
+        $targetErFmt = $targetEr > 0 ? number_format($targetEr * 100, 2) . '%' : '-';
+
+        $budgetVal = (float)($campaign['budget'] ?? $campaign['budget_total'] ?? 0);
+        $campaignType = !empty($campaign['campaign_type']) ? $campaign['campaign_type'] : 'PAID';
+        $hashtagStr = trim((string)($campaign['hashtag'] ?? ''));
+        $hashtags = array_values(array_filter(explode(' ', $hashtagStr), fn($t) => !empty(trim($t))));
+
+        return $this->response->setJSON([
+            'success'            => true,
+            'campaign'           => [
+                'id'                      => (int) $campaign['id'],
+                'title'                   => $campaign['title'] ?: ($campaign['name'] ?? 'Campaign'),
+                'name'                    => $campaign['name'] ?: $campaign['title'],
+                'description'             => $campaign['description'] ?? '',
+                'budget_total'            => $budgetVal,
+                'budget_fmt'              => number_format($budgetVal, 0, ',', '.'),
+                'campaign_type'           => $campaignType,
+                'objective'               => !empty($campaign['objective']) ? $campaign['objective'] : 'sales',
+                'target_audience'         => !empty($campaign['target_audience']) ? $campaign['target_audience'] : 'Umum',
+                'hashtag'                 => $hashtagStr,
+                'hashtags'                => $hashtags,
+                'min_followers'           => (int)($campaign['min_followers'] ?? 0),
+                'min_followers_fmt'       => ($campaign['min_followers'] ?? 0) > 0 ? number_format((int)$campaign['min_followers'], 0, ',', '.') : 'Bebas',
+                'min_er'                  => (float)($campaign['min_er'] ?? 0),
+                'min_er_fmt'              => ($campaign['min_er'] ?? 0) > 0 ? number_format((float)$campaign['min_er'] * 100, 2) . '%' : 'Bebas',
+                'target_views'            => (int) ($campaign['target_views'] ?? 0),
+                'target_views_fmt'        => number_format((int) ($campaign['target_views'] ?? 0), 0, ',', '.'),
+                'start_date'              => $campaign['start_date'] ?? '-',
+                'end_date'                => $campaign['end_date'] ?? '-',
+                'period_range_fmt'        => $periodRangeFmt,
+                'period_sub'              => $periodSub,
+                'application_deadline'    => $appDeadline,
+                'application_deadline_fmt'=> $appDeadlineFmt,
+                'deadline_sub'            => $deadlineSub,
+                'max_slots'               => $maxSlots,
+                'accepted_count'          => $acceptedCount,
+                'slots_left'              => $slotsLeft,
+                'is_slots_full'           => $isSlotsFull,
+                'slot_pct'                => $slotPct,
+                'slot_val_fmt'            => $maxSlots > 0 ? "{$acceptedCount} / {$maxSlots} Terisi" : "{$acceptedCount} Terisi (Fleksibel)",
+                'slot_sub'                => $maxSlots > 0 ? "{$slotsLeft} slot tersedia" : "Slot fleksibel",
+                'target_er'               => $targetEr,
+                'target_er_fmt'           => $targetErFmt,
+                'status'                  => $campaign['status'] ?? 'ACTIVE',
+                'sow'                     => $campaign['sow'] ?? null,
+            ],
+            'products'           => $products,
+            'required_platforms' => $requiredPlatforms,
+            'allowed_tiers'      => $allowedTiers,
+            'allowed_categories' => $allowedCategories,
+            'evaluation'         => $evaluation,
+            'has_applied'        => $hasApplied,
+        ]);
+    }
+
+    /**
      * Ajukan Lamaran Kolaborasi (AJAX POST)
      */
     public function applyCampaign(): ResponseInterface
@@ -215,6 +475,146 @@ class Talent extends BaseController
         ];
 
         return view('talent/my_tasks', $data);
+    }
+
+    /**
+     * AJAX POST: KOL Submits Draft Video
+     */
+    public function submitDraft(): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $taskId   = (int) $this->request->getPost('task_id');
+        $draftUrl = trim((string) $this->request->getPost('draft_url'));
+        $caption  = trim((string) $this->request->getPost('caption'));
+        $hashtag  = trim((string) $this->request->getPost('hashtag'));
+        $notes    = trim((string) $this->request->getPost('notes'));
+
+        if (! $taskId || empty($draftUrl)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Link draft video wajib diisi (Google Drive / Video Link).']);
+        }
+
+        // Validate task belongs to logged in KOL
+        $db = \Config\Database::connect();
+        $task = $db->table('tasks t')
+            ->select('t.*, ck.kol_id')
+            ->join('campaign_kols ck', 'ck.id = t.campaign_kol_id')
+            ->where('t.id', $taskId)
+            ->get()
+            ->getRowArray();
+
+        if (! $task || (int) $task['kol_id'] !== $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Tugas tidak ditemukan atau bukan milik akun Anda.']);
+        }
+
+        $userId = session('user_id') ?? 1;
+
+        // Determine next draft version
+        $maxVerRow = $db->table('drafts')->selectMax('version')->where('task_id', $taskId)->get()->getRowArray();
+        $nextVersion = ((int) ($maxVerRow['version'] ?? 0)) + 1;
+
+        $db->transStart();
+
+        // Insert into drafts
+        $db->table('drafts')->insert([
+            'task_id'      => $taskId,
+            'version'      => $nextVersion,
+            'draft_url'    => $draftUrl,
+            'caption'      => $caption ?: null,
+            'hashtag'      => $hashtag ?: null,
+            'notes'        => $notes ?: null,
+            'status'       => 'SUBMITTED',
+            'submitted_at' => date('Y-m-d H:i:s'),
+            'created_by'   => $userId,
+            'created_at'   => date('Y-m-d H:i:s'),
+            'updated_at'   => date('Y-m-d H:i:s'),
+        ]);
+
+        // Update task status & draft_url
+        $db->table('tasks')->where('id', $taskId)->update([
+            'status'     => 'DRAFT_SUBMITTED',
+            'draft_url'  => $draftUrl,
+            'draft_note' => $notes ?: null,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ]);
+
+        $db->transComplete();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => "Draft video versi {$nextVersion} berhasil dikirimkan! Tim brand akan segera meninjau.",
+        ]);
+    }
+
+    /**
+     * AJAX POST: KOL Submits Live Post URL
+     */
+    public function submitLiveUrl(): ResponseInterface
+    {
+        $kolId = $this->getMyKolId();
+        if (! $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Unauthorized']);
+        }
+
+        $taskId  = (int) $this->request->getPost('task_id');
+        $liveUrl = trim((string) $this->request->getPost('live_url'));
+
+        if (! $taskId || empty($liveUrl)) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Link postingan live wajib diisi.']);
+        }
+
+        // Validate task belongs to logged in KOL
+        $db = \Config\Database::connect();
+        $task = $db->table('tasks t')
+            ->select('t.*, ck.kol_id')
+            ->join('campaign_kols ck', 'ck.id = t.campaign_kol_id')
+            ->where('t.id', $taskId)
+            ->get()
+            ->getRowArray();
+
+        if (! $task || (int) $task['kol_id'] !== $kolId) {
+            return $this->response->setJSON(['success' => false, 'message' => 'Tugas tidak ditemukan atau bukan milik akun Anda.']);
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $db->transStart();
+
+        // Update task
+        $db->table('tasks')->where('id', $taskId)->update([
+            'status'     => 'POSTED',
+            'live_url'   => $liveUrl,
+            'updated_at' => $now,
+        ]);
+
+        // Insert or update postings
+        $existing = $db->table('postings')->where('task_id', $taskId)->get()->getRowArray();
+        if ($existing) {
+            $db->table('postings')->where('id', $existing['id'])->update([
+                'live_url'   => $liveUrl,
+                'status'     => 'ACTIVE',
+                'updated_at' => $now,
+            ]);
+        } else {
+            $db->table('postings')->insert([
+                'task_id'     => $taskId,
+                'platform_id' => $task['platform_id'] ?? null,
+                'live_url'    => $liveUrl,
+                'status'      => 'ACTIVE',
+                'posted_at'   => $now,
+                'created_at'  => $now,
+                'updated_at'  => $now,
+            ]);
+        }
+
+        $db->transComplete();
+
+        return $this->response->setJSON([
+            'success' => true,
+            'message' => 'Link postingan live berhasil disimpan! Metrik performa akan dipantau.',
+        ]);
     }
 
     /**
